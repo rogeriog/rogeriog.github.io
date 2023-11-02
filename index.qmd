@@ -1,0 +1,43 @@
+---
+title: "rogeriog - Rogério Gouvêa"
+image: /imgs/STK-20231027-WA0002.webp
+about:
+  template: broadside
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/rogeriog
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/rog%C3%A9rio-gouv%C3%AAa-350a8586/
+    - icon: orcid
+      text: ORCID
+      href: https://orcid.org/0000-0001-6837-6264
+format: html
+---
+<!-- <style>
+  body {
+  background-image: url("./imgs/bg1.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+  
+</style> -->
+
+## A computational materials scientist always programming some stuff
+Hello, I'm Rogério, a soon-to-be PhD in Materials Science. My academic work has been focused on using physics and machine learning to discover insights in energy materials. 
+
+I'm enthusiastic about programming, data science, and AI, and I'm dedicated to improving productivity while exploring fresh horizons in my academic work and development projects.
+
+This website blends my work portfolio with a digital garden, housing information on past projects, ongoing work, and my learning journey. Explore my digital world <ᵠ|[here](/notebook/index.qmd)|ᵠ>.
+
+
+<!-- Hello, I'm Rogério. I'm about to complete my PhD in Materials Science, where I focus on using physics and machine learning to discover new insights in energy materials.
+
+I'm passionate about programming, data science, and AI. I'm always looking for better tools to improve my productivity, whether it's for my academic work, programming projects, or language learning.
+
+My favorite programming language is Python, but I can also work with JavaScript, C++, and Fortran.
+
+This website is a mix of my work portfolio and a digital garden. Here, you can find information about my past projects, work in progress, and notes on things I'm learning.
+
+Feel free to explore my digital world <ᵠ|[here](/notebook/index.qmd)|ᵠ>. -->

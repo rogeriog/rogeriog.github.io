@@ -1,0 +1,78 @@
+/*-- scss:defaults --*/
+
+$headings-font-family: 'Prata', 'Roboto' !default;
+
+/*-- scss:rules --*/
+
+body {
+  color: #bdbab5;
+  background-image: none;
+  background-color: #323334;
+  -webkit-tap-highlight-color: rgba(206, 204, 202, 0);
+}
+
+#quarto-content section:first-of-type h2:first-of-type {
+  font-family: "Oleo Script", $headings-font-family;
+  color: rgb(102, 168, 194) ;
+}
+
+#a-computational-materials-scientist-always-programming-some-stuff > p:nth-child(4) > a {
+  color: #468ddf;
+}
+// #a-computational-materials-scientist-always-programming-some-stuff {
+//   width: 430px,
+// }
+#a-computational-materials-scientist-always-programming-some-stuff > p:nth-child(2),
+#a-computational-materials-scientist-always-programming-some-stuff > p:nth-child(3),
+#a-computational-materials-scientist-always-programming-some-stuff > p:nth-child(4) {
+  color: #BDBAB6;
+  font-weight: bold;
+  text-align: justify;
+  margin-right: 10px;
+}
+
+.justified-bold {
+  text-align: justify;
+  font-weight: bold;
+}
+
+.navbar-dark {
+     background-color: rgb(81, 98, 131);
+}
+.navbar-dark .navbar-nav .nav-link {
+  color: rgb(184, 206, 223);
+}
+.navbar-brand > img {
+     max-height: 90px 
+   }
+.menu-text {
+    font-size: 18px; /* Change font size to 18 pixels */
+    font-weight: bold; /* Make the text bold */
+    /* Add any other CSS properties you want to change */
+  }
+
+
+  .navbar .dropdown-header {
+    text-shadow: rgb(32, 32, 32) 3px 1px;
+    color: rgb(91, 192, 192) !important;
+}
+
+div.quarto-about-marquee .about-image {
+  max-width: 40%;
+}
+
+#quarto-document-content.content {
+  margin-top: -2em;
+}
+
+div.quarto-about-broadside .about-link {
+  color: rgb(164, 159, 151);
+}
+
+.nav-footer {
+  color: rgb(150, 144, 135);
+  background-color : rgb(50, 51, 52);
+}
+.nav-footer a {
+  color: rgb(150, 144, 135);
+}

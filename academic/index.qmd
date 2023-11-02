@@ -1,0 +1,14 @@
+---
+title: "Academic Work - Research"
+subtitle: "A collection of notes and articles relating to research topics I've worked on."
+listing:
+    contents: .
+    fields: [image, date, title, categories, reading-time, description]
+    sort: "date desc"
+    type: grid
+    categories: numbered
+    sort-ui: true
+    filter-ui: true
+    image-placeholder: "../imgs/placeholder1.jpg"
+toc: false
+---

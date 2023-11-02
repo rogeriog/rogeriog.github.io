@@ -1,0 +1,74 @@
+project:
+    type: website
+
+
+execute:
+  freeze: auto
+
+editor: visual
+callout-appearance: simple
+
+website:
+  title: "A computational materials scientist always programming some stuff"
+  favicon: "/imgs/damselfly2.png"
+  site-url: https://rogeriog.github.io
+  description: "This website showcases the work portfolio, digital garden, and learning journey of rogeriog with a focus on computational physics, machine learning, and programming in general."
+  open-graph: true
+  back-to-top-navigation: true
+
+  navbar:
+    logo: "./imgs/damselfly4.png"
+    logo-alt: "Illustration of a damselfly."
+    logo-href: "/damselfly/"
+    title: false
+    repo-url: https://github.com/rogeriog/rogeriog.github.io
+    repo-actions: [edit, issue]
+    left:
+      - text: rogeriog.me 
+    right:
+      - text: Academic Work
+        href: /academic/
+      - text: Development & ML
+        href: /development-ml/
+      - text: CV
+        href: /cv/
+      - text: MyLearning
+        href: /learning/
+      - text: More
+        menu:
+          - text: Productivity
+            url: /productivity/
+          - text: DevAISci
+            url: /devaisci/
+          - text: Univos
+            url: /univos/
+          - text: About Me
+            url: index.qmd
+      - text: Source
+        menu:
+          - text: Source Code
+            url:  https://github.com/rogeriog/rogeriog.me
+          - text: Report a Bug
+            url:  https://github.com/rogeriog/rogeriog.me/issues
+      - icon: rss
+        href: /index.xml
+
+  page-footer:
+    border: false
+    left: "Published with [Quarto](https://quarto.org/) v<?quarto.version?> | Hosted by [{{< iconify simple-icons github >}}](https://pages.github.com/)"
+    center: "[Github](https://github.com/rogeriog)"
+    right: "© 2023 rogeriog | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/legalcode.en)"
+
+format:
+  html:
+    theme: 
+      light: theme.scss
+      dark: theme-dark.scss
+    css: styles.css
+    code-link: true
+    link-external-newwindow: true
+    smooth-scroll: true
+    highlight-style: gruvbox
+    
+filters:
+  - quarto-version.lua

@@ -1,0 +1,26 @@
+{
+  "index.qmd": {
+    "index.html": "bf8b2d61"
+  },
+  "about.qmd": {
+    "about.html": "81ad79d6"
+  },
+  "damselfly/index.qmd": {
+    "index.html": "f1df198e"
+  },
+  "academic/Encoder - Neural Network Compression.md": {
+    "Encoder - Neural Network Compression.html": "4e878b25"
+  },
+  "academic/Machine learning.md": {
+    "Machine learning.html": "8b684cec"
+  },
+  "academic/MODnet.md": {
+    "MODnet.html": "10b71917"
+  },
+  "academic/SOAP featurization.md": {
+    "SOAP featurization.html": "312db16b"
+  },
+  "academic/index.qmd": {
+    "index.html": "f9536338"
+  }
+}

@@ -1,0 +1,6 @@
+# Enable banner style title blocks
+title-block-banner: true
+
+reference-location: margin
+citation-location: margin
+

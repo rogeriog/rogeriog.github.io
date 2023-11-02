@@ -1,0 +1,27 @@
+---
+title: ""
+image: "../imgs/damselfly3.png"
+about:
+  template: marquee
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/rogeriog
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/rog%C3%A9rio-gouv%C3%AAa-350a8586/
+    - icon: orcid
+      text: ORCID
+      href: https://orcid.org/0000-0001-6837-6264
+format: html
+---
+<style>
+  body {
+  background-image: url("/imgs/bg1.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+  
+</style>
+
+## Hi, I'm a damselfly!

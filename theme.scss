@@ -1,0 +1,109 @@
+/*-- scss:defaults --*/
+
+$headings-font-family: 'Prata', 'Roboto' !default;
+
+/*-- scss:rules --*/
+#navbarCollapse > ul.navbar-nav.navbar-nav-scroll.ms-auto > li + li {
+  background:url('./imgs/separator.ico') no-repeat center left;
+  padding-left: 10px;
+  background-size: 10px 10px;
+}
+
+body {
+  background-image: url("./imgs/bg1.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+#quarto-content section:first-of-type h2:first-of-type {
+  font-family: "Oleo Script", $headings-font-family;
+  color: #2986ab ;
+}
+
+// #a-computational-materials-scientist-always-programming-some-stuff {
+//   width: 430px,
+// }
+#a-computational-materials-scientist-always-programming-some-stuff > p:nth-child(2),
+#a-computational-materials-scientist-always-programming-some-stuff > p:nth-child(3),
+#a-computational-materials-scientist-always-programming-some-stuff > p:nth-child(4) {
+  font-weight: bold;
+  text-align: justify;
+  margin-right: 10px;
+}
+
+.justified-bold {
+  text-align: justify;
+  font-weight: bold;
+}
+
+.navbar-dark {
+     background-color: #5c79af;
+}
+
+.navbar-brand > img {
+     max-height: 90px 
+   }
+.menu-text {
+    font-size: 18px; /* Change font size to 18 pixels */
+    font-weight: bold; /* Make the text bold */
+    /* Add any other CSS properties you want to change */
+  }
+
+  .navbar .dropdown-header {
+    color: #2ec1c1 !important;
+    text-shadow: 3px 1px black;
+  }
+
+.about-entity.background-image {
+  width: 80px
+}
+
+
+div.quarto-about-marquee .about-image {
+  max-width: 40%;
+}
+
+#quarto-document-content.content {
+  margin-top: -2em;
+}
+
+#title-block-header > div.quarto-title-meta {
+  background-color: #5c79af;
+}
+.navbar > .container-xxl, .navbar > .container-xl, .navbar > .container-lg, .navbar > .container-md, .navbar > .container-sm, .navbar > .container, .navbar > .container-fluid {
+  max-width: 1145px;
+  margin: auto;
+}
+#navbarCollapse > ul.navbar-nav.navbar-nav-scroll.ms-auto > li {
+  padding-left : 1rem;
+}
+
+#title-block-header > div.quarto-title-banner.page-columns.page-full {
+  background-color : #4f6896d4;
+}
+#title-block-header>div.quarto-title-meta {
+  background-color: rgba(13,110,253,.25);
+}
+
+div.quarto-title-meta-heading {
+  font-weight: bold;
+  font-size: 1em;
+  color: #000000;
+}
+div.quarto-title-meta-contents {
+  font-weight: bold;
+  font-style: italic;
+  font-size: 1em;
+  color: #3c484d;
+}
+
+#quarto-document-content.content.quarto-banner-title-block {
+  background-color: whitesmoke;
+  font: Arial;
+  font-size: 14pt;
+}
+
+
+#title-block-header > div.quarto-title-meta > div:nth-child(1) {
+  display: none;
+}
