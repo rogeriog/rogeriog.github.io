@@ -22,7 +22,7 @@ Tutorials to help setting up everything:
 
 <div align="center">
   <h3>
-    <a href="https://rogeriog.me">
+    <a href="https://rogeriog.github.io">
       Website
     </a>
     <span> | </span>
@@ -33,7 +33,7 @@ Tutorials to help setting up everything:
 </div>
 
 <div align="center">
-  <img src="https://github.com/rogeriog/rogeriog.github.io/imgs/Screenshot_2023-11-02_002958.png" width="500"><br>
+  <img src="https://github.com/rogeriog/rogeriog.github.io/blob/main/imgs/Screenshot_2023-11-02_002958.png" width="500"><br>
 </div>
 
 ## Introduction
