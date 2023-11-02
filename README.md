@@ -14,10 +14,11 @@
 ## Design inspirations
 
 The following have been used as inspirations for this website:
- `errbufferoverfl/garden.errbufferoverfl.me` used as base for my Quarto website structure.
+- `errbufferoverfl/garden.errbufferoverfl.me` used as base for my Quarto website structure.
+
 Tutorials to help setting up everything:
-[Creating your personal website using Quarto by Sam Csik](https://ucsb-meds.github.io/creating-quarto-websites/)
-[Quarto Blog writing guide by Albert Rapp](https://albert-rapp.de/posts/13_quarto_blog_writing_guide/13_quarto_blog_writing_guide.html)
+- [Creating your personal website using Quarto by Sam Csik](https://ucsb-meds.github.io/creating-quarto-websites/)
+- [Quarto Blog writing guide by Albert Rapp](https://albert-rapp.de/posts/13_quarto_blog_writing_guide/13_quarto_blog_writing_guide.html)
 
 <div align="center">
   <h3>
@@ -32,7 +33,7 @@ Tutorials to help setting up everything:
 </div>
 
 <div align="center">
-  <img src="https://github.com/errbufferoverfl/rogeriog.github.io/imgs/Screenshot_2023-11-02_002958.png" width="500"><br>
+  <img src="https://github.com/rogeriog/rogeriog.github.io/imgs/Screenshot_2023-11-02_002958.png" width="500"><br>
 </div>
 
 ## Introduction
@@ -45,7 +46,7 @@ Additionally, you will find a curated selection of my social media content from 
 - [Introduction](#introduction)
 - [Table of contents](#table-of-contents)
 - [Tech Stack](#tech-stack)
-- [GitHub Pages & DNS Configuration](#dns-configuration)
+- [GitHub Pages & DNS Configuration](#github-pages-&-DNS-Configuration)
 - [License](#license)
 - [Contact](#contact)
 
