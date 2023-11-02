@@ -9,7 +9,7 @@
 <meta name="author" content="rogeriog">
 <meta name="dcterms.date" content="2022-12-17">
 
-<title>A computational materials scientist always programming some stuff - MODNet</title>
+<title>A computational materials scientist always programming some stuff - Encoder - Neural Network Compression</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -68,7 +68,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 <link rel="stylesheet" href="../styles.css">
-<meta property="og:title" content="A computational materials scientist always programming some stuff - MODNet">
+<meta property="og:title" content="A computational materials scientist always programming some stuff - Encoder - Neural Network Compression">
 <meta property="og:description" content="">
 <meta property="og:site-name" content="A computational materials scientist always programming some stuff">
 </head>
@@ -165,10 +165,10 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">MODNet</h1>
+      <h1 class="title">Encoder - Neural Network Compression</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">Machine Learning</div>
-                <div class="quarto-category">MODNet</div>
+                <div class="quarto-category">Encoders</div>
               </div>
                   </div>
   </div>
@@ -204,21 +204,9 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<p>All-round framework? Feed forward neural network? info goes one layer after the other</p>
-<p>What does selection of meaningful features mean? Joint-learning.</p>
-<p>What are graph network models? Joint learning vs single target learning. – it seems joint learning predicts multiple properties at once, and it improves the prediction with similar properties probably.</p>
-<p>Read these reviews of ML in materials, butler Schmidt e noh</p>
-<p>Different feature generation used in materials ML?</p>
-<p>Underlying ML models: - Ad hoc models, case by case, specific group of materials, specific properties. Tailored descriptors, see references 5678, simpler to work case by case, better accuracy, poor transfer. - More general models based on graph network , raw crystal becomes a graph and then deep layer, ref 9 10 11. - -</p>
-<p>Pymatgen to query - MaterialsProject GCNN –&gt; MEGNet (needs to know full structure) MODNet is flexible can use structure, but also just composition. Matminer gives basic input data to MODNet model. Modnet implements featurization. receives pymatgen composition,</p>
-<p>Read</p>
-<p>Get a dataset (Matminer ) Test different models (basic models –&gt; MEGNet – MODNet) Compare scores, cross validation - validation and test sets (MatBench)</p>
-<ol type="1">
-<li>Matminer + Scikit</li>
-</ol>
-<ul>
-<li>MatBench</li>
-</ul>
+<p>This tutorial has a full implementation https://machinelearningmastery.com/autoencoder-for-regression/</p>
+<p>There is also one for classification: https://machinelearningmastery.com/autoencoder-for-classification/</p>
+<p>I think this text has important information regarding the representation in the autoencoder, why compression may explain better results in ML models: https://neptune.ai/blog/representation-learning-with-autoencoder</p>
 
 
 
@@ -570,7 +558,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var filterRegex = new RegExp("https:\/\/rogeriog\.me");
+      var filterRegex = new RegExp("https:\/\/rogeriog\.github\.io");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href);
     }
