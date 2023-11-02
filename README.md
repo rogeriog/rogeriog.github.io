@@ -1,15 +1,23 @@
 <h1 align="center">rogeriog.me</h1>
 
 <div align="center">
-  💻🔥🪤
+  💻✨
 </div>
 <div align="center">
   <strong>A website built on <a href="https://quarto.org">Quarto.</a></strong>
 </div>
 <div align="center">
-  Website, digital garden, second brain.
+  Portfolio, digital garden, second brain.
 </div>
 <br/>
+
+## Design inspirations
+
+The following have been used as inspirations for this website:
+ `errbufferoverfl/garden.errbufferoverfl.me` used as base for my Quarto website structure.
+Tutorials to help setting up everything:
+[Creating your personal website using Quarto by Sam Csik](https://ucsb-meds.github.io/creating-quarto-websites/)
+[Quarto Blog writing guide by Albert Rapp](https://albert-rapp.de/posts/13_quarto_blog_writing_guide/13_quarto_blog_writing_guide.html)
 
 <div align="center">
   <h3>
@@ -24,8 +32,7 @@
 </div>
 
 <div align="center">
-  <img src="https://github.com/errbufferoverfl/garden.errbufferoverfl.me/blob/b9a8775a6ca458370f9708095072d3f8f1634031/screenshot.png" width="500"><br>
-  <img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a><br>
+  <img src="https://github.com/errbufferoverfl/rogeriog.github.io/imgs/Screenshot_2023-11-02_002958.png" width="500"><br>
 </div>
 
 ## Introduction
@@ -33,18 +40,12 @@
 Welcome to `rogeriog.me`, a platform dedicated to sharing an array of informative content. This website serves as a repository of my ongoing learning experiences, personal projects in programming and machine learning, as well as a collection of my academic work. 
 Additionally, you will find a curated selection of my social media content from two pages I run @devaisci and @univos.
 
-## Design inspirations
-
-The repository `errbufferoverfl/garden.errbufferoverfl.me` used as base for my Quarto® website structure.
-https://albert-rapp.de/posts/13_quarto_blog_writing_guide/13_quarto_blog_writing_guide.html#fnref1
-https://ucsb-meds.github.io/creating-quarto-websites/
-
 ## Table of contents
 
 - [Introduction](#introduction)
 - [Table of contents](#table-of-contents)
 - [Tech Stack](#tech-stack)
-- [DNS Configuration](#dns-configuration)
+- [GitHub Pages & DNS Configuration](#dns-configuration)
 - [License](#license)
 - [Contact](#contact)
 
@@ -56,13 +57,10 @@ Here's a brief high-level overview of the tech stack `rogeriog.me` uses:
 - Content is managed using [Obsidian](https://obsidian.md/).
 - Deployed to Github Pages.
 
-## DNS Configuration
+## GitHub Pages & DNS Configuration
 
-For more information on how to configure a custom domain for your own deployment, checkout the GitHub guide to ["Configuring a custom domain for your GitHub Pages site"](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
-
-```text
-CNAME <subdomain> <username>.github.io
-```
+To setup the website using GitHub Pages check this [link](https://docs.github.com/en/pages/quickstart). Additionally I highly recommend this [tutorial](https://ucsb-meds.github.io/creating-quarto-websites/).
+You can also configure a custom domain for your own deployment, checkout the GitHub guide to ["Configuring a custom domain for your GitHub Pages site"].
 
 <!-- LICENSE -->
 
@@ -70,10 +68,10 @@ CNAME <subdomain> <username>.github.io
 
 Quarto is distributed under [GNU GPLv2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html).
 
-The content on garden.errbufferoverfl.me is licenced under [Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/legalcode.en) (CC BY-SA 4.0), unless otherwise specified.
+The content on rogeriog.github.io is licenced under [Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/legalcode.en) (CC BY-SA 4.0), unless otherwise specified.
 
 <!-- CONTACT -->
 
 ## Contact
 
-For issues relating to this repository and content hosted on [https://rogeriog.me](https://rogeriog.me) please raise a [GitHub issue](https://github.com/rogeriog/rogeriog.me/issues).
+For issues relating to this repository and content hosted on [https://rogeriog.github.io](https://rogeriog.github.io) please raise a [GitHub issue](https://github.com/rogeriog/rogeriog.github.io/issues).
