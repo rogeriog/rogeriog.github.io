@@ -73,22 +73,20 @@
             padding-top:120px; overflow:hidden;
         }
         .hero-content { display:flex; align-items:center; gap:56px; flex-wrap:wrap; width:100%; }
-        .hero-photo-wrap { flex:0 0 290px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+        .hero-photo-wrap { flex:0 0 290px; display:flex; flex-direction:column; align-items:center; gap:14px;
+            order:2; }
         .hero-photo-frame {
-            width:280px; height:340px; border-radius:var(--radius); overflow:hidden;
-            border:1px solid rgba(96,165,250,.28); box-shadow:var(--shadow);
+            width:280px; height:280px; border-radius:50%; overflow:hidden;
+            border:2px solid rgba(96,165,250,.35); box-shadow:var(--shadow);
             position:relative; background:var(--bg-2);
         }
-        .hero-photo-frame::after {
-            content:''; position:absolute; inset:0;
-            background:linear-gradient(180deg,transparent 60%,rgba(7,9,15,.55));
-        }
-        .hero-photo-frame img { width:100%; height:100%; object-fit:cover; }
+        .hero-photo-frame img { width:100%; height:100%; object-fit:cover; object-position:center 18%; }
         .hero-badge {
             font-size:.74rem; font-weight:600; letter-spacing:.05em; color:var(--teal);
             background:var(--teal-dim); border:1px solid rgba(45,212,191,.24);
             padding:6px 16px; border-radius:20px; text-align:center;
         }
+        .hero-text { order:1; }
         .hero-text { flex:1 1 480px; }
         .identity-banner { display:flex; align-items:center; gap:0; font-family:'Space Grotesk';
             font-size:.72rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; margin-bottom:18px; }
@@ -148,17 +146,36 @@
         .empty-state { color:var(--text-dim); font-style:italic; padding:30px 0; }
 
         /* ── ABOUT ── */
-        .about-wrap { display:flex; gap:44px; align-items:flex-start; flex-wrap:wrap; }
-        .about-text { flex:1 1 480px; color:var(--text-muted); }
+        .about-grid { display:grid; grid-template-columns:1fr 300px; gap:44px; align-items:start; }
+        @media (max-width:820px) { .about-grid { grid-template-columns:1fr; } .about-card-right { order:-1; } }
+        .about-card-right {
+            background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius);
+            padding:28px; text-align:center; backdrop-filter:blur(8px);
+        }
+        .about-card-right img.about-avatar {
+            width:160px; height:160px; object-fit:contain; border-radius:50%;
+            background:#fff; border:1px solid var(--border); margin-bottom:14px;
+        }
+        .about-name { font-family:'Space Grotesk'; font-weight:700; font-size:1.15rem; }
+        .about-pos { color:var(--text-muted); font-size:.82rem; margin-bottom:14px; }
+        .about-socials { display:flex; justify-content:center; gap:10px; margin-bottom:18px; }
+        .social-btn { width:38px; height:38px; border-radius:50%; display:inline-flex; align-items:center;
+            justify-content:center; color:var(--text-muted); background:var(--bg-2);
+            border:1px solid var(--border); text-decoration:none; transition:var(--transition); }
+        .social-btn:hover { color:var(--primary); border-color:var(--primary); transform:translateY(-2px); }
+        .about-metrics { display:flex; justify-content:center; gap:10px; }
+        .metric-box { background:var(--bg-2); border:1px solid var(--border); border-radius:var(--radius-sm);
+            padding:10px 14px; min-width:76px; }
+        .metric-val { font-family:'Space Grotesk'; font-weight:700; font-size:1.15rem; color:var(--primary); display:block; }
+        .metric-lbl { font-size:.68rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; }
+        .about-text { color:var(--text-muted); }
         .about-text p { margin-bottom:16px; }
-        .about-side { flex:0 0 250px; display:flex; flex-direction:column; gap:20px; }
-        .about-side img.avatar { width:230px; border-radius:var(--radius); border:1px solid var(--border);
-            box-shadow:var(--shadow); background:#fff; }
-        .beyond-card { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius);
-            padding:20px; text-align:center; }
-        .beyond-card img { width:120px; margin-bottom:10px; }
-        .beyond-card h3 { font-size:.9rem; margin-bottom:6px; }
-        .beyond-card p { color:var(--text-dim); font-size:.78rem; margin:0; }
+        .about-text strong { color:var(--text); }
+        .about-text em { color:var(--text-muted); }
+        .thesis-box { background:var(--card-bg); border-left:3px solid var(--primary); border-radius:var(--radius-sm);
+            padding:16px 20px; margin-top:22px; font-size:.9rem; color:var(--text-muted); }
+        .thesis-box strong { display:block; color:var(--primary); font-size:.74rem; text-transform:uppercase;
+            letter-spacing:.08em; margin-bottom:6px; }
 
         /* ── SKILLS ── */
         .skill-group { margin-bottom:26px; }
@@ -217,12 +234,6 @@
     <div class="orb" style="width:420px;height:420px;background:radial-gradient(circle,rgba(45,212,191,.13),transparent 70%);top:-80px;left:-120px"></div>
     <div class="orb" style="width:360px;height:360px;background:radial-gradient(circle,rgba(96,165,250,.12),transparent 70%);bottom:-60px;right:-80px;animation-delay:-7s;animation-duration:18s"></div>
     <div class="hero-content">
-        <div class="hero-photo-wrap">
-            <div class="hero-photo-frame">
-                <img src="./assets/profile.jpg" alt="Rogério Gouvêa">
-            </div>
-            <span class="hero-badge">PhD Candidate · Materials Science</span>
-        </div>
         <div class="hero-text">
             <div class="identity-banner">
                 <div class="identity-pill mat"><i class="fas fa-atom"></i> Materials Science</div>
@@ -231,18 +242,16 @@
             </div>
             <div class="mission-tag"><i class="fas fa-infinity"></i> Physics is the grammar of materials</div>
             <h1 class="hero-name">Rogério <span class="highlight">Gouvêa</span></h1>
-            <p class="hero-subtitle">Computational Materials Science · Machine Learning · Energy Materials</p>
+            <p class="hero-subtitle">Computational Materials Science · DFT · Machine Learning · Semiconductors</p>
             <p class="hero-affiliation">
-                <i class="fab fa-orcid"></i> <a href="https://orcid.org/0000-0001-6837-6264" target="_blank" style="color:inherit">ORCID 0000-0001-6837-6264</a>
+                <i class="fas fa-map-marker-alt"></i> MODL, IMCN, UCLouvain, Belgium
                 <span style="color:var(--border)">|</span>
-                <i class="fas fa-flask"></i> Soon-to-be PhD
-                <span style="color:var(--border)">|</span>
-                <i class="fas fa-code"></i> Builder of agent-driven tools
+                <i class="fab fa-orcid"></i> <a href="https://orcid.org/0000-0001-6837-6264" target="_blank" style="color:inherit">0000-0001-6837-6264</a>
             </p>
             <div class="hero-chips">
-                <span class="chip" style="border-color:rgba(45,212,191,.3);color:var(--teal)">Perovskites</span>
-                <span class="chip" style="border-color:rgba(45,212,191,.3);color:var(--teal)">Oxides &amp; Nanostructures</span>
-                <span class="chip" style="border-color:rgba(96,165,250,.3);color:var(--primary)">Atomistic Modeling</span>
+                <span class="chip" style="border-color:rgba(45,212,191,.3);color:var(--teal)">Halide Perovskites</span>
+                <span class="chip" style="border-color:rgba(45,212,191,.3);color:var(--teal)">Semiconductors &amp; Oxides</span>
+                <span class="chip" style="border-color:rgba(96,165,250,.3);color:var(--primary)">Density Functional Theory</span>
                 <span class="chip" style="border-color:rgba(96,165,250,.3);color:var(--primary)">Materials Informatics</span>
                 <span class="chip" style="border-color:rgba(52,211,153,.3);color:var(--green)">Energy Materials</span>
             </div>
@@ -257,6 +266,12 @@
                 <a href="#projects" class="btn btn-ghost"><i class="fas fa-rocket"></i> Projects</a>
                 <a href="#publications" class="btn btn-ghost"><i class="fas fa-book-open"></i> Publications</a>
             </div>
+        </div>
+        <div class="hero-photo-wrap">
+            <div class="hero-photo-frame">
+                <img src="./assets/profile.jpg" alt="Rogério Gouvêa">
+            </div>
+            <span class="hero-badge">Postdoc Researcher · IMCN, UCLouvain</span>
         </div>
     </div>
 </section>
@@ -286,25 +301,45 @@
 
 <!-- ═══════ ABOUT ═══════ -->
 <section id="about">
-    <div class="section-label">Background</div>
-    <h2 class="section-title">About</h2>
-    <div class="about-wrap" style="margin-top:30px">
-        <div class="about-text">
-            <p>Hello, I'm Rogério — a soon-to-be PhD in Materials Science. My academic work focuses on
-               using physics and machine learning to discover insights in energy materials, with
-               publications spanning halide perovskites, oxide nanostructures, and ceramic processing.</p>
-            <p>I'm enthusiastic about programming, data science, and AI, and I'm dedicated to improving
-               productivity while exploring fresh horizons across my academic work and development projects.</p>
-            <p>Beyond research, I build tools: automation, autonomous agents, and small systems that make
-               everyday work faster — including this site, which is maintained by an OpenClaw agent fleet
-               I supervise over Telegram.</p>
+    <div class="section-label">Profile</div>
+    <h2 class="section-title">About <span style="color:var(--primary)">Me</span></h2>
+    <div class="about-grid" style="margin-top:30px">
+        <div>
+            <div class="about-text">
+                <p>I am a <strong>Postdoctoral Researcher at MODL, IMCN, UCLouvain (Belgium)</strong>, working at
+                   the convergence of <strong>condensed matter physics, semiconductors, and machine learning</strong>.
+                   My current research applies density functional theory and data-driven methods to the discovery
+                   of stable, lead-free halide perovskites and other energy-relevant materials.</p>
+                <p>My scientific roots span <strong>computational and experimental materials science</strong>. Earlier
+                   work covered oxide nanostructures and band-alignment engineering — ZnO/ZnS core–shell systems —
+                   as well as ceramic processing, including biotemplate-derived porous alumina for low-temperature
+                   sintering. Today I connect that physical intuition to atomistic modeling and materials
+                   informatics.</p>
+                <p>Beyond research, I'm enthusiastic about <strong>programming, data science, and AI tooling</strong>.
+                   I build automation and agent-driven systems — including the OpenClaw agent fleet that maintains
+                   this site — always looking for better tools to accelerate both academic work and development
+                   projects.</p>
+            </div>
+            <div class="thesis-box">
+                <strong>Current Focus</strong>
+                DFT + machine learning for halide perovskite discovery — halide alloying, doping, and surface
+                engineering for stable optoelectronic materials.
+            </div>
         </div>
-        <div class="about-side">
-            <img class="avatar" src="./assets/avatar-memoji.webp" alt="Rogério's avatar">
-            <div class="beyond-card">
-                <img src="./assets/damselfly.png" alt="Damselfly illustration">
-                <h3>The damselfly</h3>
-                <p>Mascot of this site's earlier Quarto incarnation — kept around as the digital garden's emblem.</p>
+        <div class="about-card-right">
+            <img class="about-avatar" src="./assets/avatar-memoji.webp" alt="Rogério Gouvêa" loading="lazy">
+            <div class="about-name">Rogério Gouvêa</div>
+            <div class="about-pos">Postdoc Researcher · MODL, IMCN, UCLouvain</div>
+            <div class="about-socials">
+                <a href="https://github.com/rogeriog" target="_blank" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://scholar.google.com/citations?user=2daZwrEAAAAJ&hl=en" target="_blank" class="social-btn" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+                <a href="https://orcid.org/0000-0001-6837-6264" target="_blank" class="social-btn" title="ORCID"><i class="fab fa-orcid"></i></a>
+                <a href="https://www.linkedin.com/in/rog%C3%A9rio-gouv%C3%AAa-350a8586/" target="_blank" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            </div>
+            <div class="about-metrics">
+                <div class="metric-box"><span class="metric-val" id="met-cit">–</span><span class="metric-lbl">Citations</span></div>
+                <div class="metric-box"><span class="metric-val" id="met-h">–</span><span class="metric-lbl">h-index</span></div>
+                <div class="metric-box"><span class="metric-val" id="met-i10">–</span><span class="metric-lbl">i10</span></div>
             </div>
         </div>
     </div>
@@ -405,6 +440,8 @@ fetch('./publications.json?nocache=' + Date.now())
             data.updated ? `Synced from Google Scholar · ${data.updated.replace('_CACHED',' (cached)')}` : 'Syncs from Google Scholar daily';
         const stat = document.getElementById('scholar-contact-stat');
         if (stat && data.total_citations) stat.textContent = `${data.total_citations} citations · h-index ${data.h_index}`;
+        const met = { 'met-cit': data.total_citations, 'met-h': data.h_index, 'met-i10': data.i10_index };
+        for (const [id, v] of Object.entries(met)) { const el = document.getElementById(id); if (el && v) el.textContent = v; }
 
         // Research highlights: top-cited works as cite pills
         const top = pubs.filter(p => p.citations > 0).slice(0, 8);
