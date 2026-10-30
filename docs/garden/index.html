@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Garden | Rogério Gouvêa</title>
+    <meta name="description" content="Rogério Gouvêa's digital garden — short notes on papers, ideas, and tools in computational materials science, machine learning, and autonomous science.">
+    <meta property="og:title" content="Digital Garden | Rogério Gouvêa">
+    <meta property="og:description" content="Short notes on papers, ideas, and tools — tended together with OpenClaw agents.">
+    <meta property="og:image" content="https://rogeriog.github.io/assets/garden-damselfly.jpg">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-0:#08060a; --bg-1:#100a10; --bg-2:#181020;
+            --primary:#ff3d5a; --primary-dim:rgba(255,61,90,.14);
+            --secondary:#5a6cff; --teal:#45d6ff;
+            --gold:#e8a05a; --green:#63e6a4;
+            --text:#eee9ee; --text-muted:#a79ba6; --text-dim:#6e5f6e;
+            --border:rgba(214,160,180,.10);
+            --card-bg:rgba(22,14,22,.72);
+            --radius:18px; --radius-sm:11px;
+            --transition:all .3s cubic-bezier(.4,0,.2,1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--bg-0); color:var(--text); line-height:1.6;
+            background-image:
+                radial-gradient(900px 600px at 8% -5%, rgba(120,18,40,.28), transparent 65%),
+                radial-gradient(760px 620px at 95% 15%, rgba(30,45,120,.24), transparent 70%),
+                radial-gradient(1000px 700px at 50% 105%, rgba(88,14,58,.16), transparent 70%);
+            background-attachment:fixed;
+        }
+        h1,h2,h3 { font-family:'Space Grotesk',sans-serif; }
+        #navbar {
+            position:fixed; top:0; left:0; right:0; z-index:100;
+            display:flex; justify-content:space-between; align-items:center;
+            padding:14px 6vw; background:rgba(8,6,10,.82); backdrop-filter:blur(14px);
+            border-bottom:1px solid var(--border);
+        }
+        .nav-brand { font-family:'Space Grotesk'; font-weight:700; font-size:1.05rem; color:var(--text); text-decoration:none; }
+        .nav-brand span { color:var(--primary); }
+        .nav-links { display:flex; gap:26px; list-style:none; }
+        .nav-links a { color:var(--text-muted); text-decoration:none; font-size:.85rem; transition:var(--transition); }
+        .nav-links a:hover { color:var(--primary); }
+        main { max-width:860px; margin:0 auto; padding:120px 6vw 60px; }
+        .garden-head { display:flex; align-items:center; gap:28px; margin-bottom:48px; flex-wrap:wrap; }
+        .garden-head img { width:110px; height:110px; border-radius:50%; object-fit:cover;
+            border:2px solid var(--border); box-shadow:0 4px 32px rgba(0,0,0,.55); }
+        .garden-head h1 { font-size:2.2rem; font-weight:700; }
+        .garden-head h1 span { color:var(--green); }
+        .garden-head p { color:var(--text-muted); font-size:.95rem; max-width:520px; }
+        .post-list { display:flex; flex-direction:column; gap:18px; }
+        .post-card { display:block; background:var(--card-bg); border:1px solid var(--border);
+            border-radius:var(--radius); padding:22px 26px; text-decoration:none; color:var(--text);
+            transition:var(--transition); }
+        .post-card:hover { border-color:rgba(99,230,164,.35); transform:translateY(-2px); }
+        .post-card h2 { font-size:1.25rem; margin-bottom:6px; }
+        .post-card:hover h2 { color:var(--green); }
+        .post-meta { display:flex; gap:14px; align-items:center; font-size:.78rem; color:var(--text-dim);
+            margin-bottom:8px; flex-wrap:wrap; }
+        .post-meta .tag { padding:2px 10px; border-radius:10px; background:rgba(99,230,164,.10);
+            color:var(--green); font-size:.72rem; }
+        .post-card .summary { color:var(--text-muted); font-size:.9rem; }
+        .post-links { margin-top:10px; font-size:.78rem; display:flex; gap:16px; }
+        .post-links span { color:var(--teal); }
+        .empty { color:var(--text-dim); font-style:italic; padding:40px 0; text-align:center; }
+        footer { text-align:center; padding:36px 6vw; color:var(--text-dim); font-size:.8rem;
+            border-top:1px solid var(--border); }
+        footer a { color:var(--text-dim); }
+        @media (max-width:600px) { .garden-head { flex-direction:column; text-align:center; } }
+    </style>
+</head>
+<body>
+<nav id="navbar">
+    <a class="nav-brand" href="../">rogeriog<span>.</span></a>
+    <ul class="nav-links">
+        <li><a href="../#research">Research</a></li>
+        <li><a href="../#projects">Projects</a></li>
+        <li><a href="../#publications">Publications</a></li>
+        <li><a href="../#contact">Contact</a></li>
+    </ul>
+</nav>
+<main>
+    <div class="garden-head">
+        <img src="../assets/garden-damselfly.jpg" alt="Damselfly — the garden's emblem">
+        <div>
+            <h1>Digital <span>Garden</span></h1>
+            <p>Short notes on papers, ideas, and tools I keep coming back to — computational
+               materials science, machine learning, and autonomous science. Tended together
+               with my OpenClaw agents; social versions go out after my review.</p>
+        </div>
+    </div>
+    <div class="post-list" id="postList">
+        <p class="empty">Loading posts…</p>
+    </div>
+</main>
+<footer>
+    <p>&copy; <span id="yr"></span> Rogério Gouvêa · <a href="../">rogeriog.github.io</a> · <a href="https://github.com/rogeriog/rogeriog.github.io">source</a></p>
+</footer>
+<script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    fetch('./posts.json')
+        .then(r => r.json())
+        .then(data => {
+            const list = document.getElementById('postList');
+            const posts = (data.posts || []).slice().sort((a,b) => b.date.localeCompare(a.date));
+            if (!posts.length) { list.innerHTML = '<p class="empty">Nothing planted yet.</p>'; return; }
+            list.innerHTML = posts.map(p => `
+                <a class="post-card" href="./${p.slug}.html">
+                    <div class="post-meta">
+                        <span>${p.date}</span>
+                        ${(p.tags||[]).map(t => `<span class="tag">${t}</span>`).join('')}
+                    </div>
+                    <h2>${p.title}</h2>
+                    <p class="summary">${p.summary}</p>
+                    <div class="post-links">
+                        ${p.source_url ? `<span><i class="fas fa-file-lines"></i> source paper</span>` : ''}
+                        ${p.x_url ? `<span><i class="fab fa-x-twitter"></i> discussed on X</span>` : ''}
+                    </div>
+                </a>`).join('');
+        })
+        .catch(() => { document.getElementById('postList').innerHTML = '<p class="empty">Could not load posts.</p>'; });
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!-- GARDEN POST TEMPLATE — copy to <slug>.html, fill the TODO fields,
+     then add a matching entry to posts.json. Keep one idea per post. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO: POST TITLE | Rogério Gouvêa</title>
+    <meta name="description" content="TODO: one-sentence summary">
+    <meta property="og:title" content="TODO: POST TITLE">
+    <meta property="og:description" content="TODO: one-sentence summary">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://rogeriog.github.io/garden/TODO-SLUG.html">
+    <meta property="og:image" content="https://rogeriog.github.io/assets/garden-damselfly.jpg">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-0:#08060a; --bg-1:#100a10; --bg-2:#181020;
+            --primary:#ff3d5a; --secondary:#5a6cff; --teal:#45d6ff;
+            --gold:#e8a05a; --green:#63e6a4;
+            --text:#eee9ee; --text-muted:#a79ba6; --text-dim:#6e5f6e;
+            --border:rgba(214,160,180,.10);
+            --card-bg:rgba(22,14,22,.72);
+            --radius:18px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--bg-0); color:var(--text); line-height:1.75;
+            background-image:
+                radial-gradient(900px 600px at 8% -5%, rgba(120,18,40,.28), transparent 65%),
+                radial-gradient(760px 620px at 95% 15%, rgba(30,45,120,.24), transparent 70%),
+                radial-gradient(1000px 700px at 50% 105%, rgba(88,14,58,.16), transparent 70%);
+            background-attachment:fixed;
+        }
+        #navbar {
+            position:fixed; top:0; left:0; right:0; z-index:100;
+            display:flex; justify-content:space-between; align-items:center;
+            padding:14px 6vw; background:rgba(8,6,10,.82); backdrop-filter:blur(14px);
+            border-bottom:1px solid var(--border);
+        }
+        .nav-brand { font-family:'Space Grotesk'; font-weight:700; font-size:1.05rem; color:var(--text); text-decoration:none; }
+        .nav-brand span { color:var(--primary); }
+        .nav-links { display:flex; gap:26px; list-style:none; }
+        .nav-links a { color:var(--text-muted); text-decoration:none; font-size:.85rem; }
+        .nav-links a:hover { color:var(--primary); }
+        article { max-width:720px; margin:0 auto; padding:120px 6vw 80px; }
+        .post-meta { font-size:.8rem; color:var(--text-dim); margin-bottom:10px; display:flex; gap:14px; flex-wrap:wrap; }
+        .post-meta .tag { padding:2px 10px; border-radius:10px; background:rgba(99,230,164,.10); color:var(--green); font-size:.72rem; }
+        article h1 { font-family:'Space Grotesk'; font-size:2rem; margin-bottom:18px; line-height:1.25; }
+        article h2 { font-family:'Space Grotesk'; font-size:1.3rem; margin:34px 0 10px; }
+        article p { color:var(--text-muted); margin-bottom:16px; }
+        article p strong, article li strong { color:var(--text); }
+        article a { color:var(--teal); }
+        article ul, article ol { color:var(--text-muted); margin:0 0 16px 22px; }
+        article blockquote { border-left:3px solid var(--green); padding:4px 16px; margin:0 0 16px;
+            color:var(--text-muted); font-style:italic; }
+        article code { font-family:ui-monospace,monospace; font-size:.85em; background:var(--bg-2);
+            padding:2px 6px; border-radius:6px; }
+        .source-box { margin-top:40px; background:var(--card-bg); border:1px solid var(--border);
+            border-radius:var(--radius); padding:18px 22px; font-size:.85rem; color:var(--text-muted); }
+        .source-box a { color:var(--teal); }
+        .garden-mark { display:flex; align-items:center; gap:10px; margin-top:44px;
+            color:var(--text-dim); font-size:.78rem; }
+        .garden-mark img { width:34px; height:34px; border-radius:50%; object-fit:cover; border:1px solid var(--border); }
+        footer { text-align:center; padding:36px 6vw; color:var(--text-dim); font-size:.8rem; border-top:1px solid var(--border); }
+        footer a { color:var(--text-dim); }
+    </style>
+</head>
+<body>
+<nav id="navbar">
+    <a class="nav-brand" href="../">rogeriog<span>.</span></a>
+    <ul class="nav-links">
+        <li><a href="./">← Garden</a></li>
+        <li><a href="../#research">Research</a></li>
+        <li><a href="../#publications">Publications</a></li>
+        <li><a href="../#contact">Contact</a></li>
+    </ul>
+</nav>
+<article>
+    <div class="post-meta">
+        <span>TODO: YYYY-MM-DD</span>
+        <span class="tag">TODO: tag</span>
+    </div>
+    <h1>TODO: POST TITLE</h1>
+
+    <!-- Body: 3–8 short paragraphs. One idea, what it changes, why it matters to me. -->
+    <p>TODO: body paragraph.</p>
+
+    <p>TODO: body paragraph.</p>
+
+    <!-- Remove the source-box if the post is not based on a paper/link. -->
+    <div class="source-box">
+        <i class="fas fa-seedling" style="color:var(--green)"></i>
+        <strong>Grown from:</strong> <a href="TODO: source url" target="_blank">TODO: paper or link title</a>
+    </div>
+
+    <div class="garden-mark">
+        <img src="../assets/garden-damselfly.jpg" alt="">
+        <span>A note in the digital garden — short ideas tended with OpenClaw agents.</span>
+    </div>
+</article>
+<footer>
+    <p>&copy; <span id="yr"></span> Rogério Gouvêa · <a href="./">Digital Garden</a> · <a href="../">rogeriog.github.io</a></p>
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -27,6 +27,13 @@ All published files live under `docs/` — the Jekyll build is skipped via `docs
 - `projects.json` schema: `{name, description, tags[], url}` — `url` may be `""`.
 - `publications.json` is machine-owned by `update_scholar.py` — do not hand-edit entries;
   badges may be curated via `BADGE_MAP` in the script.
+- Digital garden lives in `docs/garden/`: one self-contained `<slug>.html` per post
+  (copy `_template.html`) plus a matching entry in `docs/garden/posts.json`
+  (`{slug,title,date,summary,tags[],source_url,x_url}` — `source_url`/`x_url` may be
+  `""`). The damselfly branding (`assets/garden-damselfly.jpg`) belongs to the garden
+  only — never use it as the main-site identity. Posts are short notes on a paper or
+  idea: 3–8 paragraphs, one idea, his voice. `x_url` is filled in after the X version
+  is approved and published (see `social/` in the agent workspace).
 - Images go in `docs/assets/`; keep them < 500 KB and referenced with relative paths.
 - Commit style: short imperative summary (`add projects section`, `update bio`). The
   scholar workflow commits as `chore: auto-update ... [skip ci]` — don't replicate that
@@ -39,3 +46,4 @@ All published files live under `docs/` — the Jekyll build is skipped via `docs
 Pushes use the repo's SSH deploy key via the `github-rogeriog` SSH host alias
 (remote: `git@github-rogeriog:rogeriog/rogeriog.github.io.git`). The key is write-scoped
 to this repo only. If a push fails, report it — never swap in a different credential.
+(Other/new repos use `$GH_TOKEN` + `bin/gh-setup.sh` — see workspace `social/README.md`.)
