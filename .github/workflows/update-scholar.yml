@@ -6,7 +6,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'publications.json'  # avoid infinite loop when the action commits
+      - 'docs/publications.json'  # avoid infinite loop when the action commits
   workflow_dispatch:
 
 jobs:
@@ -30,9 +30,7 @@ jobs:
       - name: Fetch publications from Google Scholar
         run: cd docs && python ../update_scholar.py
         env:
-          # TODO: set Rogério's Scholar ID (the `user=` param of the profile URL).
-          # Empty -> script no-ops safely.
-          SCHOLAR_ID: ""
+          SCHOLAR_ID: "2daZwrEAAAAJ"
 
       - name: Commit updated publications.json
         uses: stefanzweifel/git-auto-commit-action@v5

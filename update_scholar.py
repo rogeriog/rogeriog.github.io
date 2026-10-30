@@ -91,9 +91,12 @@ def fetch_via_scrape(badge_lookup: dict) -> dict:
     resp.raise_for_status()
     html = resp.text
 
-    def stat(label_id: str) -> int:
-        m = re.search(rf'{label_id}[^>]*>(\d+)<', html)
-        return int(m.group(1)) if m else 0
+    # Stats table: gsc_rsb_std cells = citations_all, citations_recent, h_all,
+    # h_recent, i10_all, i10_recent (in document order).
+    stats = re.findall(r'gsc_rsb_std">(\d+)<', html)
+
+    def stat(idx: int) -> int:
+        return int(stats[idx]) if len(stats) > idx else 0
 
     publications = []
     rows = re.findall(r'class="gsc_a_tr"(.*?)</tr>', html, re.S)
@@ -117,9 +120,9 @@ def fetch_via_scrape(badge_lookup: dict) -> dict:
 
     return {
         "updated": now_utc(),
-        "total_citations": stat("gsc_rsb_st1"),
-        "h_index": stat("gsc_rsb_st2"),
-        "i10_index": stat("gsc_rsb_st3"),
+        "total_citations": stat(0),
+        "h_index": stat(2),
+        "i10_index": stat(4),
         "publications": publications,
     }
 

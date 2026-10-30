@@ -1,7 +1,278 @@
 {
-  "updated": "",
-  "total_citations": 0,
-  "h_index": 0,
-  "i10_index": 0,
-  "publications": []
+  "updated": "2026-10-30T15:56:20Z",
+  "total_citations": 224,
+  "h_index": 8,
+  "i10_index": 8,
+  "publications": [
+    {
+      "rank": 1,
+      "title": "Band alignment and charge transfer predictions of ZnO/ZnX (X = S, Se or Te) interfaces applied to solar cells: a PBE+U theoretical study",
+      "authors": "EM Flores, RA Gouvea, MJ Piotrowski, ML Moreira",
+      "journal": "Physical Chemistry Chemical Physics 20 (7), 4953-4961, 2018",
+      "year": "2018",
+      "citations": 37,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 2,
+      "title": "Optical and structural investigation of ZnO@ ZnS core–shell nanostructures",
+      "authors": "EM Flores, CW Raubach, R Gouvea, E Longo, S Cava, ML Moreira",
+      "journal": "Materials Chemistry and Physics 173, 347-354, 2016",
+      "year": "2016",
+      "citations": 36,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 3,
+      "title": "Sintering of porous alumina obtained by biotemplate fibers for low thermal conductivity applications",
+      "authors": "T Delbrücke, RA Gouvêa, ML Moreira, CW Raubach, JA Varela, E Longo, ...",
+      "journal": "Journal of the European Ceramic Society 33 (6), 1087-1092, 2013",
+      "year": "2013",
+      "citations": 32,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 4,
+      "title": "Lead-free cesium antimony halide perovskites: halide alloying, surfaces, interfaces, and clusters",
+      "authors": "RA Gouvêa, ML Moreira, CV Singh, MJL Santos",
+      "journal": "Journal of Materials Science 59 (1), 142-160, 2024",
+      "year": "2024",
+      "citations": 30,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 5,
+      "title": "Doping effects on the optoelectronic properties and the stability of Cs3Sb2I9: Density functional theory insights on photovoltaics and light-emitting devices",
+      "authors": "A Exner, RA Gouvêa, A Köche, S Khan, JFL Santos, MJL Santos",
+      "journal": "Journal of Science: Advanced Materials and Devices 9 (2), 100700, 2024",
+      "year": "2024",
+      "citations": 17,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 6,
+      "title": "Combining feature-based approaches with graph neural networks and symbolic regression for synergistic performance and interpretability",
+      "authors": "RA Gouvêa, PP De Breuck, T Pretto, GM Rignanese, MJL Santos",
+      "journal": "arXiv preprint arXiv:2509.03547, 2025",
+      "year": "2025",
+      "citations": 13,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 7,
+      "title": "Evolutionary design algorithm for optimal light trapping in solar cells",
+      "authors": "RA Gouvêa, ML Moreira, JA Souza",
+      "journal": "Journal of Applied Physics 125 (4), 2019",
+      "year": "2019",
+      "citations": 12,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 8,
+      "title": "Design of experiments and theoretical investigation for photoluminescence optimization of copper aluminum sulfide nanoparticles through controlling crystalline defects",
+      "authors": "F Baum, T Pretto, RA Gouvea, MJL Santos",
+      "journal": "Crystal Growth &amp; Design 22 (6), 3669-3679, 2022",
+      "year": "2022",
+      "citations": 10,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 9,
+      "title": "Optimizing the synthesis parameters of double perovskites with machine learning using a multioutput regression model",
+      "authors": "T Pretto, F Baum, RA Gouvea, AG Brolo, MJL Santos",
+      "journal": "The Journal of Physical Chemistry C 128 (17), 7041-7052, 2024",
+      "year": "2024",
+      "citations": 8,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 10,
+      "title": "A first-principles investigation on the luminescence emissions of BaZrO3 obtained by microwave-assisted hydrothermal method",
+      "authors": "RA Gouvêa, EM Flores, S da Silva Cava, ML Moreira",
+      "journal": "Journal of Luminescence 180, 73-80, 2016",
+      "year": "2016",
+      "citations": 6,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 11,
+      "title": "MEIDNet: Multimodal generative AI framework for inverse materials design",
+      "authors": "A Babu, RA Gouvêa, P Vandergheynst, GM Rignanese",
+      "journal": "npj Computational Materials, 2026",
+      "year": "2026",
+      "citations": 4,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 12,
+      "title": "VibroML: an automated toolkit for high-throughput vibrational analysis and dynamic instability remediation of crystalline materials using machine-learned potentials",
+      "authors": "RA Gouvêa, GM Rignanese",
+      "journal": "arXiv preprint arXiv:2604.27685, 2026",
+      "year": "2026",
+      "citations": 4,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 13,
+      "title": "Exploring Cs3Sb2X9-type perovskites (X= Cl, Br, I) for optoelectronic applications: a theoretical investigation using density functional theory (DFT) and machine learning",
+      "authors": "RA Gouvêa",
+      "journal": "",
+      "year": "2024",
+      "citations": 4,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 14,
+      "title": "Síntese de fibras cerâmicas para aplicação aeroespacial",
+      "authors": "T Delbrucke, RA Gouvea, SS Cava",
+      "journal": "XIII ENPOS (Encontro de pós-graduação da Universidade Federal de Pelotas), 2011",
+      "year": "2011",
+      "citations": 3,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 15,
+      "title": "Obtenção de fibras cerâmicas de óxido de alumínio pelo método de biotemplate com diferentes recobrimentos para aplicação aeroespacial",
+      "authors": "RA Gouvea, T Delbrucke, SS Cava",
+      "journal": "CONGRESSO DE INICIAÇÃO CIENTÍFICA DA UNIVERSIDADE FEDERAL DE PELOTAS 13, 2011",
+      "year": "2011",
+      "citations": 3,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 16,
+      "title": "Microstructure and Thermal Conductivity of Porous Al2O3-ZrO2 Ceramics",
+      "authors": "T Delbrücke, RA Gouvêa, CW Raubach, E Longo, VC Sousa, ...",
+      "journal": "Materials Science Forum 820, 268-273, 2015",
+      "year": "2015",
+      "citations": 2,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 17,
+      "title": "Toward automated discovery with generative models multimodal learning and closed loop workflows in inverse materials design",
+      "authors": "A Babu, RA Gouvêa, GM Rignanese",
+      "journal": "Cell Reports Physical Science 7 (10), 2026",
+      "year": "2026",
+      "citations": 1,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 18,
+      "title": "Towards Automated Discovery: A Review of Generative Models, Multimodal Learning and Closed-Loop Workflows in Inverse Materials Design",
+      "authors": "A Babu, RA Gouvêa, GM Rignanese",
+      "journal": "arXiv preprint arXiv:2606.02507, 2026",
+      "year": "2026",
+      "citations": 1,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 19,
+      "title": "Al2O3 and Al2O3-ZrO2 fibers obtained by biotemplete with low thermal conductivity",
+      "authors": "T Delbrücke, RA Gouvêa, CW Raubach, JR Jurado, FCT Veiga, S Cava, ...",
+      "journal": "Sintering Techniques of Materials, 2015",
+      "year": "2015",
+      "citations": 1,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 20,
+      "title": "From symmetry to stability: Structural and electronic transformation in",
+      "authors": "M Bakhsh, V Trinquet, RA Gouvêa, GM Rignanese, S Poncé",
+      "journal": "Physical Review B 114 (6), 065201, 2026",
+      "year": "2026",
+      "citations": 0,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 21,
+      "title": "Modificações químicas no perfil do solo por modelos de sistemas de produção de soja.",
+      "authors": "RA GOUVEA, ELDOS SANTOS, AA BALBINOT JUNIOR, H DEBIASI, ...",
+      "journal": "",
+      "year": "2024",
+      "citations": 0,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 22,
+      "title": "Otimização geométrica de células solares pelo método design constructal",
+      "authors": "RA Gouvêa",
+      "journal": "",
+      "year": "2018",
+      "citations": 0,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 23,
+      "title": "Otimização construtal de uma cavidade multi-bifurcada para dissipação de calor",
+      "authors": "RA Gouvea, ED dos Santos, JA Souza",
+      "journal": "Scientia Plena 13 (4), 2017",
+      "year": "2017",
+      "citations": 0,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 24,
+      "title": "Cr-doped Al2O3 pigments encapsulated with SiO2 core-shell obtained by the polymeric precursor method",
+      "authors": "F Moraes, RA Gouvêa, T Delbrücke, S Cava, NLV Carreño, ...",
+      "journal": "",
+      "year": "",
+      "citations": 0,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 25,
+      "title": "Magnetic metal-carbon composite functionalized with acrylic acid for biotechnological application",
+      "authors": "RA Gouvêa, AL Sievers, AMS Oliveira, GC Link, SS Cava, NLV Carreño",
+      "journal": "",
+      "year": "",
+      "citations": 0,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 26,
+      "title": "AVALIAÇÃO DA CITOTOXICIDADE DO GRAFENO PARA UTILIZAÇÃO NA CONFECÇÃO DE SCAFFOLDS",
+      "authors": "GC LINK, BP SANTANA, R GOUVÊA",
+      "journal": "",
+      "year": "",
+      "citations": 0,
+      "url": "",
+      "badges": []
+    },
+    {
+      "rank": 27,
+      "title": "Obtaining of nanoparticles from a new powder synthesis method using sucrose and isopropanol",
+      "authors": "RA Gouvêa, KP Sanches, S Cava, NLV Carreño",
+      "journal": "",
+      "year": "",
+      "citations": 0,
+      "url": "",
+      "badges": []
+    }
+  ]
 }
