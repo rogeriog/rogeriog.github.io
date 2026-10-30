@@ -46,4 +46,5 @@ All published files live under `docs/` — the Jekyll build is skipped via `docs
 Pushes use the repo's SSH deploy key via the `github-rogeriog` SSH host alias
 (remote: `git@github-rogeriog:rogeriog/rogeriog.github.io.git`). The key is write-scoped
 to this repo only. If a push fails, report it — never swap in a different credential.
-(Other/new repos use `$GH_TOKEN` + `bin/gh-setup.sh` — see workspace `social/README.md`.)
+(New repos: Rogério creates them himself; `bin/gh-setup.sh` issues a per-repo
+deploy key — see workspace `social/README.md`.)
