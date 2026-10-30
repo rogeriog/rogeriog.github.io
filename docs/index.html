@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rogério Gouvêa | Computational Materials Scientist</title>
-    <meta name="description" content="Rogério Gouvêa — computational materials scientist applying physics and machine learning to energy materials. Publications, projects, and research.">
+    <meta name="description" content="Rogério Gouvêa — computational materials scientist building machine learning, automation, and software for science and industry. Publications, projects, and research.">
     <link rel="icon" type="image/svg+xml" href="./favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -248,20 +248,21 @@
                 <div class="identity-divider"></div>
                 <div class="identity-pill ml"><i class="fas fa-brain"></i> Machine Learning</div>
             </div>
-            <div class="mission-tag"><i class="fas fa-infinity"></i> Physics is the grammar of materials</div>
+            <div class="mission-tag"><i class="fas fa-infinity"></i> Turning hard scientific problems into working systems</div>
             <h1 class="hero-name">Rogério <span class="highlight">Gouvêa</span></h1>
-            <p class="hero-subtitle">Materials Informatics · DFT · Machine Learning · Self-Driving Labs</p>
+            <p class="hero-subtitle">Materials Science · Machine Learning · Scientific Automation · Software</p>
             <p class="hero-affiliation">
                 <i class="fas fa-map-marker-alt"></i> MODL, IMCN, UCLouvain, Belgium
                 <span style="color:var(--border)">|</span>
                 <i class="fab fa-orcid"></i> <a href="https://orcid.org/0000-0001-6837-6264" target="_blank" style="color:inherit">0000-0001-6837-6264</a>
             </p>
             <div class="hero-chips">
-                <span class="chip" style="border-color:rgba(69,214,255,.3);color:var(--teal)">Halide Perovskites</span>
+                <span class="chip" style="border-color:rgba(69,214,255,.3);color:var(--teal)">Materials Discovery</span>
                 <span class="chip" style="border-color:rgba(69,214,255,.3);color:var(--teal)">MatterVial · VibroML · MEIDNet</span>
                 <span class="chip" style="border-color:rgba(255,61,90,.32);color:var(--primary)">GNNs · MLIPs</span>
                 <span class="chip" style="border-color:rgba(255,61,90,.32);color:var(--primary)">High-Throughput Screening</span>
-                <span class="chip" style="border-color:rgba(99,230,164,.3);color:var(--green)">Agentic Frameworks</span>
+                <span class="chip" style="border-color:rgba(99,230,164,.3);color:var(--green)">Scientific Automation</span>
+                <span class="chip" style="border-color:rgba(99,230,164,.3);color:var(--green)">Industry R&amp;D</span>
             </div>
             <div class="hero-stats">
                 <div class="stat-item"><span class="stat-num" data-target="0" id="sc-cit">0</span><span class="stat-label">Citations</span></div>
@@ -286,13 +287,16 @@
 
 <!-- ═══════ RESEARCH HIGHLIGHTS ═══════ -->
 <section id="research">
-    <div class="section-label">Research Impact</div>
-    <h2 class="section-title">Where <span style="color:var(--teal)">Physics</span> Meets <span style="color:var(--primary)">Machine Learning</span></h2>
+    <div class="section-label">Research &amp; Engineering</div>
+    <h2 class="section-title">From <span style="color:var(--teal)">Science</span> to <span style="color:var(--primary)">Working Systems</span></h2>
     <p class="research-intro" style="margin-top:22px">
-        My work applies <strong>physics-based modeling</strong> and <strong>machine learning</strong> to
-        <strong>energy materials</strong> — from halide perovskites and oxide nanostructures to the
-        featurization methods that make materials data learnable. These are my most-cited works,
-        synced live from Google Scholar.
+        My work sits between <strong>materials science</strong>, <strong>machine learning</strong>, and
+        <strong>software engineering</strong>. I study systems ranging from halide perovskites and oxide
+        nanostructures to framework materials, and I build the methods that make materials data useful —
+        featurization, graph neural networks, symbolic regression, machine-learned potentials, and automated
+        workflows. The goal is the same in a research group or an industrial R&amp;D team: turn a hard scientific
+        problem into a reproducible tool that other people can actually use. Below is recent work, synced live
+        from Google Scholar.
     </p>
     <div class="cite-pills" id="topCites"></div>
 </section>
@@ -332,8 +336,11 @@
                    electromagnetic solar-cell simulations. After my PhD, a postdoctoral fellowship at
                    <strong>UFRGS</strong> took me into self-driving laboratories — automated robotic platforms
                    coupled with ML and LLM agentic frameworks to steer the discovery and solution-based synthesis
-                   of optoelectronic materials. I'm passionate about scientific innovation through robust software
-                   engineering, complex research challenges, and team collaboration.</p>
+                   of optoelectronic materials. What drives me is <strong>automation, software development, and
+                   machine learning applied to real problems</strong> — building tools that are reproducible,
+                   explainable, and useful beyond a single paper, whether for a research group or an industrial
+                   R&amp;D team. I care about robust engineering, complex research challenges, and collaboration
+                   across disciplines.</p>
             </div>
             <div class="thesis-box">
                 <strong>Ph.D. Thesis</strong>
@@ -477,8 +484,10 @@ fetch('./publications.json?nocache=' + Date.now())
         const met = { 'met-cit': data.total_citations, 'met-h': data.h_index, 'met-i10': data.i10_index };
         for (const [id, v] of Object.entries(met)) { const el = document.getElementById(id); if (el && v) el.textContent = v; }
 
-        // Research highlights: top-cited works as cite pills
-        const top = pubs.filter(p => p.citations > 0).slice(0, 8);
+        // Highlights: newest work first — current tools matter more than citation count
+        const pubsByYear = [...pubs].sort((a, b) =>
+            (b.year || 0) - (a.year || 0) || (b.citations || 0) - (a.citations || 0));
+        const top = pubsByYear.filter(p => p.citations > 0).slice(0, 6);
         document.getElementById('topCites').innerHTML = top.map(p =>
             `<a class="cite-pill" href="${p.url || '#'}" target="_blank">
                 <i class="fas fa-file-alt"></i>
@@ -488,7 +497,7 @@ fetch('./publications.json?nocache=' + Date.now())
 
         // Full list
         if (!pubs.length) { document.getElementById('pubList').innerHTML = '<div class="empty-state">Publications will appear once Scholar sync is configured.</div>'; return; }
-        document.getElementById('pubList').innerHTML = pubs.map(p => `
+        document.getElementById('pubList').innerHTML = pubsByYear.map(p => `
             <div class="pub-item">
                 <div class="pub-year">${p.year || ''}</div>
                 <div class="pub-body">
