@@ -10,14 +10,17 @@ Successor to an earlier Quarto-based site (preserved in git history before commi
 
 ## Structure
 
+GitHub Pages source is **`main` / `/docs`** (the published site root). Everything
+outside `docs/` is tooling.
+
 | Path | Purpose |
 | --- | --- |
-| `index.html` | Single-page site (inline CSS/JS, no build step) |
-| `projects.json` | Data source for the Projects grid |
-| `publications.json` | Scholar-synced publication data |
+| `docs/index.html` | Single-page site (inline CSS/JS, no build step) |
+| `docs/projects.json` | Data source for the Projects grid |
+| `docs/publications.json` | Scholar-synced publication data |
+| `docs/assets/` | Images (damselfly mascot, memoji avatar, profile photo) |
 | `update_scholar.py` | Fetches citations/publications from Google Scholar |
-| `.github/workflows/update-scholar.yml` | Daily cron that regenerates `publications.json` |
-| `assets/` | Images (damselfly mascot, memoji avatar, profile photo) |
+| `.github/workflows/update-scholar.yml` | Daily cron that regenerates `docs/publications.json` |
 | `garden/` | Salvaged learning notes — seed of a future digital-garden section |
 
 ## Editing model

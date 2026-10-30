@@ -28,7 +28,7 @@ jobs:
         run: pip install scholarly requests
 
       - name: Fetch publications from Google Scholar
-        run: python update_scholar.py
+        run: cd docs && python ../update_scholar.py
         env:
           # TODO: set Rogério's Scholar ID (the `user=` param of the profile URL).
           # Empty -> script no-ops safely.
@@ -38,4 +38,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'chore: auto-update publications from Google Scholar [skip ci]'
-          file_pattern: publications.json
+          file_pattern: docs/publications.json

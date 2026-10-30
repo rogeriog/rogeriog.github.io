@@ -4,10 +4,11 @@ Working agreement for OpenClaw agents editing this repository.
 
 ## What this is
 
-Rogério's personal GitHub Pages site (`rogeriog.github.io`, served from `main`, repo root).
+Rogério's personal GitHub Pages site (`rogeriog.github.io`, **Pages source = `main` / `/docs`**).
 Static single-file site — **no build step, no dependencies**. Architecture follows
 `ABnano/abnano.github.io`: one `index.html` (inline CSS/JS) + JSON data files rendered
 client-side + a scheduled workflow that syncs `publications.json` from Google Scholar.
+All published files live under `docs/` — the Jekyll build is skipped via `docs/.nojekyll`.
 
 ## Owner & authority
 
@@ -21,12 +22,12 @@ client-side + a scheduled workflow that syncs `publications.json` from Google Sc
 
 ## Conventions
 
-- Keep the single-file architecture. New sections go inside `index.html`; new data goes
-  in `projects.json`/`publications.json` — do not introduce frameworks or bundlers.
+- Keep the single-file architecture. New sections go inside `docs/index.html`; new data
+  goes in `docs/projects.json`/`docs/publications.json` — no frameworks or bundlers.
 - `projects.json` schema: `{name, description, tags[], url}` — `url` may be `""`.
 - `publications.json` is machine-owned by `update_scholar.py` — do not hand-edit entries;
   badges may be curated via `BADGE_MAP` in the script.
-- Images go in `assets/`; keep them < 500 KB and referenced with relative paths.
+- Images go in `docs/assets/`; keep them < 500 KB and referenced with relative paths.
 - Commit style: short imperative summary (`add projects section`, `update bio`). The
   scholar workflow commits as `chore: auto-update ... [skip ci]` — don't replicate that
   pattern for normal work.
