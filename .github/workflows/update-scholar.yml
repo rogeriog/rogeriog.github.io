@@ -1,0 +1,41 @@
+name: Update Publications from Google Scholar
+
+on:
+  schedule:
+    - cron: '0 0 * * *'     # Every day at 00:00 UTC
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'publications.json'  # avoid infinite loop when the action commits
+  workflow_dispatch:
+
+jobs:
+  update-publications:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install scholarly requests
+
+      - name: Fetch publications from Google Scholar
+        run: python update_scholar.py
+        env:
+          # TODO: set Rogério's Scholar ID (the `user=` param of the profile URL).
+          # Empty -> script no-ops safely.
+          SCHOLAR_ID: ""
+
+      - name: Commit updated publications.json
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: auto-update publications from Google Scholar [skip ci]'
+          file_pattern: publications.json

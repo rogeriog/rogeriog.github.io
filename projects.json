@@ -1,0 +1,28 @@
+{
+  "projects": [
+    {
+      "name": "rogeriog.github.io",
+      "description": "This portfolio site — a static GitHub Pages site designed, built, and maintained by autonomous OpenClaw agents in direct collaboration with me.",
+      "tags": ["HTML/CSS", "GitHub Pages", "OpenClaw"],
+      "url": "https://github.com/rogeriog/rogeriog.github.io"
+    },
+    {
+      "name": "Energy materials research",
+      "description": "PhD work in computational materials science — physics-informed machine learning for the discovery of energy materials (featurization, NN compression, atomistic modeling).",
+      "tags": ["Materials Science", "Machine Learning", "Python"],
+      "url": "https://orcid.org/0000-0001-6837-6264"
+    },
+    {
+      "name": "Digital garden",
+      "description": "A public second brain — notes on neural network compression, MODnet, SOAP featurization, and whatever I'm learning next. Growing from the garden/ directory.",
+      "tags": ["Notes", "Learning", "Knowledge"],
+      "url": ""
+    },
+    {
+      "name": "OpenClaw agent fleet",
+      "description": "Self-hosted OpenClaw gateway on Docker driving a Telegram-interfaced agent fleet that ships code, manages projects, and keeps this site updated.",
+      "tags": ["OpenClaw", "Docker", "Telegram", "Agents"],
+      "url": ""
+    }
+  ]
+}

@@ -1,78 +1,31 @@
-<h1 align="center">rogeriog.me</h1>
+# rogeriog.github.io
 
-<div align="center">
-  💻✨
-</div>
-<div align="center">
-  <strong>A website built on <a href="https://quarto.org">Quarto.</a></strong>
-</div>
-<div align="center">
-  Portfolio, digital garden, second brain.
-</div>
-<br/>
+Personal portfolio of Rogério Gouvêa — computational materials scientist working at
+the intersection of physics and machine learning for energy materials. Static site
+served by GitHub Pages at <https://rogeriog.github.io>, designed and maintained by
+autonomous [OpenClaw](https://docs.openclaw.ai) agents working directly with the owner.
 
-## Design inspirations
+Successor to an earlier Quarto-based site (preserved in git history before commit
+"Replace outdated site"). The damselfly mascot and memoji avatar were salvaged from it.
 
-The following have been used as inspirations for this website:
-- `errbufferoverfl/garden.errbufferoverfl.me` used as base for my Quarto website structure.
+## Structure
 
-Tutorials to help setting up everything:
-- [Creating your personal website using Quarto by Sam Csik](https://ucsb-meds.github.io/creating-quarto-websites/)
-- [Quarto Blog writing guide by Albert Rapp](https://albert-rapp.de/posts/13_quarto_blog_writing_guide/13_quarto_blog_writing_guide.html)
+| Path | Purpose |
+| --- | --- |
+| `index.html` | Single-page site (inline CSS/JS, no build step) |
+| `projects.json` | Data source for the Projects grid |
+| `publications.json` | Scholar-synced publication data |
+| `update_scholar.py` | Fetches citations/publications from Google Scholar |
+| `.github/workflows/update-scholar.yml` | Daily cron that regenerates `publications.json` |
+| `assets/` | Images (damselfly mascot, memoji avatar, profile photo) |
+| `garden/` | Salvaged learning notes — seed of a future digital-garden section |
 
-<div align="center">
-  <h3>
-    <a href="https://rogeriog.github.io">
-      Website
-    </a>
-    <span> | </span>
-    <a href="https://quarto.org/docs/guide/">
-      Quarto Handbook
-    </a>
-  </h3>
-</div>
+## Editing model
 
-<div align="center">
-  <img src="https://github.com/rogeriog/rogeriog.github.io/blob/main/imgs/Screenshot_2023-11-02_002958.png" width="500"><br>
-</div>
+- Content edits: modify `index.html`, `projects.json`, or profile data — the page
+  renders both JSON files client-side at load time.
+- Publications: set `SCHOLAR_ID` in the workflow env, then run the action once via
+  `workflow_dispatch` to seed `publications.json`.
+- Deploy: push to `main`. GitHub Pages serves the repo root automatically.
 
-## Introduction
-
-Welcome to `rogeriog.me`, a platform dedicated to sharing an array of informative content. This website serves as a repository of my ongoing learning experiences, personal projects in programming and machine learning, as well as a collection of my academic work. 
-Additionally, you will find a curated selection of my social media content from two pages I run @devaisci and @univos.
-
-## Table of contents
-
-- [Introduction](#introduction)
-- [Table of contents](#table-of-contents)
-- [Tech Stack](#tech-stack)
-- [GitHub Pages & DNS Configuration](#github-pages-&-DNS-Configuration)
-- [License](#license)
-- [Contact](#contact)
-
-## Tech Stack
-
-Here's a brief high-level overview of the tech stack `rogeriog.me` uses:
-
-- [Quarto](https://quarto.org/docs/guide/) for theming and static website generation.
-- Content is managed using [Obsidian](https://obsidian.md/).
-- Deployed to Github Pages.
-
-## GitHub Pages & DNS Configuration
-
-To setup the website using GitHub Pages check this [link](https://docs.github.com/en/pages/quickstart). Additionally I highly recommend this [tutorial](https://ucsb-meds.github.io/creating-quarto-websites/).
-You can also configure a custom domain for your own deployment, checkout the GitHub guide to ["Configuring a custom domain for your GitHub Pages site"].
-
-<!-- LICENSE -->
-
-## License
-
-Quarto is distributed under [GNU GPLv2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html).
-
-The content on rogeriog.github.io is licenced under [Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/legalcode.en) (CC BY-SA 4.0), unless otherwise specified.
-
-<!-- CONTACT -->
-
-## Contact
-
-For issues relating to this repository and content hosted on [https://rogeriog.github.io](https://rogeriog.github.io) please raise a [GitHub issue](https://github.com/rogeriog/rogeriog.github.io/issues).
+See `AGENTS.md` for agent working conventions.

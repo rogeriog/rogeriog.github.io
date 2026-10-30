@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rogério Gouvêa | Computational Materials Scientist</title>
+    <meta name="description" content="Portfolio of Rogério Gouvêa — physics and machine learning for energy materials, software projects, and a digital garden.">
+    <link rel="icon" type="image/png" href="./assets/damselfly.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-0:#07090f; --bg-1:#0b0f1a; --bg-2:#111827;
+            --primary:#60a5fa; --primary-dim:rgba(96,165,250,.14);
+            --secondary:#a78bfa; --secondary-dim:rgba(167,139,250,.14);
+            --teal:#2dd4bf; --teal-dim:rgba(45,212,191,.14);
+            --gold:#f59e0b; --green:#34d399;
+            --text:#e2e8f0; --text-muted:#94a3b8; --text-dim:#4b5563;
+            --border:rgba(148,163,184,.09);
+            --card-bg:rgba(17,24,39,.75);
+            --radius:18px; --radius-sm:11px;
+            --shadow:0 4px 32px rgba(0,0,0,.55);
+            --transition:all .3s cubic-bezier(.4,0,.2,1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body {
+            font-family:'Inter',sans-serif; background:var(--bg-0); color:var(--text);
+            line-height:1.6; overflow-x:hidden;
+        }
+        h1,h2,h3 { font-family:'Space Grotesk',sans-serif; }
+        body::before {
+            content:''; position:fixed; inset:0; z-index:-1;
+            background:url('./assets/bg-texture.jpg') center/cover no-repeat;
+            opacity:.05; pointer-events:none;
+        }
+
+        /* ── NAV ── */
+        #navbar {
+            position:fixed; top:0; left:0; right:0; z-index:100;
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 6vw; background:rgba(7,9,15,.82); backdrop-filter:blur(14px);
+            border-bottom:1px solid var(--border);
+        }
+        .nav-brand { display:flex; align-items:center; gap:10px; font-family:'Space Grotesk';
+            font-weight:700; font-size:1.05rem; color:var(--text); text-decoration:none; }
+        .nav-brand img { width:34px; height:34px; object-fit:contain; }
+        .nav-brand span { color:var(--primary); }
+        .nav-links { display:flex; gap:26px; list-style:none; }
+        .nav-links a { color:var(--text-muted); text-decoration:none; font-size:.85rem; transition:var(--transition); }
+        .nav-links a:hover { color:var(--primary); }
+        .nav-toggle { display:none; background:none; border:none; color:var(--text); font-size:1.2rem; cursor:pointer; }
+        @media (max-width:760px) {
+            .nav-toggle { display:block; }
+            .nav-links { display:none; position:absolute; top:100%; left:0; right:0; flex-direction:column;
+                background:var(--bg-1); padding:18px 6vw; border-bottom:1px solid var(--border); }
+            .nav-links.open { display:flex; }
+        }
+
+        /* ── SECTIONS ── */
+        section { padding:90px 6vw; max-width:1180px; margin:0 auto; }
+        .section-title { font-size:1.7rem; font-weight:600; margin-bottom:8px; }
+        .section-title::after { content:''; display:block; width:52px; height:3px; margin-top:8px;
+            background:linear-gradient(90deg,var(--teal),var(--primary)); border-radius:2px; }
+        .section-sub { color:var(--text-muted); font-size:.92rem; margin-bottom:36px; }
+
+        /* ── HERO ── */
+        #hero {
+            min-height:100vh; display:flex; align-items:center; gap:56px;
+            padding-top:120px; flex-wrap:wrap;
+        }
+        .hero-text { flex:1 1 460px; }
+        .hero-tag {
+            display:inline-flex; gap:8px; align-items:center; font-size:.72rem; font-weight:600;
+            letter-spacing:.09em; text-transform:uppercase; color:var(--teal);
+            background:var(--teal-dim); border:1px solid rgba(45,212,191,.24);
+            padding:5px 14px; border-radius:20px; margin-bottom:20px;
+        }
+        .hero-text h1 { font-size:clamp(2.1rem,4.6vw,3.2rem); font-weight:700; line-height:1.14; margin-bottom:18px; }
+        .hero-text h1 em { font-style:normal; background:linear-gradient(90deg,var(--teal),var(--primary),var(--secondary));
+            -webkit-background-clip:text; background-clip:text; color:transparent; }
+        .hero-text p { color:var(--text-muted); max-width:540px; margin-bottom:28px; }
+        .hero-cta { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:44px; }
+        .btn { padding:11px 24px; border-radius:var(--radius-sm); font-size:.88rem; font-weight:600;
+            text-decoration:none; transition:var(--transition); display:inline-flex; align-items:center; gap:8px; }
+        .btn-primary { background:var(--primary); color:#0b0f1a; }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px var(--primary-dim); }
+        .btn-ghost { border:1px solid var(--border); color:var(--text); }
+        .btn-ghost:hover { border-color:var(--primary); color:var(--primary); }
+        .hero-photo { flex:0 0 300px; display:flex; justify-content:center; position:relative; }
+        .hero-photo img.avatar {
+            width:300px; height:300px; object-fit:contain;
+            filter:drop-shadow(0 12px 40px rgba(45,212,191,.25));
+            animation:float-avatar 6s ease-in-out infinite;
+        }
+        @keyframes float-avatar { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+        .stat-strip { display:flex; gap:34px; flex-wrap:wrap; }
+        .stat-item { display:flex; flex-direction:column; }
+        .stat-num { font-family:'Space Grotesk'; font-size:1.7rem; font-weight:700; color:var(--primary); }
+        .stat-label { font-size:.75rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.07em; }
+
+        /* ── CARDS / GRIDS ── */
+        .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:22px; }
+        .card {
+            background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius);
+            padding:26px; transition:var(--transition); backdrop-filter:blur(8px);
+        }
+        .card:hover { transform:translateY(-4px); border-color:rgba(96,165,250,.3); box-shadow:var(--shadow); }
+        .card h3 { font-size:1.05rem; margin-bottom:8px; }
+        .card p { color:var(--text-muted); font-size:.88rem; margin-bottom:14px; }
+        .card-tags { display:flex; gap:8px; flex-wrap:wrap; }
+        .tag { font-size:.7rem; padding:3px 10px; border-radius:12px; background:var(--primary-dim); color:var(--primary); }
+        .tag.teal { background:var(--teal-dim); color:var(--teal); }
+        .card-link { color:var(--text-dim); font-size:.8rem; margin-top:4px; display:inline-block; }
+        .card-link:hover { color:var(--primary); }
+        .empty-state { color:var(--text-dim); font-style:italic; padding:30px 0; }
+
+        /* ── ABOUT ── */
+        .about-wrap { display:flex; gap:44px; align-items:flex-start; flex-wrap:wrap; }
+        .about-text { flex:1 1 480px; color:var(--text-muted); }
+        .about-text p { margin-bottom:16px; }
+        .about-photo { flex:0 0 220px; }
+        .about-photo img {
+            width:220px; height:220px; object-fit:cover; border-radius:var(--radius);
+            border:1px solid var(--border); box-shadow:var(--shadow);
+        }
+
+        /* ── PUBLICATIONS ── */
+        .pub-item {
+            padding:20px 0; border-bottom:1px solid var(--border);
+            display:flex; gap:18px; align-items:flex-start;
+        }
+        .pub-item:last-child { border-bottom:none; }
+        .pub-year { font-family:'Space Grotesk'; font-weight:600; color:var(--gold); min-width:52px; }
+        .pub-body h3 { font-size:.98rem; font-weight:600; margin-bottom:4px; }
+        .pub-body .pub-authors { color:var(--text-muted); font-size:.84rem; }
+        .pub-body .pub-venue { color:var(--text-dim); font-size:.82rem; font-style:italic; }
+        .pub-cites { margin-left:auto; font-size:.78rem; color:var(--green); white-space:nowrap; }
+        .pub-live-label { display:inline-flex; align-items:center; gap:7px; font-size:.75rem; color:var(--text-muted);
+            margin-bottom:18px; }
+        .live-dot { width:8px; height:8px; border-radius:50%; background:var(--green);
+            animation:pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 50% { opacity:.35; } }
+
+        /* ── SKILLS ── */
+        .skill-group { margin-bottom:26px; }
+        .skill-group h3 { font-size:.8rem; color:var(--teal); margin-bottom:12px; text-transform:uppercase;
+            letter-spacing:.06em; }
+        .skill-chips { display:flex; gap:10px; flex-wrap:wrap; }
+        .chip { padding:7px 15px; border-radius:var(--radius-sm); background:var(--bg-2);
+            border:1px solid var(--border); font-size:.84rem; transition:var(--transition); }
+        .chip:hover { border-color:var(--primary); color:var(--primary); }
+
+        /* ── CONTACT ── */
+        .contact-links { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+        .contact-link { display:flex; align-items:center; gap:14px; padding:18px 20px;
+            background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-sm);
+            text-decoration:none; color:var(--text); transition:var(--transition); }
+        .contact-link:hover { border-color:var(--primary); transform:translateY(-2px); }
+        .contact-link i { font-size:1.25rem; color:var(--primary); width:24px; text-align:center; }
+        .contact-link small { display:block; color:var(--text-dim); font-size:.72rem; }
+        .contact-link span { font-size:.88rem; }
+
+        footer { text-align:center; padding:36px 6vw; color:var(--text-dim); font-size:.8rem;
+            border-top:1px solid var(--border); }
+        footer img { width:22px; height:22px; vertical-align:middle; opacity:.6; }
+    </style>
+</head>
+<body>
+
+<nav id="navbar">
+    <a class="nav-brand" href="#hero"><img src="./assets/damselfly.png" alt="damselfly">rogeriog<span>.</span></a>
+    <ul class="nav-links" id="navLinks">
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#publications">Publications</a></li>
+        <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+    <div class="hero-text">
+        <div class="hero-tag"><i class="fas fa-atom"></i> Computational Materials Science × ML</div>
+        <h1>A computational materials scientist <em>always programming some stuff</em>.</h1>
+        <p>Hello, I'm Rogério — a soon-to-be PhD in Materials Science. My work uses physics and
+           machine learning to discover insights in energy materials. This site blends my portfolio
+           with a digital garden, and is maintained in collaboration with autonomous agents.</p>
+        <div class="hero-cta">
+            <a class="btn btn-primary" href="#projects"><i class="fas fa-rocket"></i> View Projects</a>
+            <a class="btn btn-ghost" href="https://github.com/rogeriog" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+        </div>
+        <div class="stat-strip">
+            <div class="stat-item"><span class="stat-num" id="st-projects">–</span><span class="stat-label">Projects</span></div>
+            <div class="stat-item"><span class="stat-num" id="st-pubs">–</span><span class="stat-label">Publications</span></div>
+            <div class="stat-item"><span class="stat-num" id="st-citations">–</span><span class="stat-label">Citations</span></div>
+        </div>
+    </div>
+    <div class="hero-photo">
+        <img class="avatar" src="./assets/avatar-memoji.webp" alt="Rogério's avatar">
+    </div>
+</section>
+
+<!-- ═══ PROJECTS ═══ -->
+<section id="projects">
+    <h2 class="section-title">Projects</h2>
+    <p class="section-sub">Rendered from <code>projects.json</code> — agents add entries as work ships.</p>
+    <div class="grid" id="projGrid">
+        <div class="empty-state">Loading projects…</div>
+    </div>
+</section>
+
+<!-- ═══ ABOUT ═══ -->
+<section id="about">
+    <h2 class="section-title">About</h2>
+    <div class="about-wrap">
+        <div class="about-text">
+            <p>I'm enthusiastic about programming, data science, and AI, and I'm dedicated to improving
+               productivity while exploring fresh horizons across my academic work and development projects.</p>
+            <p>My academic focus sits at the intersection of condensed matter physics and machine learning —
+               featurization methods, neural network compression, and data-driven discovery for energy materials.</p>
+            <p>Beyond research, I build tools: automation, agents, and small systems that make everyday work
+               faster. The damselfly is my mascot — light, fast, and always near the water's edge of new ideas.</p>
+        </div>
+        <div class="about-photo">
+            <img src="./assets/profile.jpg" alt="Rogério Gouvêa">
+        </div>
+    </div>
+</section>
+
+<!-- ═══ SKILLS ═══ -->
+<section id="skills">
+    <h2 class="section-title">Skills</h2>
+    <div class="skill-group">
+        <h3>Languages</h3>
+        <div class="skill-chips">
+            <span class="chip">Python</span><span class="chip">JavaScript / TypeScript</span>
+            <span class="chip">C++</span><span class="chip">Fortran</span>
+        </div>
+    </div>
+    <div class="skill-group">
+        <h3>Research &amp; ML</h3>
+        <div class="skill-chips">
+            <span class="chip">Machine Learning</span><span class="chip">Materials Informatics</span>
+            <span class="chip">Data Science</span><span class="chip">Atomistic Modeling</span>
+        </div>
+    </div>
+    <div class="skill-group">
+        <h3>Tools &amp; Platforms</h3>
+        <div class="skill-chips">
+            <span class="chip">Docker</span><span class="chip">Git</span>
+            <span class="chip">Linux</span><span class="chip">Quarto</span><span class="chip">OpenClaw</span>
+        </div>
+    </div>
+    <!-- TODO(agents): refine groups from Rogério's actual stack -->
+</section>
+
+<!-- ═══ PUBLICATIONS ═══ -->
+<section id="publications">
+    <h2 class="section-title">Publications</h2>
+    <div class="pub-live-label"><span class="live-dot" id="pubSyncDot"></span><span id="pubSyncLabel">Syncs from Google Scholar daily</span></div>
+    <div id="pubList">
+        <div class="empty-state">Loading publications…</div>
+    </div>
+</section>
+
+<!-- ═══ CONTACT ═══ -->
+<section id="contact">
+    <h2 class="section-title">Contact</h2>
+    <div class="contact-links">
+        <a class="contact-link" href="https://github.com/rogeriog" target="_blank">
+            <i class="fab fa-github"></i>
+            <div><small>GitHub</small><span>github.com/rogeriog</span></div>
+        </a>
+        <a class="contact-link" href="https://www.linkedin.com/in/rog%C3%A9rio-gouv%C3%AAa-350a8586/" target="_blank">
+            <i class="fab fa-linkedin"></i>
+            <div><small>LinkedIn</small><span>Rogério Gouvêa</span></div>
+        </a>
+        <a class="contact-link" href="https://orcid.org/0000-0001-6837-6264" target="_blank">
+            <i class="fab fa-orcid"></i>
+            <div><small>ORCID</small><span>0000-0001-6837-6264</span></div>
+        </a>
+        <!-- TODO(agents): add Scholar link once Rogério provides SCHOLAR_ID -->
+    </div>
+</section>
+
+<footer>
+    <p>© <span id="yr"></span> Rogério Gouvêa · Built with autonomous agents <img src="./assets/damselfly.png" alt=""> · <a href="https://github.com/rogeriog/rogeriog.github.io" style="color:var(--text-dim)">source</a></p>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+document.getElementById('navToggle').addEventListener('click', () =>
+    document.getElementById('navLinks').classList.toggle('open'));
+
+/* ── PROJECTS — data-driven from projects.json ── */
+fetch('./projects.json?nocache=' + Date.now())
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+        const grid = document.getElementById('projGrid');
+        const projects = data.projects || [];
+        document.getElementById('st-projects').textContent = projects.length;
+        if (!projects.length) { grid.innerHTML = '<div class="empty-state">Projects coming soon.</div>'; return; }
+        grid.innerHTML = projects.map(p => `
+            <div class="card">
+                <h3>${p.name}</h3>
+                <p>${p.description || ''}</p>
+                <div class="card-tags">${(p.tags || []).map(t => `<span class="tag teal">${t}</span>`).join('')}</div>
+                ${p.url ? `<a class="card-link" href="${p.url}" target="_blank"><i class="fas fa-external-link-alt"></i> ${p.url.replace(/^https?:\/\//,'')}</a>` : ''}
+            </div>`).join('');
+    })
+    .catch(() => {
+        document.getElementById('st-projects').textContent = '0';
+        document.getElementById('projGrid').innerHTML = '<div class="empty-state">Projects coming soon.</div>';
+    });
+
+/* ── PUBLICATIONS — Scholar-synced JSON (same contract as update_scholar.py) ── */
+fetch('./publications.json?nocache=' + Date.now())
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+        const pubs = data.publications || [];
+        document.getElementById('st-pubs').textContent = pubs.length;
+        document.getElementById('st-citations').textContent = data.total_citations ?? 0;
+        document.getElementById('pubSyncLabel').textContent =
+            data.updated ? `Synced from Google Scholar · ${data.updated.replace('_CACHED',' (cached)')}` : 'Syncs from Google Scholar daily';
+        if (!pubs.length) { document.getElementById('pubList').innerHTML = '<div class="empty-state">Publications will appear once Scholar sync is configured.</div>'; return; }
+        document.getElementById('pubList').innerHTML = pubs.map(p => `
+            <div class="pub-item">
+                <div class="pub-year">${p.year || ''}</div>
+                <div class="pub-body">
+                    <h3>${p.url ? `<a href="${p.url}" target="_blank" style="color:inherit;text-decoration:none">${p.title}</a>` : p.title}</h3>
+                    <div class="pub-authors">${p.authors || ''}</div>
+                    <div class="pub-venue">${p.journal || ''}</div>
+                </div>
+                ${p.citations ? `<div class="pub-cites">${p.citations} cites</div>` : ''}
+            </div>`).join('');
+    })
+    .catch(() => {
+        document.getElementById('st-pubs').textContent = '0';
+        document.getElementById('st-citations').textContent = '0';
+        document.getElementById('pubList').innerHTML = '<div class="empty-state">Publications will appear once Scholar sync is configured.</div>';
+    });
+</script>
+</body>
+</html>
