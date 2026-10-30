@@ -19,12 +19,6 @@
       "url": ""
     },
     {
-      "name": "MODNet featurizer",
-      "description": "Enhanced the MODNet (Materials Optimal Descriptor Network) package with autoencoder + GNN featurization during my UCLouvain doctoral exchange — significantly boosted benchmark performance and powered new perovskite discovery.",
-      "tags": ["Feature Engineering", "Autoencoders", "Screening"],
-      "url": ""
-    },
-    {
       "name": "OpenClaw agent fleet",
       "description": "Self-hosted OpenClaw gateway on Docker driving a Telegram-interfaced agent fleet that ships code, manages projects, and keeps this site updated.",
       "tags": ["OpenClaw", "Docker", "Agents", "Telegram"],

@@ -12,21 +12,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
-            --bg-0:#07090f; --bg-1:#0b0f1a; --bg-2:#111827;
-            --primary:#60a5fa; --primary-dim:rgba(96,165,250,.14);
-            --secondary:#a78bfa; --secondary-dim:rgba(167,139,250,.14);
-            --teal:#2dd4bf; --teal-dim:rgba(45,212,191,.14);
-            --gold:#f59e0b; --green:#34d399;
-            --text:#e2e8f0; --text-muted:#94a3b8; --text-dim:#4b5563;
-            --border:rgba(148,163,184,.09);
-            --card-bg:rgba(17,24,39,.75);
+            /* Oxblood & Midnight — dark red base, deep blue counterpoint, neon accents */
+            --bg-0:#08060a; --bg-1:#100a10; --bg-2:#181020;
+            --primary:#ff3d5a; --primary-dim:rgba(255,61,90,.14);
+            --secondary:#5a6cff; --secondary-dim:rgba(90,108,255,.14);
+            --teal:#45d6ff; --teal-dim:rgba(69,214,255,.14);
+            --gold:#e8a05a; --green:#63e6a4;
+            --text:#eee9ee; --text-muted:#a79ba6; --text-dim:#6e5f6e;
+            --border:rgba(214,160,180,.10);
+            --card-bg:rgba(22,14,22,.72);
             --radius:18px; --radius-sm:11px;
             --shadow:0 4px 32px rgba(0,0,0,.55);
             --transition:all .3s cubic-bezier(.4,0,.2,1);
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         html { scroll-behavior:smooth; }
-        body { font-family:'Inter',sans-serif; background:var(--bg-0); color:var(--text); line-height:1.6; overflow-x:hidden; }
+        body { font-family:'Inter',sans-serif; background:var(--bg-0); color:var(--text); line-height:1.6; overflow-x:hidden;
+            background-image:
+                radial-gradient(900px 600px at 8% -5%, rgba(120,18,40,.28), transparent 65%),
+                radial-gradient(760px 620px at 95% 15%, rgba(30,45,120,.24), transparent 70%),
+                radial-gradient(1000px 700px at 50% 105%, rgba(88,14,58,.16), transparent 70%);
+            background-attachment:fixed;
+        }
         h1,h2,h3 { font-family:'Space Grotesk',sans-serif; }
 
         /* ── AMBIENT ── */
@@ -42,7 +49,7 @@
         #navbar {
             position:fixed; top:0; left:0; right:0; z-index:100;
             display:flex; justify-content:space-between; align-items:center;
-            padding:14px 6vw; background:rgba(7,9,15,.82); backdrop-filter:blur(14px);
+            padding:14px 6vw; background:rgba(8,6,10,.82); backdrop-filter:blur(14px);
             border-bottom:1px solid var(--border);
         }
         .nav-brand { font-family:'Space Grotesk'; font-weight:700; font-size:1.05rem; color:var(--text); text-decoration:none; }
@@ -77,13 +84,13 @@
             order:2; }
         .hero-photo-frame {
             width:280px; height:280px; border-radius:50%; overflow:hidden;
-            border:2px solid rgba(96,165,250,.35); box-shadow:var(--shadow);
+            border:2px solid rgba(255,61,90,.38); box-shadow:var(--shadow);
             position:relative; background:var(--bg-2);
         }
         .hero-photo-frame img { width:100%; height:100%; object-fit:cover; object-position:center 18%; }
         .hero-badge {
             font-size:.74rem; font-weight:600; letter-spacing:.05em; color:var(--teal);
-            background:var(--teal-dim); border:1px solid rgba(45,212,191,.24);
+            background:var(--teal-dim); border:1px solid rgba(69,214,255,.24);
             padding:6px 16px; border-radius:20px; text-align:center;
         }
         .hero-text { order:1; }
@@ -91,10 +98,10 @@
         .identity-banner { display:flex; align-items:center; gap:0; font-family:'Space Grotesk';
             font-size:.72rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; margin-bottom:18px; }
         .identity-pill { padding:5px 14px; border-radius:20px; display:flex; align-items:center; gap:6px; }
-        .identity-pill.mat { background:rgba(45,212,191,.1); border:1px solid rgba(45,212,191,.24); color:var(--teal); }
-        .identity-pill.ml { background:rgba(96,165,250,.1); border:1px solid rgba(96,165,250,.22); color:var(--primary); }
+        .identity-pill.mat { background:rgba(69,214,255,.1); border:1px solid rgba(69,214,255,.24); color:var(--teal); }
+        .identity-pill.ml { background:rgba(255,61,90,.1); border:1px solid rgba(255,61,90,.22); color:var(--primary); }
         .identity-divider { width:22px; height:1px; margin:0 5px; flex-shrink:0;
-            background:linear-gradient(90deg,rgba(45,212,191,.5),rgba(96,165,250,.5)); }
+            background:linear-gradient(90deg,rgba(69,214,255,.55),rgba(255,61,90,.55)); }
         .mission-tag { display:inline-flex; align-items:center; gap:6px; color:var(--text-dim);
             font-size:.78rem; font-style:italic; margin-bottom:16px; }
         .hero-name { font-size:clamp(2.4rem,5vw,3.6rem); font-weight:700; line-height:1.08; margin-bottom:14px; }
@@ -115,7 +122,7 @@
         .hero-actions { display:flex; gap:14px; flex-wrap:wrap; }
         .btn { padding:11px 24px; border-radius:var(--radius-sm); font-size:.88rem; font-weight:600;
             text-decoration:none; transition:var(--transition); display:inline-flex; align-items:center; gap:8px; }
-        .btn-primary { background:var(--primary); color:#0b0f1a; }
+        .btn-primary { background:var(--primary); color:#14060a; }
         .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px var(--primary-dim); }
         .btn-ghost { border:1px solid var(--border); color:var(--text); }
         .btn-ghost:hover { border-color:var(--primary); color:var(--primary); }
@@ -136,7 +143,7 @@
         .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:22px; }
         .card { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius);
             padding:26px; transition:var(--transition); backdrop-filter:blur(8px); }
-        .card:hover { transform:translateY(-4px); border-color:rgba(96,165,250,.3); box-shadow:var(--shadow); }
+        .card:hover { transform:translateY(-4px); border-color:rgba(255,61,90,.32); box-shadow:var(--shadow); }
         .card h3 { font-size:1.05rem; margin-bottom:8px; }
         .card p { color:var(--text-muted); font-size:.88rem; margin-bottom:14px; }
         .card-tags { display:flex; gap:8px; flex-wrap:wrap; }
@@ -232,8 +239,8 @@
 
 <!-- ═══════ HERO ═══════ -->
 <section id="hero">
-    <div class="orb" style="width:420px;height:420px;background:radial-gradient(circle,rgba(45,212,191,.13),transparent 70%);top:-80px;left:-120px"></div>
-    <div class="orb" style="width:360px;height:360px;background:radial-gradient(circle,rgba(96,165,250,.12),transparent 70%);bottom:-60px;right:-80px;animation-delay:-7s;animation-duration:18s"></div>
+    <div class="orb" style="width:420px;height:420px;background:radial-gradient(circle,rgba(255,61,90,.14),transparent 70%);top:-80px;left:-120px"></div>
+    <div class="orb" style="width:360px;height:360px;background:radial-gradient(circle,rgba(90,108,255,.16),transparent 70%);bottom:-60px;right:-80px;animation-delay:-7s;animation-duration:18s"></div>
     <div class="hero-content">
         <div class="hero-text">
             <div class="identity-banner">
@@ -250,11 +257,11 @@
                 <i class="fab fa-orcid"></i> <a href="https://orcid.org/0000-0001-6837-6264" target="_blank" style="color:inherit">0000-0001-6837-6264</a>
             </p>
             <div class="hero-chips">
-                <span class="chip" style="border-color:rgba(45,212,191,.3);color:var(--teal)">Halide Perovskites</span>
-                <span class="chip" style="border-color:rgba(45,212,191,.3);color:var(--teal)">MatterVial · VibroML · MEIDNet</span>
-                <span class="chip" style="border-color:rgba(96,165,250,.3);color:var(--primary)">GNNs · MLIPs</span>
-                <span class="chip" style="border-color:rgba(96,165,250,.3);color:var(--primary)">High-Throughput Screening</span>
-                <span class="chip" style="border-color:rgba(52,211,153,.3);color:var(--green)">Agentic Frameworks</span>
+                <span class="chip" style="border-color:rgba(69,214,255,.3);color:var(--teal)">Halide Perovskites</span>
+                <span class="chip" style="border-color:rgba(69,214,255,.3);color:var(--teal)">MatterVial · VibroML · MEIDNet</span>
+                <span class="chip" style="border-color:rgba(255,61,90,.32);color:var(--primary)">GNNs · MLIPs</span>
+                <span class="chip" style="border-color:rgba(255,61,90,.32);color:var(--primary)">High-Throughput Screening</span>
+                <span class="chip" style="border-color:rgba(99,230,164,.3);color:var(--green)">Agentic Frameworks</span>
             </div>
             <div class="hero-stats">
                 <div class="stat-item"><span class="stat-num" data-target="0" id="sc-cit">0</span><span class="stat-label">Citations</span></div>
