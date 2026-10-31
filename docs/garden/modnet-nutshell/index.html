@@ -8,55 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#08060a; --panel:#160e16; --border:rgba(214,160,180,.14);
-    --text:#eee9ee; --muted:#a79ba6; --dim:#6e5f6e;
-    --red:#ff3d5a; --blue:#5a6cff; --ice:#45d6ff; --green:#63e6a4;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:
-      radial-gradient(900px 600px at 8% -5%, rgba(120,18,40,.28), transparent 65%),
-      radial-gradient(760px 620px at 95% 15%, rgba(30,45,120,.24), transparent 70%),
-      var(--bg);
-    color:var(--text);font-family:'Inter',sans-serif;line-height:1.65}
-  a{color:var(--red)}
-  header{max-width:980px;margin:0 auto;padding:28px 24px 0;display:flex;justify-content:space-between;align-items:center}
-  .brand{font-family:'Space Grotesk';font-weight:700;text-decoration:none;color:var(--text)}
-  .brand span{color:var(--red)}
-  .back{font-size:.82rem;color:var(--muted);text-decoration:none}
-  main{max-width:980px;margin:0 auto;padding:40px 24px 80px}
-  .wip{display:inline-flex;align-items:center;gap:8px;font-size:.72rem;letter-spacing:.08em;
-    text-transform:uppercase;color:var(--ice);border:1px solid rgba(69,214,255,.3);
-    background:rgba(69,214,255,.08);padding:5px 12px;border-radius:20px;margin-bottom:18px}
-  h1{font-family:'Space Grotesk';font-size:clamp(2rem,5vw,3rem);line-height:1.1;margin:0 0 14px}
-  h1 em{font-style:normal;color:var(--red)}
-  .lede{color:var(--muted);max-width:680px;font-size:1.02rem}
-  h2{font-family:'Space Grotesk';font-size:1.25rem;margin:48px 0 8px}
-  h2::after{content:'';display:block;width:44px;height:3px;margin-top:8px;border-radius:2px;
-    background:linear-gradient(90deg,var(--red),var(--blue))}
-  .sub{color:var(--muted);font-size:.9rem;margin:10px 0 22px;max-width:720px}
-  .card{background:rgba(22,14,22,.72);border:1px solid var(--border);border-radius:16px;padding:20px}
-  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-  .controls button{font:inherit;font-size:.8rem;padding:7px 13px;border-radius:10px;cursor:pointer;
-    color:var(--muted);background:transparent;border:1px solid var(--border);transition:.2s}
-  .controls button:hover{color:var(--text);border-color:var(--red)}
-  .controls button[aria-pressed="true"]{color:#14060a;background:var(--red);border-color:var(--red);font-weight:600}
-  .chart-wrap{position:relative}
-  svg{width:100%;height:auto;display:block}
-  .axis text{fill:var(--dim);font-size:11px}
-  .axis line,.axis path{stroke:rgba(214,160,180,.16)}
-  .grid line{stroke:rgba(214,160,180,.08)}
-  .series{fill:none;stroke-width:2.5;stroke-linecap:round}
-  .dot{stroke:var(--panel);stroke-width:1.5}
-  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:12px}
-  .legend span{display:inline-flex;align-items:center;gap:7px}
-  .swatch{width:18px;height:3px;border-radius:2px;display:inline-block}
-  .note{font-size:.76rem;color:var(--dim);margin-top:12px}
-  .note strong{color:var(--muted)}
-  footer{max-width:980px;margin:0 auto;padding:24px;border-top:1px solid var(--border);
-    color:var(--dim);font-size:.78rem}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
@@ -65,179 +17,259 @@
 </header>
 
 <main>
-  <div class="wip">Draft preview · section 0 of 7</div>
+  <div class="wip">Draft preview · 7 sections</div>
   <h1>MODNet in a <em>nutshell</em></h1>
   <p class="lede">
     An interactive explainer for MODNet — the Materials Optimal Descriptor Network.
-    This preview contains the opening argument: materials ML is a small-data game,
-    and that changes which models win.
+    The pipeline in execution order: descriptors, mutual information, feature selection,
+    a small network, joint learning, and the genetic algorithm that tunes it.
   </p>
 
-  <h2>The small-data problem</h2>
-  <p class="sub">
-    Most materials datasets have hundreds to thousands of samples, not millions.
-    The models that win at 60 000 samples are not the models that win at 500.
-    Pick a property and compare mean absolute error as the training set grows.
-  </p>
+  <ul class="toc">
+    <li><a href="#small-data">0 · small data</a></li>
+    <li><a href="#featurization">1 · featurization</a></li>
+    <li><a href="#nmi">2 · NMI</a></li>
+    <li><a href="#frr">3 · selection</a></li>
+    <li><a href="#model">4 · model</a></li>
+    <li><a href="#joint">5 · joint learning</a></li>
+    <li><a href="#ga">6 · genetic algorithm</a></li>
+    <li><a href="#wrap">7 · wrap-up</a></li>
+  </ul>
 
-  <div class="card">
-    <div class="controls" id="controls"></div>
-    <div class="chart-wrap"><svg id="chart" viewBox="0 0 900 460" role="img" aria-label="Test error versus training-set size"></svg></div>
-    <div class="legend" id="legend"></div>
-    <p class="note">
-      <strong>Data:</strong> measured points are verbatim from De Breuck, Hautier,
-      Rignanese, <em>npj Comput. Mater.</em> 7, 83 (2021), Table I. The lines
-      between and beyond those points are a log-log interpolation for the slider,
-      not measured results.
+  <section id="small-data">
+    <h2>0 · Materials ML is a small-data game</h2>
+    <p class="sub">
+      Most materials datasets have hundreds to thousands of samples, not millions.
+      The models that win at 60 000 samples are not the models that win at 500.
+      Pick a property and compare mean absolute error as the training set grows.
     </p>
-  </div>
+    <div class="card">
+      <div class="controls" id="propControls"></div>
+      <svg id="crossChart" viewBox="0 0 900 420" role="img" aria-label="Test error versus training-set size"></svg>
+      <div class="legend" id="crossLegend"></div>
+      <p class="note">
+        <strong>Data:</strong> measured points are verbatim from De Breuck, Hautier,
+        Rignanese, <em>npj Comput. Mater.</em> 7, 83 (2021), Table I. Lines between
+        and beyond those points are a log-log interpolation, not measured results.
+        The paper reports only one training size for the refractive-index dataset,
+        so it is not shown as a curve.
+      </p>
+    </div>
+  </section>
 
-  <h2>What comes next</h2>
-  <p class="sub">
-    The full piece walks the pipeline in execution order: featurization → normalized
-    mutual information → relevance–redundancy selection → the network → joint
-    learning → the genetic algorithm and validation. Each stage gets a widget and a
-    collapsible “in the codebase” panel pointing at the pinned MODNet source.
-  </p>
+  <section id="featurization">
+    <h2>1 · Featurization: a material becomes a vector</h2>
+    <p class="sub">
+      MODNet does not learn from raw structures. It computes hundreds of standard
+      descriptors — elemental statistics, oxidation states, bonding, density, symmetry —
+      then lets feature selection decide which ones matter. Composition-only mode works
+      without a crystal structure; structure mode adds the geometric features.
+    </p>
+    <div class="card">
+      <div class="controls" id="compoundControls"></div>
+      <div class="kv">
+        <div><b id="featComp">–</b><small>composition features</small></div>
+        <div><b id="featStruct">–</b><small>structure features</small></div>
+        <div><b id="featTotal">–</b><small>total</small></div>
+        <div><b id="featProto">–</b><small>prototype</small></div>
+      </div>
+      <label class="controls" style="align-items:center">
+        <button class="pill" id="structToggle" aria-pressed="false">include structure features</button>
+        <span class="note" id="structNote" style="margin:0"></span>
+      </label>
+      <div class="bars" id="groupBars"></div>
+      <p class="note">
+        <strong>Real counts</strong> from the pinned <code>Matminer2023</code> presets on these
+        prototypes. Structure mode is only offered for NaCl, GaAs and CsPbI3; the other
+        compounds are shown composition-only rather than inventing a structure.
+      </p>
+    </div>
+    <details class="code-panel">
+      <summary>in the codebase · featurizers</summary>
+      <pre><span class="file">modnet/featurizers/featurizers.py:78</span>  MODFeaturizer.featurize()
+<span class="file">modnet/featurizers/featurizers.py:185</span> featurize_composition()
+<span class="file">modnet/featurizers/featurizers.py:269</span> featurize_structure()
+<span class="file">modnet/featurizers/presets/__init__.py:13</span> FEATURIZER_PRESETS</pre>
+    </details>
+  </section>
+
+  <section id="nmi">
+    <h2>2 · Normalized mutual information</h2>
+    <p class="sub">
+      Feature selection needs a measure of “how much does this feature tell me about
+      the target?”. MODNet uses normalized mutual information: it catches nonlinear
+      dependence, unlike Pearson correlation, and it is bounded between 0 and 1.
+      Drag the dependence and watch NMI move.
+    </p>
+    <div class="card grid2">
+      <div>
+        <svg id="nmiScatter" viewBox="0 0 420 320" role="img" aria-label="Synthetic scatter plot"></svg>
+      </div>
+      <div>
+        <div class="kv"><div><b id="nmiValue">–</b><small>NMI(X, Y)</small></div></div>
+        <label class="sub" style="display:block">dependence <input id="nmiSlider" type="range" min="0" max="100" value="65" style="width:100%"></label>
+        <div class="controls">
+          <button class="pill" data-nmi="linear">linear</button>
+          <button class="pill" data-nmi="quadratic">quadratic</button>
+          <button class="pill" data-nmi="independent">independent</button>
+        </div>
+        <p class="note">NMI is estimated here with equal-width binning on 180 synthetic
+          points. The real implementation uses scikit-learn's k-NN estimator.</p>
+      </div>
+    </div>
+    <details class="code-panel">
+      <summary>in the codebase · NMI</summary>
+      <pre><span class="file">modnet/preprocessing.py:45</span>  compute_mi()
+<span class="file">modnet/preprocessing.py:68</span>  nmi_target()
+<span class="file">modnet/preprocessing.py:158</span> NMI = MI / ((H(X) + H(Y)) / 2)
+<span class="file">modnet/preprocessing.py:175</span> get_cross_nmi()</pre>
+    </details>
+  </section>
+
+  <section id="frr">
+    <h2>3 · Feature selection: relevance minus redundancy</h2>
+    <p class="sub">
+      The heart of MODNet. Greedy forward selection: pick the feature with the highest
+      NMI to the target, then repeatedly pick the feature with the best trade-off between
+      relevance and redundancy with what is already selected. The score is Eq. 2 of the paper.
+    </p>
+    <div class="card">
+      <div class="grid2">
+        <div><svg id="frrScatter" viewBox="0 0 440 330" role="img" aria-label="Relevance versus redundancy"></svg></div>
+        <div>
+          <div class="kv">
+            <div><b id="frrStep">0</b><small>selected</small></div>
+            <div><b id="frrP">–</b><small>p</small></div>
+            <div><b id="frrC">–</b><small>c</small></div>
+            <div><b id="frrScore">–</b><small>last RR</small></div>
+          </div>
+          <div class="steps">
+            <button class="pill primary" id="frrNext">next feature</button>
+            <button class="pill" id="frrReset">reset</button>
+          </div>
+          <ol id="frrList" style="font-size:.76rem;color:var(--muted);padding-left:18px;line-height:1.8"></ol>
+        </div>
+      </div>
+      <p class="note"><strong>Synthetic candidates</strong>, 40 features in four latent clusters.
+        The arithmetic is the real FRR rule with dynamic p and c; the feature names are labels, not
+        MODNet descriptors.</p>
+    </div>
+    <details class="code-panel">
+      <summary>in the codebase · relevance–redundancy</summary>
+      <pre><span class="file">modnet/preprocessing.py:297</span> p = max(0.1, 4.5 - n**0.4)
+<span class="file">modnet/preprocessing.py:311</span> c = 1e-6 * n**3
+<span class="file">modnet/preprocessing.py:325</span> get_features_relevance_redundancy()
+<span class="file">modnet/preprocessing.py:476</span> get_features_dyn()
+<span class="file">modnet/preprocessing.py:516</span> merge_ranked()</pre>
+    </details>
+  </section>
+
+  <section id="model">
+    <h2>4 · The network is deliberately small</h2>
+    <p class="sub">
+      Four blocks, not a deep monster. A shared encoder turns the selected descriptors
+      into an all-round vector; one intermediate block per property group; then one
+      output block per property. The descriptor work does the heavy lifting.
+    </p>
+    <div class="card">
+      <svg id="archSvg" viewBox="0 0 900 360" role="img" aria-label="MODNet architecture"></svg>
+      <p class="note">Default architecture: <code>num_neurons=([64],[32],[16],[16])</code>,
+        <code>n_feat=64</code>, ReLU. Batch normalization is added when there is more than
+        one target.</p>
+    </div>
+    <details class="code-panel">
+      <summary>in the codebase · model</summary>
+      <pre><span class="file">modnet/models/vanilla.py:31</span>  MODNetModel
+<span class="file">modnet/models/vanilla.py:122</span> build_model()
+<span class="file">modnet/models/vanilla.py:143</span> shared encoder block
+<span class="file">modnet/models/vanilla.py:154</span> per-group intermediate block
+<span class="file">modnet/models/vanilla.py:184</span> classification vs regression head</pre>
+    </details>
+  </section>
+
+  <section id="joint">
+    <h2>5 · Joint learning: related targets regularize each other</h2>
+    <p class="sub">
+      Train one network on several related properties at once. The shared trunk sees
+      more samples than any single target would provide, which acts like a virtual
+      larger dataset. In the paper this gave a ~8% MAE improvement on vibrational
+      entropy, and it is what lets one model predict a whole temperature curve.
+    </p>
+    <div class="card">
+      <svg id="jointSvg" viewBox="0 0 900 300" role="img" aria-label="Single-task versus joint architecture"></svg>
+      <div class="callout">
+        <strong>Paper result, not a universal law:</strong> joint MODNet reduced test MAE
+        by ~8% versus the best single-target MODNet on S(305 K); the gain was larger at
+        smaller training sizes. The vibrational dataset has 1 245 materials and a
+        145-sample test set.
+      </div>
+    </div>
+    <details class="code-panel">
+      <summary>in the codebase · joint loss</summary>
+      <pre><span class="file">modnet/models/vanilla.py:266</span> fit()
+<span class="file">modnet/models/vanilla.py:357</span> one y array per target group
+<span class="file">modnet/models/vanilla.py:462</span> compile(loss_weights=self.weights)</pre>
+    </details>
+  </section>
+
+  <section id="ga">
+    <h2>6 · The genetic algorithm</h2>
+    <p class="sub">
+      The least-documented part. Instead of one grid search, MODNet evolves a population
+      of hyperparameter sets: each individual has a genome (learning rate, batch size,
+      feature count, layer width, scaling, imputation), is scored by nested validation,
+      and the best individuals are selected, crossed over, and mutated. Elitism keeps
+      the best; early stopping ends a stagnant run; refit turns the winner into an ensemble.
+    </p>
+    <div class="card">
+      <div class="grid2">
+        <div><svg id="gaScatter" viewBox="0 0 440 330" role="img" aria-label="Toy GA population on a fitness landscape"></svg></div>
+        <div>
+          <div class="kv">
+            <div><b id="gaGen">0</b><small>generation</small></div>
+            <div><b id="gaBest">–</b><small>best fitness</small></div>
+            <div><b id="gaPop">24</b><small>population</small></div>
+          </div>
+          <div class="steps">
+            <button class="pill primary" id="gaNext">next generation</button>
+            <button class="pill" id="gaReset">reset</button>
+          </div>
+          <p class="note">Toy 2-D landscape: brighter is better. The real genome is
+            multi-dimensional; this animation shows selection, crossover and mutation,
+            not MODNet's validation scores.</p>
+        </div>
+      </div>
+    </div>
+    <details class="code-panel">
+      <summary>in the codebase · GA</summary>
+      <pre><span class="file">modnet/hyper_opt/fit_genetic.py:15</span>  Individual (genome)
+<span class="file">modnet/hyper_opt/fit_genetic.py:85</span>  crossover()
+<span class="file">modnet/hyper_opt/fit_genetic.py:112</span> mutation()
+<span class="file">modnet/hyper_opt/fit_genetic.py:510</span> FitGenetic.run()
+<span class="file">modnet/hyper_opt/fit_genetic.py:565</span> weighted parent selection</pre>
+    </details>
+  </section>
+
+  <section id="wrap">
+    <h2>7 · The pipeline end to end</h2>
+    <p class="sub">
+      Composition or structure → descriptors → NMI → relevance–redundancy ranking →
+      a small feedforward network → joint heads → GA over hyperparameters and nested
+      validation. The bet is not a bigger model; it is better use of limited data.
+    </p>
+    <div class="card">
+      <p style="margin-top:0"><strong>Honest limits.</strong> MODNet is descriptor-based,
+        not a graph model. On very large datasets, graph networks win. Its accuracy depends
+        on the featurizer preset and on the version of matminer behind it. And the current
+        API still makes you build a <code>MODData</code> object — which is exactly what
+        <code>modnet.pt</code>, the PyTorch rewrite, is meant to remove.</p>
+      <p class="note" style="margin-bottom:0">Preview ends here. Next: the rewrite’s design
+        notes and a side-by-side old API vs new API block.</p>
+    </div>
+  </section>
 </main>
 
 <footer>Preview build · Rogério Gouvêa · not indexed</footer>
-
-<script>
-const DATA = {
-  "formation_energy": {
-    "label": "Formation energy",
-    "unit": "eV/atom",
-    "series": {
-      "MODNet": {color:"#ff3d5a", points:[[504,0.210],[60000,0.044]]},
-      "MEGNet": {color:"#5a6cff", points:[[504,0.342],[60000,0.028]]},
-      "SISSO": {color:"#63e6a4", points:[[504,0.312],[60000,0.299]]}
-    }
-  },
-  "band_gap": {
-    "label": "Band gap",
-    "unit": "eV",
-    "series": {
-      "MODNet": {color:"#ff3d5a", points:[[504,0.71],[60000,0.34]]},
-      "MEGNet": {color:"#5a6cff", points:[[504,0.94],[60000,0.30]]},
-      "SISSO": {color:"#63e6a4", points:[[504,0.80],[60000,0.75]]}
-    }
-  },
-  "refractive_index": {
-    "label": "Refractive index",
-    "unit": "",
-    "series": {
-      "MODNet": {color:"#ff3d5a", points:[[3240,0.05]]},
-      "MEGNet": {color:"#5a6cff", points:[[3240,0.08]]},
-      "SISSO": {color:"#63e6a4", points:[[3240,0.12]]}
-    }
-  }
-};
-
-const NS="http://www.w3.org/2000/svg";
-const svg=document.getElementById("chart");
-const W=900,H=460,P={t:24,r:24,b:52,l:64};
-const x0=P.l,x1=W-P.r,y0=H-P.b,y1=P.t;
-const NMIN=100,NMAX=100000;
-const lx=n=>Math.log10(n);
-const sx=n=>x0+(lx(n)-lx(NMIN))/(lx(NMAX)-lx(NMIN))*(x1-x0);
-
-let current="formation_energy";
-
-function curve(pts){
-  const [a,b]=pts;
-  if(pts.length===1) return [[NMIN,a[1]],[NMAX,a[1]]];
-  const bb=Math.log(a[1]/b[1])/Math.log(b[0]/a[0]);
-  const aa=a[1]*Math.pow(a[0],bb);
-  const out=[];
-  for(let i=0;i<=80;i++){
-    const n=Math.pow(10,lx(NMIN)+(lx(NMAX)-lx(NMIN))*i/80);
-    out.push([n,aa*Math.pow(n,-bb)]);
-  }
-  return out;
-}
-
-function draw(){
-  const d=DATA[current];
-  const all=d.series;
-  const vals=Object.values(all).flatMap(s=>s.points.map(p=>p[1]));
-  const ymin=Math.max(0.01,Math.min(...vals)*0.6);
-  const ymax=Math.max(...vals)*1.25;
-  const ly=v=>Math.log10(v);
-  const sy=v=>y1-(ly(v)-ly(ymin))/(ly(ymax)-ly(ymin))*(y1-y0);
-
-  svg.innerHTML="";
-  const g=document.createElementNS(NS,"g"); g.setAttribute("class","grid");
-  const ticks=[100,300,1000,3000,10000,30000,100000];
-  ticks.forEach(n=>{
-    const l=document.createElementNS(NS,"line");
-    l.setAttribute("x1",sx(n)); l.setAttribute("x2",sx(n));
-    l.setAttribute("y1",y0); l.setAttribute("y2",y1); g.appendChild(l);
-  });
-  svg.appendChild(g);
-
-  const ax=document.createElementNS(NS,"g"); ax.setAttribute("class","axis");
-  ticks.forEach(n=>{
-    const t=document.createElementNS(NS,"text");
-    t.setAttribute("x",sx(n)); t.setAttribute("y",H-26);
-    t.setAttribute("text-anchor","middle");
-    t.textContent=n>=1000?(n/1000)+"k":n; ax.appendChild(t);
-  });
-  const yt=5;
-  for(let i=0;i<=yt;i++){
-    const v=Math.pow(10,ly(ymin)+(ly(ymax)-ly(ymin))*i/yt);
-    const t=document.createElementNS(NS,"text");
-    t.setAttribute("x",x0-10); t.setAttribute("y",sy(v)+4);
-    t.setAttribute("text-anchor","end");
-    t.textContent=v>=1?v.toFixed(1):v.toFixed(3);
-    ax.appendChild(t);
-    const l=document.createElementNS(NS,"line");
-    l.setAttribute("x1",x0); l.setAttribute("x2",x1);
-    l.setAttribute("y1",sy(v)); l.setAttribute("y2",sy(v));
-    ax.appendChild(l);
-  }
-  const xl=document.createElementNS(NS,"text");
-  xl.setAttribute("x",(x0+x1)/2); xl.setAttribute("y",H-6);
-  xl.setAttribute("text-anchor","middle"); xl.textContent="training samples";
-  ax.appendChild(xl);
-  const yl=document.createElementNS(NS,"text");
-  yl.setAttribute("transform",`translate(16,${(y0+y1)/2}) rotate(-90)`);
-  yl.setAttribute("text-anchor","middle"); yl.textContent=`MAE (${d.unit||"dimensionless"})`;
-  ax.appendChild(yl);
-  svg.appendChild(ax);
-
-  for(const [name,s] of Object.entries(all)){
-    const path=document.createElementNS(NS,"path");
-    const pts=curve(s.points);
-    path.setAttribute("class","series");
-    path.setAttribute("stroke",s.color);
-    path.setAttribute("d",pts.map((p,i)=>(i?"L":"M")+sx(p[0])+" "+sy(p[1])).join(" "));
-    svg.appendChild(path);
-    for(const [n,v] of s.points){
-      const c=document.createElementNS(NS,"circle");
-      c.setAttribute("class","dot"); c.setAttribute("cx",sx(n)); c.setAttribute("cy",sy(v));
-      c.setAttribute("r",4.5); c.setAttribute("fill",s.color); svg.appendChild(c);
-    }
-  }
-
-  const lg=document.getElementById("legend"); lg.innerHTML="";
-  for(const [name,s] of Object.entries(all)){
-    const el=document.createElement("span");
-    el.innerHTML=`<i class="swatch" style="background:${s.color}"></i>${name}`;
-    lg.appendChild(el);
-  }
-}
-
-const controls=document.getElementById("controls");
-for(const [key,d] of Object.entries(DATA)){
-  const b=document.createElement("button");
-  b.textContent=d.label;
-  b.setAttribute("aria-pressed",key===current);
-  b.onclick=()=>{current=key;draw();
-    [...controls.children].forEach(c=>c.setAttribute("aria-pressed",c===b));};
-  controls.appendChild(b);
-}
-draw();
-</script>
+<script src="app.js"></script>
 </body>
 </html>

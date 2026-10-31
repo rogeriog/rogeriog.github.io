@@ -1,0 +1,1050 @@
+{
+  "source": {
+    "code": "matgenix/modnet @ 128197701adfe6407551a5af9441fc820908449d",
+    "preset_composition": "CompositionOnlyMatminer2023",
+    "preset_structure": "Matminer2023",
+    "matminer": "0.10.1",
+    "generated_by": "research/scripts/make_featurizer_data.py"
+  },
+  "note": "Counts are real outputs of the pinned presets on these prototypes. Structure-mode counts exist only for NaCl, GaAs and CsPbI3; the other compounds are shown composition-only rather than inventing structures.",
+  "compounds": [
+    {
+      "name": "NaCl",
+      "formula": "NaCl",
+      "prototype": "rock salt",
+      "composition_features": 285,
+      "structure_features": 854,
+      "structure_available": true,
+      "groups": {
+        "AtomicOrbitals": {
+          "count": 7,
+          "sample": [
+            {
+              "name": "AtomicOrbitals|HOMO_character",
+              "value": 2.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_element",
+              "value": 17.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_energy",
+              "value": -0.32038
+            }
+          ]
+        },
+        "AtomicPackingEfficiency": {
+          "count": 5,
+          "sample": [
+            {
+              "name": "AtomicPackingEfficiency|mean simul. packing efficiency",
+              "value": 0.02498
+            },
+            {
+              "name": "AtomicPackingEfficiency|mean abs simul. packing efficiency",
+              "value": 0.02498
+            },
+            {
+              "name": "AtomicPackingEfficiency|dist from 1 clusters |APE| < 0.010",
+              "value": 0.05439
+            }
+          ]
+        },
+        "BandCenter": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "BandCenter|band center",
+              "value": 4.85565
+            }
+          ]
+        },
+        "ElementFraction": {
+          "count": 118,
+          "sample": [
+            {
+              "name": "ElementFraction|H",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|He",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|Li",
+              "value": 0.0
+            }
+          ]
+        },
+        "ElementProperty": {
+          "count": 132,
+          "sample": [
+            {
+              "name": "ElementProperty|MagpieData minimum Number",
+              "value": 11.0
+            },
+            {
+              "name": "ElementProperty|MagpieData maximum Number",
+              "value": 17.0
+            },
+            {
+              "name": "ElementProperty|MagpieData range Number",
+              "value": 6.0
+            }
+          ]
+        },
+        "IonProperty": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "IonProperty|max ionic char",
+              "value": 0.71155
+            },
+            {
+              "name": "IonProperty|avg ionic char",
+              "value": 0.17789
+            }
+          ]
+        },
+        "Miedema": {
+          "count": 3,
+          "sample": [
+            {
+              "name": "Miedema|Miedema_deltaH_inter",
+              "value": 0.59542
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_amor",
+              "value": 0.56246
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_ss_min",
+              "value": 0.43085
+            }
+          ]
+        },
+        "Stoichiometry": {
+          "count": 6,
+          "sample": [
+            {
+              "name": "Stoichiometry|0-norm",
+              "value": 2.0
+            },
+            {
+              "name": "Stoichiometry|2-norm",
+              "value": 0.70711
+            },
+            {
+              "name": "Stoichiometry|3-norm",
+              "value": 0.62996
+            }
+          ]
+        },
+        "TMetalFraction": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "TMetalFraction|transition metal fraction",
+              "value": 0.0
+            }
+          ]
+        },
+        "ValenceOrbital": {
+          "count": 8,
+          "sample": [
+            {
+              "name": "ValenceOrbital|avg s valence electrons",
+              "value": 1.5
+            },
+            {
+              "name": "ValenceOrbital|avg p valence electrons",
+              "value": 2.5
+            },
+            {
+              "name": "ValenceOrbital|avg d valence electrons",
+              "value": 0.0
+            }
+          ]
+        },
+        "YangSolidSolution": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "YangSolidSolution|Yang omega",
+              "value": 0.11005
+            },
+            {
+              "name": "YangSolidSolution|Yang delta",
+              "value": 0.07838
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Fe2O3",
+      "formula": "Fe2O3",
+      "prototype": "hematite",
+      "composition_features": 285,
+      "structure_features": null,
+      "structure_available": false,
+      "groups": {
+        "AtomicOrbitals": {
+          "count": 7,
+          "sample": [
+            {
+              "name": "AtomicOrbitals|HOMO_character",
+              "value": 3.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_element",
+              "value": 26.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_energy",
+              "value": -0.29505
+            }
+          ]
+        },
+        "AtomicPackingEfficiency": {
+          "count": 5,
+          "sample": [
+            {
+              "name": "AtomicPackingEfficiency|mean simul. packing efficiency",
+              "value": 0.00639
+            },
+            {
+              "name": "AtomicPackingEfficiency|mean abs simul. packing efficiency",
+              "value": 0.01693
+            },
+            {
+              "name": "AtomicPackingEfficiency|dist from 1 clusters |APE| < 0.010",
+              "value": 0.05143
+            }
+          ]
+        },
+        "BandCenter": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "BandCenter|band center",
+              "value": 5.87042
+            }
+          ]
+        },
+        "ElementFraction": {
+          "count": 118,
+          "sample": [
+            {
+              "name": "ElementFraction|H",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|He",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|Li",
+              "value": 0.0
+            }
+          ]
+        },
+        "ElementProperty": {
+          "count": 132,
+          "sample": [
+            {
+              "name": "ElementProperty|MagpieData minimum Number",
+              "value": 8.0
+            },
+            {
+              "name": "ElementProperty|MagpieData maximum Number",
+              "value": 26.0
+            },
+            {
+              "name": "ElementProperty|MagpieData range Number",
+              "value": 18.0
+            }
+          ]
+        },
+        "IonProperty": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "IonProperty|max ionic char",
+              "value": 0.47692
+            },
+            {
+              "name": "IonProperty|avg ionic char",
+              "value": 0.11446
+            }
+          ]
+        },
+        "Miedema": {
+          "count": 3,
+          "sample": [
+            {
+              "name": "Miedema|Miedema_deltaH_inter",
+              "value": -0.16646
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_amor",
+              "value": -0.08553
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_ss_min",
+              "value": 0.19402
+            }
+          ]
+        },
+        "Stoichiometry": {
+          "count": 6,
+          "sample": [
+            {
+              "name": "Stoichiometry|0-norm",
+              "value": 2.0
+            },
+            {
+              "name": "Stoichiometry|2-norm",
+              "value": 0.72111
+            },
+            {
+              "name": "Stoichiometry|3-norm",
+              "value": 0.65421
+            }
+          ]
+        },
+        "TMetalFraction": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "TMetalFraction|transition metal fraction",
+              "value": 0.4
+            }
+          ]
+        },
+        "ValenceOrbital": {
+          "count": 8,
+          "sample": [
+            {
+              "name": "ValenceOrbital|avg s valence electrons",
+              "value": 2.0
+            },
+            {
+              "name": "ValenceOrbital|avg p valence electrons",
+              "value": 2.4
+            },
+            {
+              "name": "ValenceOrbital|avg d valence electrons",
+              "value": 2.4
+            }
+          ]
+        },
+        "YangSolidSolution": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "YangSolidSolution|Yang omega",
+              "value": 0.31076
+            },
+            {
+              "name": "YangSolidSolution|Yang delta",
+              "value": 0.33805
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "GaAs",
+      "formula": "GaAs",
+      "prototype": "zinc blende",
+      "composition_features": 285,
+      "structure_features": 869,
+      "structure_available": true,
+      "groups": {
+        "AtomicOrbitals": {
+          "count": 7,
+          "sample": [
+            {
+              "name": "AtomicOrbitals|HOMO_character",
+              "value": 2.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_element",
+              "value": 33.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_energy",
+              "value": -0.1975
+            }
+          ]
+        },
+        "AtomicPackingEfficiency": {
+          "count": 5,
+          "sample": [
+            {
+              "name": "AtomicPackingEfficiency|mean simul. packing efficiency",
+              "value": 0.02514
+            },
+            {
+              "name": "AtomicPackingEfficiency|mean abs simul. packing efficiency",
+              "value": 0.02514
+            },
+            {
+              "name": "AtomicPackingEfficiency|dist from 1 clusters |APE| < 0.010",
+              "value": 0.16318
+            }
+          ]
+        },
+        "BandCenter": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "BandCenter|band center",
+              "value": 4.09015
+            }
+          ]
+        },
+        "ElementFraction": {
+          "count": 118,
+          "sample": [
+            {
+              "name": "ElementFraction|H",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|He",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|Li",
+              "value": 0.0
+            }
+          ]
+        },
+        "ElementProperty": {
+          "count": 132,
+          "sample": [
+            {
+              "name": "ElementProperty|MagpieData minimum Number",
+              "value": 31.0
+            },
+            {
+              "name": "ElementProperty|MagpieData maximum Number",
+              "value": 33.0
+            },
+            {
+              "name": "ElementProperty|MagpieData range Number",
+              "value": 2.0
+            }
+          ]
+        },
+        "IonProperty": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "IonProperty|max ionic char",
+              "value": 0.03365
+            },
+            {
+              "name": "IonProperty|avg ionic char",
+              "value": 0.00841
+            }
+          ]
+        },
+        "Miedema": {
+          "count": 3,
+          "sample": [
+            {
+              "name": "Miedema|Miedema_deltaH_inter",
+              "value": -0.12641
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_amor",
+              "value": -0.08567
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_ss_min",
+              "value": -0.11017
+            }
+          ]
+        },
+        "Stoichiometry": {
+          "count": 6,
+          "sample": [
+            {
+              "name": "Stoichiometry|0-norm",
+              "value": 2.0
+            },
+            {
+              "name": "Stoichiometry|2-norm",
+              "value": 0.70711
+            },
+            {
+              "name": "Stoichiometry|3-norm",
+              "value": 0.62996
+            }
+          ]
+        },
+        "TMetalFraction": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "TMetalFraction|transition metal fraction",
+              "value": 0.0
+            }
+          ]
+        },
+        "ValenceOrbital": {
+          "count": 8,
+          "sample": [
+            {
+              "name": "ValenceOrbital|avg s valence electrons",
+              "value": 2.0
+            },
+            {
+              "name": "ValenceOrbital|avg p valence electrons",
+              "value": 2.0
+            },
+            {
+              "name": "ValenceOrbital|avg d valence electrons",
+              "value": 10.0
+            }
+          ]
+        },
+        "YangSolidSolution": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "YangSolidSolution|Yang omega",
+              "value": 0.66892
+            },
+            {
+              "name": "YangSolidSolution|Yang delta",
+              "value": 0.07631
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "LiFePO4",
+      "formula": "LiFePO4",
+      "prototype": "olivine",
+      "composition_features": 285,
+      "structure_features": null,
+      "structure_available": false,
+      "groups": {
+        "AtomicOrbitals": {
+          "count": 7,
+          "sample": [
+            {
+              "name": "AtomicOrbitals|HOMO_character",
+              "value": 3.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_element",
+              "value": 26.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_energy",
+              "value": -0.29505
+            }
+          ]
+        },
+        "AtomicPackingEfficiency": {
+          "count": 5,
+          "sample": [
+            {
+              "name": "AtomicPackingEfficiency|mean simul. packing efficiency",
+              "value": -0.00059
+            },
+            {
+              "name": "AtomicPackingEfficiency|mean abs simul. packing efficiency",
+              "value": 0.00654
+            },
+            {
+              "name": "AtomicPackingEfficiency|dist from 1 clusters |APE| < 0.010",
+              "value": 0.02474
+            }
+          ]
+        },
+        "BandCenter": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "BandCenter|band center",
+              "value": 5.79692
+            }
+          ]
+        },
+        "ElementFraction": {
+          "count": 118,
+          "sample": [
+            {
+              "name": "ElementFraction|H",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|He",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|Li",
+              "value": 0.14286
+            }
+          ]
+        },
+        "ElementProperty": {
+          "count": 132,
+          "sample": [
+            {
+              "name": "ElementProperty|MagpieData minimum Number",
+              "value": 3.0
+            },
+            {
+              "name": "ElementProperty|MagpieData maximum Number",
+              "value": 26.0
+            },
+            {
+              "name": "ElementProperty|MagpieData range Number",
+              "value": 23.0
+            }
+          ]
+        },
+        "IonProperty": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "IonProperty|max ionic char",
+              "value": 0.77973
+            },
+            {
+              "name": "IonProperty|avg ionic char",
+              "value": 0.13926
+            }
+          ]
+        },
+        "Miedema": {
+          "count": 3,
+          "sample": [
+            {
+              "name": "Miedema|Miedema_deltaH_inter",
+              "value": -0.42938
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_amor",
+              "value": -0.34561
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_ss_min",
+              "value": -0.35584
+            }
+          ]
+        },
+        "Stoichiometry": {
+          "count": 6,
+          "sample": [
+            {
+              "name": "Stoichiometry|0-norm",
+              "value": 4.0
+            },
+            {
+              "name": "Stoichiometry|2-norm",
+              "value": 0.6227
+            },
+            {
+              "name": "Stoichiometry|3-norm",
+              "value": 0.58022
+            }
+          ]
+        },
+        "TMetalFraction": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "TMetalFraction|transition metal fraction",
+              "value": 0.14286
+            }
+          ]
+        },
+        "ValenceOrbital": {
+          "count": 8,
+          "sample": [
+            {
+              "name": "ValenceOrbital|avg s valence electrons",
+              "value": 1.85714
+            },
+            {
+              "name": "ValenceOrbital|avg p valence electrons",
+              "value": 2.71429
+            },
+            {
+              "name": "ValenceOrbital|avg d valence electrons",
+              "value": 0.85714
+            }
+          ]
+        },
+        "YangSolidSolution": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "YangSolidSolution|Yang omega",
+              "value": 0.20494
+            },
+            {
+              "name": "YangSolidSolution|Yang delta",
+              "value": 0.37064
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "SiO2",
+      "formula": "SiO2",
+      "prototype": "quartz",
+      "composition_features": 285,
+      "structure_features": null,
+      "structure_available": false,
+      "groups": {
+        "AtomicOrbitals": {
+          "count": 7,
+          "sample": [
+            {
+              "name": "AtomicOrbitals|HOMO_character",
+              "value": 2.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_element",
+              "value": 8.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_energy",
+              "value": -0.33838
+            }
+          ]
+        },
+        "AtomicPackingEfficiency": {
+          "count": 5,
+          "sample": [
+            {
+              "name": "AtomicPackingEfficiency|mean simul. packing efficiency",
+              "value": 0.00979
+            },
+            {
+              "name": "AtomicPackingEfficiency|mean abs simul. packing efficiency",
+              "value": 0.00979
+            },
+            {
+              "name": "AtomicPackingEfficiency|dist from 1 clusters |APE| < 0.010",
+              "value": 0.19849
+            }
+          ]
+        },
+        "BandCenter": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "BandCenter|band center",
+              "value": 6.47192
+            }
+          ]
+        },
+        "ElementFraction": {
+          "count": 118,
+          "sample": [
+            {
+              "name": "ElementFraction|H",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|He",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|Li",
+              "value": 0.0
+            }
+          ]
+        },
+        "ElementProperty": {
+          "count": 132,
+          "sample": [
+            {
+              "name": "ElementProperty|MagpieData minimum Number",
+              "value": 8.0
+            },
+            {
+              "name": "ElementProperty|MagpieData maximum Number",
+              "value": 14.0
+            },
+            {
+              "name": "ElementProperty|MagpieData range Number",
+              "value": 6.0
+            }
+          ]
+        },
+        "IonProperty": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "IonProperty|max ionic char",
+              "value": 0.44728
+            },
+            {
+              "name": "IonProperty|avg ionic char",
+              "value": 0.0994
+            }
+          ]
+        },
+        "Miedema": {
+          "count": 3,
+          "sample": [
+            {
+              "name": "Miedema|Miedema_deltaH_inter",
+              "value": -0.4691
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_amor",
+              "value": -0.35584
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_ss_min",
+              "value": -0.27204
+            }
+          ]
+        },
+        "Stoichiometry": {
+          "count": 6,
+          "sample": [
+            {
+              "name": "Stoichiometry|0-norm",
+              "value": 2.0
+            },
+            {
+              "name": "Stoichiometry|2-norm",
+              "value": 0.74536
+            },
+            {
+              "name": "Stoichiometry|3-norm",
+              "value": 0.69336
+            }
+          ]
+        },
+        "TMetalFraction": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "TMetalFraction|transition metal fraction",
+              "value": 0.0
+            }
+          ]
+        },
+        "ValenceOrbital": {
+          "count": 8,
+          "sample": [
+            {
+              "name": "ValenceOrbital|avg s valence electrons",
+              "value": 2.0
+            },
+            {
+              "name": "ValenceOrbital|avg p valence electrons",
+              "value": 3.33333
+            },
+            {
+              "name": "ValenceOrbital|avg d valence electrons",
+              "value": 0.0
+            }
+          ]
+        },
+        "YangSolidSolution": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "YangSolidSolution|Yang omega",
+              "value": 0.25102
+            },
+            {
+              "name": "YangSolidSolution|Yang delta",
+              "value": 0.27334
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "CsPbI3",
+      "formula": "CsPbI3",
+      "prototype": "inorganic halide perovskite",
+      "composition_features": 285,
+      "structure_features": 907,
+      "structure_available": true,
+      "groups": {
+        "AtomicOrbitals": {
+          "count": 7,
+          "sample": [
+            {
+              "name": "AtomicOrbitals|HOMO_character",
+              "value": 2.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_element",
+              "value": 53.0
+            },
+            {
+              "name": "AtomicOrbitals|HOMO_energy",
+              "value": -0.2679
+            }
+          ]
+        },
+        "AtomicPackingEfficiency": {
+          "count": 5,
+          "sample": [
+            {
+              "name": "AtomicPackingEfficiency|mean simul. packing efficiency",
+              "value": -0.02533
+            },
+            {
+              "name": "AtomicPackingEfficiency|mean abs simul. packing efficiency",
+              "value": 0.02533
+            },
+            {
+              "name": "AtomicPackingEfficiency|dist from 1 clusters |APE| < 0.010",
+              "value": 0.03402
+            }
+          ]
+        },
+        "BandCenter": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "BandCenter|band center",
+              "value": 4.82626
+            }
+          ]
+        },
+        "ElementFraction": {
+          "count": 118,
+          "sample": [
+            {
+              "name": "ElementFraction|H",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|He",
+              "value": 0.0
+            },
+            {
+              "name": "ElementFraction|Li",
+              "value": 0.0
+            }
+          ]
+        },
+        "ElementProperty": {
+          "count": 132,
+          "sample": [
+            {
+              "name": "ElementProperty|MagpieData minimum Number",
+              "value": 53.0
+            },
+            {
+              "name": "ElementProperty|MagpieData maximum Number",
+              "value": 82.0
+            },
+            {
+              "name": "ElementProperty|MagpieData range Number",
+              "value": 29.0
+            }
+          ]
+        },
+        "IonProperty": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "IonProperty|max ionic char",
+              "value": 0.58281
+            },
+            {
+              "name": "IonProperty|avg ionic char",
+              "value": 0.09105
+            }
+          ]
+        },
+        "Miedema": {
+          "count": 3,
+          "sample": [
+            {
+              "name": "Miedema|Miedema_deltaH_inter",
+              "value": 0.26418
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_amor",
+              "value": 0.28947
+            },
+            {
+              "name": "Miedema|Miedema_deltaH_ss_min",
+              "value": 0.12843
+            }
+          ]
+        },
+        "Stoichiometry": {
+          "count": 6,
+          "sample": [
+            {
+              "name": "Stoichiometry|0-norm",
+              "value": 3.0
+            },
+            {
+              "name": "Stoichiometry|2-norm",
+              "value": 0.66332
+            },
+            {
+              "name": "Stoichiometry|3-norm",
+              "value": 0.61446
+            }
+          ]
+        },
+        "TMetalFraction": {
+          "count": 1,
+          "sample": [
+            {
+              "name": "TMetalFraction|transition metal fraction",
+              "value": 0.0
+            }
+          ]
+        },
+        "ValenceOrbital": {
+          "count": 8,
+          "sample": [
+            {
+              "name": "ValenceOrbital|avg s valence electrons",
+              "value": 1.8
+            },
+            {
+              "name": "ValenceOrbital|avg p valence electrons",
+              "value": 3.4
+            },
+            {
+              "name": "ValenceOrbital|avg d valence electrons",
+              "value": 8.0
+            }
+          ]
+        },
+        "YangSolidSolution": {
+          "count": 2,
+          "sample": [
+            {
+              "name": "YangSolidSolution|Yang omega",
+              "value": 0.18482
+            },
+            {
+              "name": "YangSolidSolution|Yang delta",
+              "value": 0.23773
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
