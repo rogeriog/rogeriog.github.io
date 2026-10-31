@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MODNet in a nutshell — preview</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08060a; --panel:#160e16; --border:rgba(214,160,180,.14);
+    --text:#eee9ee; --muted:#a79ba6; --dim:#6e5f6e;
+    --red:#ff3d5a; --blue:#5a6cff; --ice:#45d6ff; --green:#63e6a4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(900px 600px at 8% -5%, rgba(120,18,40,.28), transparent 65%),
+      radial-gradient(760px 620px at 95% 15%, rgba(30,45,120,.24), transparent 70%),
+      var(--bg);
+    color:var(--text);font-family:'Inter',sans-serif;line-height:1.65}
+  a{color:var(--red)}
+  header{max-width:980px;margin:0 auto;padding:28px 24px 0;display:flex;justify-content:space-between;align-items:center}
+  .brand{font-family:'Space Grotesk';font-weight:700;text-decoration:none;color:var(--text)}
+  .brand span{color:var(--red)}
+  .back{font-size:.82rem;color:var(--muted);text-decoration:none}
+  main{max-width:980px;margin:0 auto;padding:40px 24px 80px}
+  .wip{display:inline-flex;align-items:center;gap:8px;font-size:.72rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ice);border:1px solid rgba(69,214,255,.3);
+    background:rgba(69,214,255,.08);padding:5px 12px;border-radius:20px;margin-bottom:18px}
+  h1{font-family:'Space Grotesk';font-size:clamp(2rem,5vw,3rem);line-height:1.1;margin:0 0 14px}
+  h1 em{font-style:normal;color:var(--red)}
+  .lede{color:var(--muted);max-width:680px;font-size:1.02rem}
+  h2{font-family:'Space Grotesk';font-size:1.25rem;margin:48px 0 8px}
+  h2::after{content:'';display:block;width:44px;height:3px;margin-top:8px;border-radius:2px;
+    background:linear-gradient(90deg,var(--red),var(--blue))}
+  .sub{color:var(--muted);font-size:.9rem;margin:10px 0 22px;max-width:720px}
+  .card{background:rgba(22,14,22,.72);border:1px solid var(--border);border-radius:16px;padding:20px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .controls button{font:inherit;font-size:.8rem;padding:7px 13px;border-radius:10px;cursor:pointer;
+    color:var(--muted);background:transparent;border:1px solid var(--border);transition:.2s}
+  .controls button:hover{color:var(--text);border-color:var(--red)}
+  .controls button[aria-pressed="true"]{color:#14060a;background:var(--red);border-color:var(--red);font-weight:600}
+  .chart-wrap{position:relative}
+  svg{width:100%;height:auto;display:block}
+  .axis text{fill:var(--dim);font-size:11px}
+  .axis line,.axis path{stroke:rgba(214,160,180,.16)}
+  .grid line{stroke:rgba(214,160,180,.08)}
+  .series{fill:none;stroke-width:2.5;stroke-linecap:round}
+  .dot{stroke:var(--panel);stroke-width:1.5}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:12px}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .swatch{width:18px;height:3px;border-radius:2px;display:inline-block}
+  .note{font-size:.76rem;color:var(--dim);margin-top:12px}
+  .note strong{color:var(--muted)}
+  footer{max-width:980px;margin:0 auto;padding:24px;border-top:1px solid var(--border);
+    color:var(--dim);font-size:.78rem}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../../index.html">rogeriog<span>.</span></a>
+  <a class="back" href="../index.html">← garden</a>
+</header>
+
+<main>
+  <div class="wip">Draft preview · section 0 of 7</div>
+  <h1>MODNet in a <em>nutshell</em></h1>
+  <p class="lede">
+    An interactive explainer for MODNet — the Materials Optimal Descriptor Network.
+    This preview contains the opening argument: materials ML is a small-data game,
+    and that changes which models win.
+  </p>
+
+  <h2>The small-data problem</h2>
+  <p class="sub">
+    Most materials datasets have hundreds to thousands of samples, not millions.
+    The models that win at 60 000 samples are not the models that win at 500.
+    Pick a property and compare mean absolute error as the training set grows.
+  </p>
+
+  <div class="card">
+    <div class="controls" id="controls"></div>
+    <div class="chart-wrap"><svg id="chart" viewBox="0 0 900 460" role="img" aria-label="Test error versus training-set size"></svg></div>
+    <div class="legend" id="legend"></div>
+    <p class="note">
+      <strong>Data:</strong> measured points are verbatim from De Breuck, Hautier,
+      Rignanese, <em>npj Comput. Mater.</em> 7, 83 (2021), Table I. The lines
+      between and beyond those points are a log-log interpolation for the slider,
+      not measured results.
+    </p>
+  </div>
+
+  <h2>What comes next</h2>
+  <p class="sub">
+    The full piece walks the pipeline in execution order: featurization → normalized
+    mutual information → relevance–redundancy selection → the network → joint
+    learning → the genetic algorithm and validation. Each stage gets a widget and a
+    collapsible “in the codebase” panel pointing at the pinned MODNet source.
+  </p>
+</main>
+
+<footer>Preview build · Rogério Gouvêa · not indexed</footer>
+
+<script>
+const DATA = {
+  "formation_energy": {
+    "label": "Formation energy",
+    "unit": "eV/atom",
+    "series": {
+      "MODNet": {color:"#ff3d5a", points:[[504,0.210],[60000,0.044]]},
+      "MEGNet": {color:"#5a6cff", points:[[504,0.342],[60000,0.028]]},
+      "SISSO": {color:"#63e6a4", points:[[504,0.312],[60000,0.299]]}
+    }
+  },
+  "band_gap": {
+    "label": "Band gap",
+    "unit": "eV",
+    "series": {
+      "MODNet": {color:"#ff3d5a", points:[[504,0.71],[60000,0.34]]},
+      "MEGNet": {color:"#5a6cff", points:[[504,0.94],[60000,0.30]]},
+      "SISSO": {color:"#63e6a4", points:[[504,0.80],[60000,0.75]]}
+    }
+  },
+  "refractive_index": {
+    "label": "Refractive index",
+    "unit": "",
+    "series": {
+      "MODNet": {color:"#ff3d5a", points:[[3240,0.05]]},
+      "MEGNet": {color:"#5a6cff", points:[[3240,0.08]]},
+      "SISSO": {color:"#63e6a4", points:[[3240,0.12]]}
+    }
+  }
+};
+
+const NS="http://www.w3.org/2000/svg";
+const svg=document.getElementById("chart");
+const W=900,H=460,P={t:24,r:24,b:52,l:64};
+const x0=P.l,x1=W-P.r,y0=H-P.b,y1=P.t;
+const NMIN=100,NMAX=100000;
+const lx=n=>Math.log10(n);
+const sx=n=>x0+(lx(n)-lx(NMIN))/(lx(NMAX)-lx(NMIN))*(x1-x0);
+
+let current="formation_energy";
+
+function curve(pts){
+  const [a,b]=pts;
+  if(pts.length===1) return [[NMIN,a[1]],[NMAX,a[1]]];
+  const bb=Math.log(a[1]/b[1])/Math.log(b[0]/a[0]);
+  const aa=a[1]*Math.pow(a[0],bb);
+  const out=[];
+  for(let i=0;i<=80;i++){
+    const n=Math.pow(10,lx(NMIN)+(lx(NMAX)-lx(NMIN))*i/80);
+    out.push([n,aa*Math.pow(n,-bb)]);
+  }
+  return out;
+}
+
+function draw(){
+  const d=DATA[current];
+  const all=d.series;
+  const vals=Object.values(all).flatMap(s=>s.points.map(p=>p[1]));
+  const ymin=Math.max(0.01,Math.min(...vals)*0.6);
+  const ymax=Math.max(...vals)*1.25;
+  const ly=v=>Math.log10(v);
+  const sy=v=>y1-(ly(v)-ly(ymin))/(ly(ymax)-ly(ymin))*(y1-y0);
+
+  svg.innerHTML="";
+  const g=document.createElementNS(NS,"g"); g.setAttribute("class","grid");
+  const ticks=[100,300,1000,3000,10000,30000,100000];
+  ticks.forEach(n=>{
+    const l=document.createElementNS(NS,"line");
+    l.setAttribute("x1",sx(n)); l.setAttribute("x2",sx(n));
+    l.setAttribute("y1",y0); l.setAttribute("y2",y1); g.appendChild(l);
+  });
+  svg.appendChild(g);
+
+  const ax=document.createElementNS(NS,"g"); ax.setAttribute("class","axis");
+  ticks.forEach(n=>{
+    const t=document.createElementNS(NS,"text");
+    t.setAttribute("x",sx(n)); t.setAttribute("y",H-26);
+    t.setAttribute("text-anchor","middle");
+    t.textContent=n>=1000?(n/1000)+"k":n; ax.appendChild(t);
+  });
+  const yt=5;
+  for(let i=0;i<=yt;i++){
+    const v=Math.pow(10,ly(ymin)+(ly(ymax)-ly(ymin))*i/yt);
+    const t=document.createElementNS(NS,"text");
+    t.setAttribute("x",x0-10); t.setAttribute("y",sy(v)+4);
+    t.setAttribute("text-anchor","end");
+    t.textContent=v>=1?v.toFixed(1):v.toFixed(3);
+    ax.appendChild(t);
+    const l=document.createElementNS(NS,"line");
+    l.setAttribute("x1",x0); l.setAttribute("x2",x1);
+    l.setAttribute("y1",sy(v)); l.setAttribute("y2",sy(v));
+    ax.appendChild(l);
+  }
+  const xl=document.createElementNS(NS,"text");
+  xl.setAttribute("x",(x0+x1)/2); xl.setAttribute("y",H-6);
+  xl.setAttribute("text-anchor","middle"); xl.textContent="training samples";
+  ax.appendChild(xl);
+  const yl=document.createElementNS(NS,"text");
+  yl.setAttribute("transform",`translate(16,${(y0+y1)/2}) rotate(-90)`);
+  yl.setAttribute("text-anchor","middle"); yl.textContent=`MAE (${d.unit||"dimensionless"})`;
+  ax.appendChild(yl);
+  svg.appendChild(ax);
+
+  for(const [name,s] of Object.entries(all)){
+    const path=document.createElementNS(NS,"path");
+    const pts=curve(s.points);
+    path.setAttribute("class","series");
+    path.setAttribute("stroke",s.color);
+    path.setAttribute("d",pts.map((p,i)=>(i?"L":"M")+sx(p[0])+" "+sy(p[1])).join(" "));
+    svg.appendChild(path);
+    for(const [n,v] of s.points){
+      const c=document.createElementNS(NS,"circle");
+      c.setAttribute("class","dot"); c.setAttribute("cx",sx(n)); c.setAttribute("cy",sy(v));
+      c.setAttribute("r",4.5); c.setAttribute("fill",s.color); svg.appendChild(c);
+    }
+  }
+
+  const lg=document.getElementById("legend"); lg.innerHTML="";
+  for(const [name,s] of Object.entries(all)){
+    const el=document.createElement("span");
+    el.innerHTML=`<i class="swatch" style="background:${s.color}"></i>${name}`;
+    lg.appendChild(el);
+  }
+}
+
+const controls=document.getElementById("controls");
+for(const [key,d] of Object.entries(DATA)){
+  const b=document.createElement("button");
+  b.textContent=d.label;
+  b.setAttribute("aria-pressed",key===current);
+  b.onclick=()=>{current=key;draw();
+    [...controls.children].forEach(c=>c.setAttribute("aria-pressed",c===b));};
+  controls.appendChild(b);
+}
+draw();
+</script>
+</body>
+</html>
