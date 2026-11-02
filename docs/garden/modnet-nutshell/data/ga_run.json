@@ -1,0 +1,902 @@
+{
+  "meta": {
+    "source": "matgenix/modnet @ 128197701adfe6407551a5af9441fc820908449d",
+    "script": "stage5_ga.py",
+    "dataset": "matbench_dielectric",
+    "target": "n",
+    "date": "2026-11-02T23:39:44.166247+00:00",
+    "n_train": 800,
+    "n_test": 200,
+    "config": {
+      "size_pop": 10,
+      "num_generations": 5,
+      "nested": 3,
+      "refit": 3,
+      "epochs": 800,
+      "early_stopping": 30
+    },
+    "versions": {
+      "python": "3.10.18",
+      "modnet": "0.4.4",
+      "numpy": "1.26.4",
+      "pandas": "1.5.3"
+    }
+  },
+  "generations": [
+    [
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 96,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.5,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.005,
+          "batch_size": 64,
+          "n_feat": 10
+        },
+        "val_loss": 0.6092068899849977
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 1,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": "mean",
+          "xscale_before_impute": true,
+          "lr": 0.005,
+          "batch_size": 256,
+          "n_feat": 170
+        },
+        "val_loss": 0.5196655409235786
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.5,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 32,
+          "n_feat": 50
+        },
+        "val_loss": 0.5638681935781183
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 192,
+          "fraction1": 0.75,
+          "fraction2": 0.5,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 32,
+          "n_feat": 130
+        },
+        "val_loss": 0.5953930221197525
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.5027167558756048
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 256,
+          "fraction1": 0.75,
+          "fraction2": 0.25,
+          "fraction3": 1,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 64,
+          "n_feat": 180
+        },
+        "val_loss": 0.58903351194105
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 224,
+          "fraction1": 0.5,
+          "fraction2": 0.5,
+          "fraction3": 0.75,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.5823932309750547
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 288,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 1,
+          "xscale": "standard",
+          "impute_missing": "mean",
+          "xscale_before_impute": true,
+          "lr": 0.005,
+          "batch_size": 128,
+          "n_feat": 110
+        },
+        "val_loss": 0.5738052992543032
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 160,
+          "fraction1": 0.5,
+          "fraction2": 0.75,
+          "fraction3": 1,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.1,
+          "batch_size": 32,
+          "n_feat": 90
+        },
+        "val_loss": 0.7999612270991184
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 192,
+          "fraction1": 1,
+          "fraction2": 1,
+          "fraction3": 0.5,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.1,
+          "batch_size": 256,
+          "n_feat": 20
+        },
+        "val_loss": 3.4151590727171772
+      }
+    ],
+    [
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 1,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.588011119622614
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.005,
+          "batch_size": 256,
+          "n_feat": 10
+        },
+        "val_loss": 0.5606551982520184
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.5090242882735437
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 288,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 1,
+          "xscale": "standard",
+          "impute_missing": "mean",
+          "xscale_before_impute": true,
+          "lr": 0.005,
+          "batch_size": 128,
+          "n_feat": 110
+        },
+        "val_loss": 0.6403133849142199
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 288,
+          "fraction1": 0.75,
+          "fraction2": 0.25,
+          "fraction3": 1,
+          "xscale": "standard",
+          "impute_missing": "mean",
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 64,
+          "n_feat": 110
+        },
+        "val_loss": 0.6054469162218401
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 50
+        },
+        "val_loss": 0.5010922198203099
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.5,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 32,
+          "n_feat": 80
+        },
+        "val_loss": 0.5725105271237367
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 192,
+          "fraction1": 0.5,
+          "fraction2": 0.5,
+          "fraction3": 1,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 128,
+          "n_feat": 130
+        },
+        "val_loss": 0.5655235504946893
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 50
+        },
+        "val_loss": 0.506885204722123
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 64,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 128,
+          "n_feat": 91
+        },
+        "val_loss": 0.5247032664342054
+      }
+    ],
+    [
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.75,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 32,
+          "n_feat": 130
+        },
+        "val_loss": 0.5687801665419073
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 160,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 64,
+          "n_feat": 94
+        },
+        "val_loss": 0.597417319385791
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.25,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "standard",
+          "impute_missing": "mean",
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 64,
+          "n_feat": 10
+        },
+        "val_loss": 0.6135755520958909
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 50
+        },
+        "val_loss": 0.4974882701422663
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 10
+        },
+        "val_loss": 0.5641239428265326
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 50
+        },
+        "val_loss": 0.5004017991559349
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 50
+        },
+        "val_loss": 0.49879946702547157
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 64,
+          "fraction1": 0.75,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 128,
+          "n_feat": 180
+        },
+        "val_loss": 0.5203310066888608
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.5,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 32,
+          "n_feat": 80
+        },
+        "val_loss": 0.6708191805728839
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.5176741501018902
+      }
+    ],
+    [
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.512694116374205
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 96,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.005,
+          "batch_size": 256,
+          "n_feat": 10
+        },
+        "val_loss": 0.561835291340517
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 50
+        },
+        "val_loss": 0.5150606775235476
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.25,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 50
+        },
+        "val_loss": 0.5143856015722009
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.75,
+          "fraction2": 0.25,
+          "fraction3": 1,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 50
+        },
+        "val_loss": 0.5323478161224691
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 170
+        },
+        "val_loss": 0.5118825151471081
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.5069829645047695
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 160,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.5,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 64,
+          "n_feat": 95
+        },
+        "val_loss": 0.7043904026423703
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 10
+        },
+        "val_loss": 0.5607871258031768
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": "mean",
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 10
+        },
+        "val_loss": 0.5807774070579291
+      }
+    ],
+    [
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 256,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 64,
+          "n_feat": 10
+        },
+        "val_loss": 0.6052293838876891
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 288,
+          "fraction1": 0.5,
+          "fraction2": 0.75,
+          "fraction3": 1,
+          "xscale": "minmax",
+          "impute_missing": "mean",
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 110
+        },
+        "val_loss": 0.5405292445985337
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.5178385039578649
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.49463300523512727
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 160,
+          "fraction1": 0.5,
+          "fraction2": 0.75,
+          "fraction3": 0.75,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 63
+        },
+        "val_loss": 0.5121829934353248
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.5,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "standard",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.005,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.5422132111657553
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 128,
+          "fraction1": 0.25,
+          "fraction2": 0.75,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 256,
+          "n_feat": 10
+        },
+        "val_loss": 0.5722924975873568
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 224,
+          "fraction1": 0.5,
+          "fraction2": 0.75,
+          "fraction3": 0.75,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 80
+        },
+        "val_loss": 0.5253261485136634
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 320,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 0.25,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.001,
+          "batch_size": 256,
+          "n_feat": 170
+        },
+        "val_loss": 0.5252195081249184
+      },
+      {
+        "genes": {
+          "act": "elu",
+          "loss": "mae",
+          "n_neurons_first_layer": 256,
+          "fraction1": 0.5,
+          "fraction2": 0.25,
+          "fraction3": 1,
+          "xscale": "minmax",
+          "impute_missing": 0,
+          "xscale_before_impute": true,
+          "lr": 0.01,
+          "batch_size": 64,
+          "n_feat": 91
+        },
+        "val_loss": 0.5436965654995656
+      }
+    ]
+  ],
+  "final_test_mae": 0.46859697877784057,
+  "final_genome": {
+    "act": "elu",
+    "loss": "mae",
+    "n_neurons_first_layer": 256,
+    "fraction1": 0.25,
+    "fraction2": 0.75,
+    "fraction3": 0.25,
+    "xscale": "standard",
+    "impute_missing": 0,
+    "xscale_before_impute": true,
+    "lr": 0.01,
+    "batch_size": 64,
+    "n_feat": 10
+  }
+}

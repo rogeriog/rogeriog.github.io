@@ -290,21 +290,23 @@
       the best; early stopping ends a stagnant run; refit turns the winner into an ensemble.
     </p>
     <div class="card">
-      <div class="grid2">
-        <div><svg id="gaScatter" viewBox="0 0 440 330" role="img" aria-label="Toy GA population on a fitness landscape"></svg></div>
+      <svg id="gaChart" viewBox="0 0 900 320" role="img" aria-label="Real GA generations"></svg>
+      <div class="grid2" style="margin-top:12px">
         <div>
           <div class="kv">
-            <div><b id="gaGen">0</b><small>generation</small></div>
-            <div><b id="gaBest">–</b><small>best fitness</small></div>
-            <div><b id="gaPop">24</b><small>population</small></div>
+            <div><b id="gaGen">–</b><small>generation</small></div>
+            <div><b id="gaBest">–</b><small>best validation MAE</small></div>
+            <div><b id="gaMean">–</b><small>population mean</small></div>
           </div>
           <div class="steps">
             <button class="pill primary" id="gaNext">next generation</button>
             <button class="pill" id="gaReset">reset</button>
           </div>
-          <p class="note">Toy 2-D landscape: brighter is better. The real genome is
-            multi-dimensional; this animation shows selection, crossover and mutation,
-            not MODNet's validation scores.</p>
+          <p class="note">Real <code>FitGenetic</code> run: population 10, 5 generations,
+            nested 3-fold validation, 800 training materials. Lower is better.</p>
+        </div>
+        <div>
+          <div id="gaTable"></div>
         </div>
       </div>
     </div>

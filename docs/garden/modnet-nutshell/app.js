@@ -733,77 +733,76 @@ async function initEnsemble() {
   $("ensCover2").textContent = (d.coverage.within_2sigma * 100).toFixed(0) + "%";
 }
 
-/* ---------- 6. toy GA ---------- */
-let ga = null;
+/* ---------- 6. real genetic algorithm ---------- */
+let gaData = null;
+let gaIdx = 0;
 
-function fitness2(x, y) {
-  const p1 = Math.exp(-((x - 0.3) ** 2 + (y - 0.35) ** 2) / 0.035);
-  const p2 = 0.65 * Math.exp(-((x - 0.72) ** 2 + (y - 0.7) ** 2) / 0.06);
-  return p1 + p2 + 0.04 * Math.sin(9 * x) * Math.cos(9 * y);
-}
-
-function gaInit() {
-  const r = rng(99);
-  const pop = [];
-  for (let i = 0; i < 24; i++) pop.push([r(), r()]);
-  ga = { pop, gen: 0, best: null };
-  evaluateGA();
-}
-
-function evaluateGA() {
-  ga.pop = ga.pop.map(([x, y]) => [Math.max(0, Math.min(1, x)), Math.max(0, Math.min(1, y))]);
-  ga.scores = ga.pop.map(([x, y]) => fitness2(x, y));
-  ga.best = Math.max(...ga.scores);
-}
-
-function gaStep() {
-  const r = rng(1000 + ga.gen * 7);
-  const order = ga.scores.map((s, i) => [s, i]).sort((a, b) => b[0] - a[0]).map((x) => x[1]);
-  const next = [ga.pop[order[0]], ga.pop[order[1]]];
-  while (next.length < 24) {
-    const a = ga.pop[order[Math.floor(r() * 6)]];
-    const b = ga.pop[order[Math.floor(r() * 6)]];
-    let child = [r() < 0.5 ? a[0] : b[0], r() < 0.5 ? a[1] : b[1]];
-    if (r() < 0.3) child = [child[0] + (r() - 0.5) * 0.3, child[1] + (r() - 0.5) * 0.3];
-    next.push(child);
+async function initGA() {
+  const svg = $("gaChart");
+  if (!svg) return;
+  try {
+    gaData = await (await fetch("data/ga_run.json")).json();
+  } catch (e) {
+    svg.parentNode.style.display = "none";
+    return;
   }
-  ga.pop = next;
-  ga.gen++;
-  evaluateGA();
+  gaIdx = 0;
   drawGA();
+  $("gaNext").onclick = () => {
+    if (gaIdx < gaData.generations.length - 1) gaIdx++;
+    drawGA();
+  };
+  $("gaReset").onclick = () => { gaIdx = 0; drawGA(); };
 }
 
 function drawGA() {
-  const svg = $("gaScatter");
-  if (!svg || !ga) return;
-  const W = 440, H = 330, P = 22;
-  const sx = (x) => P + x * (W - 2 * P);
-  const sy = (y) => H - P - y * (H - 2 * P);
-  svg.innerHTML = "";
-
-  // landscape heatmap as a coarse grid
-  const N = 22;
-  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-    const x = i / (N - 1), y = j / (N - 1);
-    const v = fitness2(x, y);
-    svg.appendChild(el("rect", {
-      x: sx(x), y: sy(y), width: (W - 2 * P) / N + 0.5, height: (H - 2 * P) / N + 0.5,
-      fill: `rgba(255,61,90,${0.03 + Math.max(0, v) * 0.35})`,
-    }));
-  }
-  ga.pop.forEach(([x, y], i) => {
-    svg.appendChild(el("circle", { cx: sx(x), cy: sy(y), r: 4.5, fill: "#45d6ff", opacity: 0.9, class: "dot" }));
+  const gens = gaData.generations;
+  const stats = gens.map((g) => {
+    const losses = g.map((x) => x.val_loss);
+    return { best: Math.min(...losses), mean: losses.reduce((a, v) => a + v, 0) / losses.length };
   });
-  $("gaGen").textContent = ga.gen;
-  $("gaBest").textContent = ga.best.toFixed(2);
-  $("gaPop").textContent = ga.pop.length;
-}
+  const shown = stats.slice(0, gaIdx + 1);
+  const ymax = Math.max(...shown.flatMap((d) => [d.best, d.mean])) * 1.1;
+  const W = 900, H = 320, P = { t: 22, r: 20, b: 42, l: 60 };
+  const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
+  const sx = (i) => x0 + (gens.length <= 1 ? 0 : (i / (gens.length - 1)) * (x1 - x0));
+  const sy = (v) => y0 - (v / ymax) * (y0 - y1);
+  const svg = $("gaChart");
+  svg.innerHTML = "";
+  const ax = el("g", { class: "axis" });
+  for (let i = 0; i <= 4; i++) {
+    const v = ymax * i / 4;
+    const t = el("text", { x: x0 - 8, y: sy(v) + 4, "text-anchor": "end" }); t.textContent = v.toFixed(2); ax.appendChild(t);
+    ax.appendChild(el("line", { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: "gridline" }));
+  }
+  gens.forEach((_, i) => {
+    const t = el("text", { x: sx(i), y: H - 20, "text-anchor": "middle" });
+    t.textContent = i + 1; ax.appendChild(t);
+  });
+  const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
+  xl.textContent = "generation"; ax.appendChild(xl);
+  const yl = el("text", { transform: `translate(12,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle" });
+  yl.textContent = "validation MAE (lower is better)"; ax.appendChild(yl);
+  svg.appendChild(ax);
 
-function initGA() {
-  gaInit();
-  drawGA();
-  $("gaNext").onclick = gaStep;
-  $("gaReset").onclick = () => { gaInit(); drawGA(); };
+  const bestPath = shown.map((d, i) => `${i ? "L" : "M"}${sx(i)} ${sy(d.best)}`).join(" ");
+  const meanPath = shown.map((d, i) => `${i ? "L" : "M"}${sx(i)} ${sy(d.mean)}`).join(" ");
+  svg.appendChild(el("path", { class: "series", stroke: "#ff3d5a", d: bestPath }));
+  svg.appendChild(el("path", { class: "series", stroke: "#5a6cff", "stroke-dasharray": "5 4", d: meanPath }));
+  shown.forEach((d, i) => {
+    svg.appendChild(el("circle", { cx: sx(i), cy: sy(d.best), r: 4, fill: "#ff3d5a", class: "dot" }));
+    svg.appendChild(el("circle", { cx: sx(i), cy: sy(d.mean), r: 3, fill: "#5a6cff", class: "dot" }));
+  });
+
+  $("gaGen").textContent = gaIdx + 1;
+  $("gaBest").textContent = shown[shown.length - 1].best.toFixed(3);
+  $("gaMean").textContent = shown[shown.length - 1].mean.toFixed(3);
+
+  const pop = [...gens[gaIdx]].sort((a, b) => a.val_loss - b.val_loss).slice(0, 6);
+  const cols = ["n_feat", "n_neurons_first_layer", "lr", "batch_size", "xscale", "loss"];
+  $("gaTable").innerHTML = `<table><thead><tr><th>#</th>${cols.map((c) => `<th>${c}</th>`).join("")}<th>val MAE</th></tr></thead><tbody>` +
+    pop.map((ind, i) => `<tr><td>${i + 1}</td>${cols.map((c) => `<td>${ind.genes[c]}</td>`).join("")}<td>${ind.val_loss.toFixed(3)}</td></tr>`).join("") +
+    "</tbody></table>";
 }
 
 /* ---------- boot ---------- */
