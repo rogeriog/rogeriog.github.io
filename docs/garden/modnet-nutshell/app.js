@@ -46,7 +46,7 @@ function drawCross() {
   const vals = Object.values(d.series).flatMap((s) => s.points.map((p) => p[1]));
   const ymin = Math.max(0.01, Math.min(...vals) * 0.55);
   const ymax = Math.max(...vals) * 1.35;
-  const sy = (v) => y1 - (Math.log10(v) - Math.log10(ymin)) / (Math.log10(ymax) - Math.log10(ymin)) * (y1 - y0);
+  const sy = (v) => y0 - (Math.log10(v) - Math.log10(ymin)) / (Math.log10(ymax) - Math.log10(ymin)) * (y0 - y1);
 
   svg.innerHTML = "";
   const g = el("g");
@@ -141,7 +141,7 @@ async function initLearningCurves() {
   const W = 900, H = 360, P = { t: 18, r: 18, b: 46, l: 60 };
   const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
   const sx = (i) => x0 + (i / (sizes.length - 1)) * (x1 - x0);
-  const sy = (v) => y1 - (v / ymax) * (y1 - y0);
+  const sy = (v) => y0 - (v / ymax) * (y0 - y1);
   svg.innerHTML = "";
   const ax = el("g", { class: "axis" });
   sizes.forEach((n, i) => {
@@ -165,8 +165,22 @@ async function initLearningCurves() {
     svg.appendChild(el("path", { class: "series", stroke: colors[m], d: path }));
     pts.forEach((p, i) => p && svg.appendChild(el("circle", { cx: sx(i), cy: sy(p.mean), r: 4, fill: colors[m], class: "dot" })));
   }
+  // highlight sizes where MODNet beats the all-features net
+  const wins = sizes.map((_, i) => rows.modnet[i] && rows.allnet[i] && rows.modnet[i].mean < rows.allnet[i].mean);
+  wins.forEach((w, i) => {
+    if (!w) return;
+    const half = i === 0 ? (sx(1) - sx(0)) / 2 : (sx(i) - sx(i - 1)) / 2;
+    svg.appendChild(el("rect", {
+      x: sx(i) - half, y: y1, width: 2 * half, height: y0 - y1,
+      fill: "rgba(255,61,90,.07)", stroke: "none",
+    }));
+    const t = el("text", { x: sx(i), y: y1 + 14, "text-anchor": "middle", fill: "#ff3d5a", "font-size": 10 });
+    t.textContent = "MODNet wins";
+    svg.appendChild(t);
+  });
   $("lcLegend").innerHTML = Object.keys(rows).map((m) =>
-    `<span><i class="swatch" style="background:${colors[m]}"></i>${names[m]}</span>`).join("");
+    `<span><i class="swatch" style="background:${colors[m]}"></i>${names[m]}</span>`).join("") +
+    '<span style="color:#ff3d5a">shaded: MODNet lower MAE than all-features</span>';
 }
 
 /* ---------- 1. featurizer explorer ---------- */
@@ -198,7 +212,8 @@ async function initFeaturizer() {
   });
   $("structToggle").onclick = () => {
     const c = featData.compounds.find((x) => x.name === featCurrent);
-    if (!c.structure_available) return;
+    const has = c.structure_features && Object.keys(c.structure_features).length > 0;
+    if (!has) return;
     includeStructure = !includeStructure;
     renderFeaturizer();
   };
@@ -209,7 +224,7 @@ function renderFeaturizer() {
   const c = featData.compounds.find((x) => x.name === featCurrent);
   const hasStruct = c.structure_features && Object.keys(c.structure_features).length > 0;
   const comp = featData.preset_summary.composition_only.n_features;
-  const struct = hasStruct ? featData.preset_summary.with_structure.n_features : 0;
+  const struct = hasStruct ? Object.keys(c.structure_features).length : 0;
   const total = includeStructure && hasStruct ? comp + struct : comp;
   $("featComp").textContent = comp;
   $("featStruct").textContent = hasStruct ? struct : "n/a";
@@ -231,6 +246,26 @@ function renderFeaturizer() {
       <span class="bar-track"><span class="bar-fill" style="width:${(count / max) * 100}%"></span></span>
       <b>${count}</b>
     </div>`).join("");
+
+  // actual values: pick the 10 descriptors that vary most across the six real samples
+  const useStruct = includeStructure && hasStruct;
+  const key = useStruct ? "structure_features" : "composition_features";
+  const dicts = featData.compounds.map((x) => x[key] || {});
+  const cols = Object.keys(dicts[0] || {});
+  const variances = cols.map((col) => {
+    const vals = dicts.map((dd) => Number(dd[col])).filter((v) => Number.isFinite(v));
+    if (vals.length < 2) return [col, -1];
+    const mean = vals.reduce((a, v) => a + v, 0) / vals.length;
+    return [col, vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length];
+  }).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+  const selDict = c[key] || {};
+  $("featValues").innerHTML = `<table><thead><tr><th>descriptor</th><th>${c.name}</th></tr></thead><tbody>` +
+    variances.map(([col]) => {
+      const v = selDict[col];
+      const shown = typeof v === "number" ? (Math.abs(v) >= 1e4 || (Math.abs(v) < 1e-3 && v !== 0) ? v.toExponential(2) : v.toFixed(3)) : (v == null ? "null" : v);
+      return `<tr><td title="${col}">${col.length > 52 ? col.slice(0, 52) + "…" : col}</td><td>${shown}</td></tr>`;
+    }).join("") + "</tbody></table>";
 }
 
 /* ---------- 2. NMI playground ---------- */
@@ -395,21 +430,22 @@ function frrStep() {
 function drawFRRReal() {
   const svg = $("frrScatter");
   if (!svg || !frr) return;
-  const W = 440, H = 330, P = { t: 18, r: 18, b: 46, l: 48 };
+  const W = 440, H = 330, P = { t: 18, r: 18, b: 46, l: 52 };
+  const maxN = Math.max(...frrReal.cands.map((c) => frrNmi[c] || 0), 0.001) * 1.1;
   const sx = (v) => P.l + v * (W - P.l - P.r);
-  const sy = (v) => H - P.b - v * (H - P.t - P.b);
+  const sy = (v) => H - P.b - Math.sqrt(Math.min(1, v / maxN)) * (H - P.t - P.b);
   svg.innerHTML = "";
   const ax = el("g", { class: "axis" });
   [0, 0.25, 0.5, 0.75, 1].forEach((t) => {
     ax.appendChild(el("line", { x1: sx(t), x2: sx(t), y1: P.t, y2: H - P.b, class: "gridline" }));
-    ax.appendChild(el("line", { x1: P.l, x2: W - P.r, y1: sy(t), y2: sy(t), class: "gridline" }));
+    ax.appendChild(el("line", { x1: P.l, x2: W - P.r, y1: sy(t * maxN), y2: sy(t * maxN), class: "gridline" }));
     const tx = el("text", { x: sx(t), y: H - 26, "text-anchor": "middle" }); tx.textContent = t; ax.appendChild(tx);
-    const ty = el("text", { x: P.l - 8, y: sy(t) + 4, "text-anchor": "end" }); ty.textContent = t.toFixed(2); ax.appendChild(ty);
+    const ty = el("text", { x: P.l - 8, y: sy(t * maxN) + 4, "text-anchor": "end" }); ty.textContent = (t * maxN).toFixed(3); ax.appendChild(ty);
   });
   const xl = el("text", { x: (P.l + W - P.r) / 2, y: H - 6, "text-anchor": "middle" });
-  xl.textContent = "max redundancy with selected set";
+  xl.textContent = "max redundancy with already-selected features";
   const yl = el("text", { transform: `translate(12,${(P.t + H - P.b) / 2}) rotate(-90)`, "text-anchor": "middle" });
-  yl.textContent = "NMI with target";
+  yl.textContent = "NMI with target (sqrt scale)";
   ax.appendChild(xl); ax.appendChild(yl);
   svg.appendChild(ax);
 
@@ -442,8 +478,8 @@ function drawFRRReal() {
   });
 
   $("frrStep").textContent = frr.selected.length;
-  $("frrP").textContent = frr.last ? Number(frr.last.p).toFixed(2) : "–";
-  $("frrC").textContent = frr.last ? Number(frr.last.c).toExponential(1) : "–";
+  $("frrP").textContent = frr.last && frr.last.p != null ? Number(frr.last.p).toFixed(2) : "–";
+  $("frrC").textContent = frr.last && frr.last.c != null ? Number(frr.last.c).toExponential(1) : "–";
   $("frrScore").textContent = frr.last && frr.last.score != null ? Number(frr.last.score).toFixed(2) : "–";
   $("frrList").innerHTML = frr.selected.slice(-8).reverse().map((s) =>
     `<li>${s.split("|").slice(0, 2).join(" · ")} — NMI ${(frrNmi[s] || 0).toFixed(3)}</li>`).join("");
@@ -488,8 +524,8 @@ function drawFRR() {
   });
 
   $("frrStep").textContent = frr.selected.length;
-  $("frrP").textContent = frr.last ? frr.last.p.toFixed(2) : "–";
-  $("frrC").textContent = frr.last ? frr.last.c.toExponential(1) : "–";
+  $("frrP").textContent = frr.last && frr.last.p != null ? frr.last.p.toFixed(2) : "–";
+  $("frrC").textContent = frr.last && frr.last.c != null ? frr.last.c.toExponential(1) : "–";
   $("frrScore").textContent = frr.last ? frr.last.score.toFixed(2) : "–";
   $("frrList").innerHTML = frr.selected.map((i, k) =>
     `<li>${frr.features[i].name} — NMI ${frr.features[i].relevance.toFixed(2)}</li>`).join("");
@@ -616,7 +652,7 @@ async function initJointChart() {
   const allVals = d.rows.flatMap((r) => [r.joint.eform, r.joint.egap, r.single.eform, r.single.egap]);
   const ymin = 0, ymax = Math.max(...allVals) * 1.15;
   const sx = (n) => x0 + (n - sizes[0]) / (sizes[sizes.length - 1] - sizes[0]) * (x1 - x0);
-  const sy = (v) => y1 - (v - ymin) / (ymax - ymin) * (y1 - y0);
+  const sy = (v) => y0 - (v - ymin) / (ymax - ymin) * (y0 - y1);
   svg.innerHTML = "";
 
   const ax = el("g", { class: "axis" });
@@ -675,7 +711,7 @@ async function initEnsemble() {
   const W = 460, H = 360, P = { t: 18, r: 18, b: 46, l: 52 };
   const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
   const sx = (v) => x0 + (v / xmax) * (x1 - x0);
-  const sy = (v) => y1 - (v / ymax) * (y1 - y0);
+  const sy = (v) => y0 - (v / ymax) * (y0 - y1);
   svg.innerHTML = "";
   const ax = el("g", { class: "axis" });
   for (let i = 0; i <= 4; i++) {

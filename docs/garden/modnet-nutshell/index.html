@@ -87,6 +87,8 @@
         <span class="note" id="structNote" style="margin:0"></span>
       </label>
       <div class="bars" id="groupBars"></div>
+      <h3 style="margin-top:18px">Actual descriptor values</h3>
+      <div id="featValues"></div>
       <p class="note">
         <strong>Real counts</strong> from the pinned <code>Matminer2023</code> presets on these
         prototypes. Structure mode is only offered for NaCl, GaAs and CsPbI3; the other
@@ -95,10 +97,18 @@
     </div>
     <details class="code-panel">
       <summary>in the codebase · featurizers</summary>
-      <pre><span class="file">modnet/featurizers/featurizers.py:78</span>  MODFeaturizer.featurize()
-<span class="file">modnet/featurizers/featurizers.py:185</span> featurize_composition()
-<span class="file">modnet/featurizers/featurizers.py:269</span> featurize_structure()
-<span class="file">modnet/featurizers/presets/__init__.py:13</span> FEATURIZER_PRESETS</pre>
+      <pre><a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/featurizers/featurizers.py#L78" target="_blank">MODFeaturizer.featurize(df)</a>
+  input: DataFrame with a "structure" column (pymatgen Structure or CompositionContainer)
+  output: one row per material, hundreds of matminer columns
+  joins composition + structure + site feature blocks
+
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/featurizers/featurizers.py#L185" target="_blank">featurize_composition(df)</a>
+  derives df["composition"], runs MultipleFeaturizer, handles oxidation states
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/featurizers/featurizers.py#L269" target="_blank">featurize_structure(df)</a>
+  structure-only blocks: density, symmetry, RDF, Coulomb matrix, Ewald, XRD...
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/featurizers/presets/__init__.py#L13" target="_blank">FEATURIZER_PRESETS</a>
+  "Matminer2023" (default) and "CompositionOnlyMatminer2023"
+  "DeBreuck2020" is pinned to matminer==0.6.2 and warns on modern versions</pre>
     </details>
   </section>
 
@@ -136,10 +146,15 @@
   </div>
   <details class="code-panel">
       <summary>in the codebase · NMI</summary>
-      <pre><span class="file">modnet/preprocessing.py:45</span>  compute_mi()
-<span class="file">modnet/preprocessing.py:68</span>  nmi_target()
-<span class="file">modnet/preprocessing.py:158</span> NMI = MI / ((H(X) + H(Y)) / 2)
-<span class="file">modnet/preprocessing.py:175</span> get_cross_nmi()</pre>
+      <pre><a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/preprocessing.py#L45" target="_blank">compute_mi(x, y, x_name, y_name, random_state, n_neighbors=3)</a>
+  wraps sklearn.feature_selection.mutual_info_regression (k-NN estimator)
+
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/preprocessing.py#L68" target="_blank">nmi_target(df_feat, df_target, task_type="regression", drop_constant_features=True, drop_duplicate_features=True)</a>
+  returns a DataFrame: NMI(feature, target) for every feature
+  NMI = MI / ((H(X) + H(Y)) / 2); NaNs -> 0
+
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/preprocessing.py#L175" target="_blank">get_cross_nmi(df_feat, drop_thr=0.2, return_entropy=False, n_jobs=None)</a>
+  full feature x feature NMI matrix; drops features with entropy < drop_thr</pre>
     </details>
   </section>
 
@@ -174,11 +189,17 @@
     </div>
     <details class="code-panel">
       <summary>in the codebase · relevance–redundancy</summary>
-      <pre><span class="file">modnet/preprocessing.py:297</span> p = max(0.1, 4.5 - n**0.4)
-<span class="file">modnet/preprocessing.py:311</span> c = 1e-6 * n**3
-<span class="file">modnet/preprocessing.py:325</span> get_features_relevance_redundancy()
-<span class="file">modnet/preprocessing.py:476</span> get_features_dyn()
-<span class="file">modnet/preprocessing.py:516</span> merge_ranked()</pre>
+      <pre><a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/preprocessing.py#L325" target="_blank">get_features_relevance_redundancy(target_nmi, cross_nmi, n_feat=None, rr_parameters=None, return_pc=False)</a>
+  greedy selection; returns dicts with feature, RR_score, NMI_target, RR_p, RR_c
+  score = NMI(f,y) / (max_selected NMI(f,s)^p + c)
+  default p = max(0.1, 4.5 - n^0.4)   (line 297)
+  default c = 1e-6 * n^3              (line 311)
+
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/preprocessing.py#L476" target="_blank">get_features_dyn(n_feat, cross_nmi, target_nmi)</a>
+  the faster variant MODData.feature_selection actually calls
+
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/preprocessing.py#L516" target="_blank">merge_ranked(lists)</a>
+  merges per-target rankings into one list, best rank first</pre>
     </details>
   </section>
 
@@ -197,11 +218,14 @@
     </div>
     <details class="code-panel">
       <summary>in the codebase · model</summary>
-      <pre><span class="file">modnet/models/vanilla.py:31</span>  MODNetModel
-<span class="file">modnet/models/vanilla.py:122</span> build_model()
-<span class="file">modnet/models/vanilla.py:143</span> shared encoder block
-<span class="file">modnet/models/vanilla.py:154</span> per-group intermediate block
-<span class="file">modnet/models/vanilla.py:184</span> classification vs regression head</pre>
+      <pre><a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/models/vanilla.py#L48" target="_blank">MODNetModel(targets, weights, num_neurons=([64],[32],[16],[16]), num_classes=None, multi_label=False, n_feat=64, act="relu", out_act="linear")</a>
+  targets: nested groups, e.g. [[["eform"]], [["egap"]]]
+
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/models/vanilla.py#L122" target="_blank">build_model(...)</a>
+  shared encoder block -> one intermediate block per target group -> one head per property
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/models/vanilla.py#L266" target="_blank">fit(training_data, val_fraction=0, val_data=None, lr=1e-3, epochs=200, batch_size=128, xscale="minmax", impute_missing=0, loss=None)</a>
+  selects n_feat optimal descriptors, scales/imputes, compiles with loss_weights
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/models/vanilla.py#L696" target="_blank">predict(test_data)</a> -> DataFrame of predictions</pre>
     </details>
   </section>
 
@@ -248,9 +272,11 @@
     </div>
     <details class="code-panel">
       <summary>in the codebase · joint loss</summary>
-      <pre><span class="file">modnet/models/vanilla.py:266</span> fit()
-<span class="file">modnet/models/vanilla.py:357</span> one y array per target group
-<span class="file">modnet/models/vanilla.py:462</span> compile(loss_weights=self.weights)</pre>
+      <pre>targets=[[["eform"]], [["egap"]]] means two property groups.
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/models/vanilla.py#L154" target="_blank">build_model - per-group blocks</a>
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/models/vanilla.py#L357" target="_blank">fit - one y array per target group</a>
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/models/vanilla.py#L462" target="_blank">compile(loss_weights=self.weights)</a>
+  the shared encoder is trained by gradients from every target</pre>
     </details>
   </section>
 
@@ -284,11 +310,13 @@
     </div>
     <details class="code-panel">
       <summary>in the codebase · GA</summary>
-      <pre><span class="file">modnet/hyper_opt/fit_genetic.py:15</span>  Individual (genome)
-<span class="file">modnet/hyper_opt/fit_genetic.py:85</span>  crossover()
-<span class="file">modnet/hyper_opt/fit_genetic.py:112</span> mutation()
-<span class="file">modnet/hyper_opt/fit_genetic.py:510</span> FitGenetic.run()
-<span class="file">modnet/hyper_opt/fit_genetic.py:565</span> weighted parent selection</pre>
+      <pre><a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/hyper_opt/fit_genetic.py#L15" target="_blank">Individual(max_feat, num_classes, multi_label, loss="mae", targets=None, weights=None)</a>
+  genome: act, loss, first-layer width, three data fractions,
+  xscale, impute_missing, lr, batch_size, n_feat
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/hyper_opt/fit_genetic.py#L85" target="_blank">crossover(partner)</a> / <a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/hyper_opt/fit_genetic.py#L112" target="_blank">mutation(prob_mut)</a>
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/hyper_opt/fit_genetic.py#L313" target="_blank">FitGenetic(data, targets=None, weights=None, sample_threshold=5000)</a>
+<a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/hyper_opt/fit_genetic.py#L510" target="_blank">run(size_pop=20, num_generations=10, prob_mut=None, nested=5, early_stopping=4, refit=5)</a>
+  returns an EnsembleMODNetModel; selection weight ~ 1/loss^5</pre>
     </details>
   </section>
 
