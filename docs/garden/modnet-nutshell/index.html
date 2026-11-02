@@ -55,6 +55,15 @@
         so it is not shown as a curve.
       </p>
     </div>
+    <div class="card" style="margin-top:16px">
+      <svg id="lcChart" viewBox="0 0 900 360" role="img" aria-label="Real learning curves"></svg>
+      <div class="legend" id="lcLegend"></div>
+      <p class="note">
+        <strong>Real run:</strong> MODNet, all-features, ridge and mean baselines on
+        <code>matbench_dielectric</code>, six training sizes × 3 seeds, fixed 800-sample
+        test set. Feature selection is redone inside every training fold.
+      </p>
+    </div>
   </section>
 
   <section id="featurization">
@@ -220,6 +229,21 @@
         by ~8% versus the best single-target MODNet on S(305 K); the gain was larger at
         smaller training sizes. The vibrational dataset has 1 245 materials and a
         145-sample test set.
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="grid2">
+        <div><svg id="ensChart" viewBox="0 0 460 360" role="img" aria-label="Ensemble uncertainty"></svg></div>
+        <div>
+          <div class="kv">
+            <div><b id="ensPearson">–</b><small>Pearson std vs error</small></div>
+            <div><b id="ensCover1">–</b><small>within 1σ</small></div>
+            <div><b id="ensCover2">–</b><small>within 2σ</small></div>
+          </div>
+          <p class="note">8 MODNet models on an 800-sample training set; each dot is a
+            test material: predicted ensemble std vs absolute error. Higher std tends
+            to mean higher error, but it is not a calibrated confidence interval.</p>
+        </div>
       </div>
     </div>
     <details class="code-panel">

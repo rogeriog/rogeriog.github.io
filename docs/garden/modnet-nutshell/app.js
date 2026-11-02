@@ -114,6 +114,61 @@ function initCross() {
   drawCross();
 }
 
+/* ---------- 0b. real learning curves ---------- */
+async function initLearningCurves() {
+  const svg = $("lcChart");
+  if (!svg) return;
+  let d;
+  try {
+    d = await (await fetch("data/learning_curves.json")).json();
+  } catch (e) {
+    svg.parentNode.style.display = "none";
+    return;
+  }
+  const colors = { modnet: "#ff3d5a", allnet: "#5a6cff", ridge: "#45d6ff", dummy: "#63e6a4" };
+  const names = { modnet: "MODNet", allnet: "all features", ridge: "ridge", dummy: "mean baseline" };
+  const sizes = d.sizes;
+  const rows = {};
+  for (const [m, obj] of Object.entries(d.models)) {
+    rows[m] = sizes.map((n) => {
+      const vals = obj.mae.filter((x) => x[0] === n).map((x) => x[2]);
+      if (!vals.length) return null;
+      return { mean: vals.reduce((a, v) => a + v, 0) / vals.length, lo: Math.min(...vals), hi: Math.max(...vals) };
+    });
+  }
+  const all = Object.values(rows).flat().filter(Boolean).flatMap((r) => [r.lo, r.hi]);
+  const ymax = Math.max(...all) * 1.1;
+  const W = 900, H = 360, P = { t: 18, r: 18, b: 46, l: 60 };
+  const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
+  const sx = (i) => x0 + (i / (sizes.length - 1)) * (x1 - x0);
+  const sy = (v) => y1 - (v / ymax) * (y1 - y0);
+  svg.innerHTML = "";
+  const ax = el("g", { class: "axis" });
+  sizes.forEach((n, i) => {
+    const t = el("text", { x: sx(i), y: H - 20, "text-anchor": "middle" }); t.textContent = n; ax.appendChild(t);
+  });
+  for (let i = 0; i <= 4; i++) {
+    const v = ymax * i / 4;
+    const t = el("text", { x: x0 - 8, y: sy(v) + 4, "text-anchor": "end" }); t.textContent = v.toFixed(2); ax.appendChild(t);
+    ax.appendChild(el("line", { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: "gridline" }));
+  }
+  const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
+  xl.textContent = "training samples"; ax.appendChild(xl);
+  svg.appendChild(ax);
+
+  for (const [m, pts] of Object.entries(rows)) {
+    pts.forEach((p, i) => {
+      if (!p) return;
+      svg.appendChild(el("line", { x1: sx(i), x2: sx(i), y1: sy(p.lo), y2: sy(p.hi), stroke: colors[m], opacity: 0.35 }));
+    });
+    const path = pts.map((p, i) => p ? `${i ? "L" : "M"}${sx(i)} ${sy(p.mean)}` : "").join(" ");
+    svg.appendChild(el("path", { class: "series", stroke: colors[m], d: path }));
+    pts.forEach((p, i) => p && svg.appendChild(el("circle", { cx: sx(i), cy: sy(p.mean), r: 4, fill: colors[m], class: "dot" })));
+  }
+  $("lcLegend").innerHTML = Object.keys(rows).map((m) =>
+    `<span><i class="swatch" style="background:${colors[m]}"></i>${names[m]}</span>`).join("");
+}
+
 /* ---------- 1. featurizer explorer ---------- */
 let featData = null;
 let featCurrent = "NaCl";
@@ -603,6 +658,45 @@ async function initJointChart() {
     `<span><i class="swatch" style="background:${s.color};height:2px;border-top:${s.dash ? "2px dashed " + s.color : "none"};background:transparent"></i>${s.name}</span>`).join("");
 }
 
+/* ---------- 5c. real ensemble uncertainty ---------- */
+async function initEnsemble() {
+  const svg = $("ensChart");
+  if (!svg) return;
+  let d;
+  try {
+    d = await (await fetch("data/ensemble.json")).json();
+  } catch (e) {
+    svg.parentNode.parentNode.style.display = "none";
+    return;
+  }
+  const pts = d.samples;
+  const xmax = Math.max(...pts.map((p) => p.std)) * 1.1;
+  const ymax = Math.max(...pts.map((p) => p.abs_error)) * 1.1;
+  const W = 460, H = 360, P = { t: 18, r: 18, b: 46, l: 52 };
+  const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
+  const sx = (v) => x0 + (v / xmax) * (x1 - x0);
+  const sy = (v) => y1 - (v / ymax) * (y1 - y0);
+  svg.innerHTML = "";
+  const ax = el("g", { class: "axis" });
+  for (let i = 0; i <= 4; i++) {
+    const xv = xmax * i / 4, yv = ymax * i / 4;
+    const tx = el("text", { x: sx(xv), y: H - 20, "text-anchor": "middle" }); tx.textContent = xv.toFixed(2); ax.appendChild(tx);
+    const ty = el("text", { x: x0 - 8, y: sy(yv) + 4, "text-anchor": "end" }); ty.textContent = yv.toFixed(2); ax.appendChild(ty);
+    ax.appendChild(el("line", { x1: x0, x2: x1, y1: sy(yv), y2: sy(yv), class: "gridline" }));
+  }
+  const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
+  xl.textContent = "ensemble std"; ax.appendChild(xl);
+  const yl = el("text", { transform: `translate(12,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle" });
+  yl.textContent = "absolute error"; ax.appendChild(yl);
+  svg.appendChild(ax);
+  pts.forEach((p) => svg.appendChild(el("circle", {
+    cx: sx(p.std), cy: sy(p.abs_error), r: 3, fill: "#ff3d5a", opacity: 0.55,
+  })));
+  $("ensPearson").textContent = d.correlations.pearson_std_error.toFixed(2);
+  $("ensCover1").textContent = (d.coverage.within_1sigma * 100).toFixed(0) + "%";
+  $("ensCover2").textContent = (d.coverage.within_2sigma * 100).toFixed(0) + "%";
+}
+
 /* ---------- 6. toy GA ---------- */
 let ga = null;
 
@@ -678,6 +772,7 @@ function initGA() {
 
 /* ---------- boot ---------- */
 initCross();
+initLearningCurves();
 initFeaturizer();
 initNMI();
 initNMIReal();
@@ -685,4 +780,5 @@ initFRR();
 drawArch();
 drawJoint();
 initJointChart();
+initEnsemble();
 initGA();
