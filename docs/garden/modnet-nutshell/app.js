@@ -124,9 +124,10 @@ async function initFeaturizer() {
     featData = await (await fetch("data/featurizer.json")).json();
   } catch (e) {
     $("groupBars").innerHTML = '<p class="note">Could not load featurizer data.</p>';
-    return;
   }
+  if (!featData || !featData.compounds) return;
   const box = $("compoundControls");
+  featCurrent = featData.compounds[0].name;
   featData.compounds.forEach((c) => {
     const b = document.createElement("button");
     b.className = "pill";
@@ -151,25 +152,29 @@ async function initFeaturizer() {
 
 function renderFeaturizer() {
   const c = featData.compounds.find((x) => x.name === featCurrent);
-  const comp = c.composition_features;
-  const struct = c.structure_features || 0;
-  const total = includeStructure && c.structure_available ? comp + struct : comp;
+  const hasStruct = c.structure_features && Object.keys(c.structure_features).length > 0;
+  const comp = featData.preset_summary.composition_only.n_features;
+  const struct = hasStruct ? featData.preset_summary.with_structure.n_features : 0;
+  const total = includeStructure && hasStruct ? comp + struct : comp;
   $("featComp").textContent = comp;
-  $("featStruct").textContent = c.structure_available ? struct : "n/a";
+  $("featStruct").textContent = hasStruct ? struct : "n/a";
   $("featTotal").textContent = total;
-  $("featProto").textContent = c.prototype;
+  $("featProto").textContent = c.prototype || (c.is_oxide ? "oxide" : "non-oxide");
   const toggle = $("structToggle");
-  toggle.disabled = !c.structure_available;
-  toggle.setAttribute("aria-pressed", includeStructure && c.structure_available);
-  $("structNote").textContent = c.structure_available ? "" : "no prototype structure built for this compound";
+  toggle.disabled = !hasStruct;
+  toggle.setAttribute("aria-pressed", includeStructure && hasStruct);
+  $("structNote").textContent = hasStruct ? "" : "no structure featurization for this sample";
 
-  const groups = Object.entries(c.groups).sort((a, b) => b[1].count - a[1].count);
-  const max = Math.max(...groups.map((g) => g[1].count));
-  $("groupBars").innerHTML = groups.map(([name, g]) => `
+  const fams = includeStructure && hasStruct
+    ? featData.preset_summary.with_structure.families
+    : featData.preset_summary.composition_only.families;
+  const groups = Object.entries(fams).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(...groups.map((g) => g[1]));
+  $("groupBars").innerHTML = groups.map(([name, count]) => `
     <div class="bar-row">
-      <span title="${g.sample.map((s) => s.name).join(", ")}">${name}</span>
-      <span class="bar-track"><span class="bar-fill" style="width:${(g.count / max) * 100}%"></span></span>
-      <b>${g.count}</b>
+      <span>${name}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${(count / max) * 100}%"></span></span>
+      <b>${count}</b>
     </div>`).join("");
 }
 
@@ -260,45 +265,137 @@ function initNMI() {
   drawNMI();
 }
 
+/* ---------- 2b. real NMI ranking ---------- */
+async function initNMIReal() {
+  try {
+    const d = await (await fetch("data/nmi_target.json")).json();
+    if (!d.features) throw new Error("no nmi data");
+    const top = d.features.slice(0, 12);
+    const max = Math.max(...top.map((f) => f.nmi));
+    $("nmiRealBars").innerHTML = top.map((f) => `
+      <div class="bar-row" title="${f.feature}">
+        <span>${f.feature.split("|").slice(0, 2).join(" · ")}</span>
+        <span class="bar-track"><span class="bar-fill" style="width:${(f.nmi / max) * 100}%"></span></span>
+        <b>${f.nmi.toFixed(3)}</b>
+      </div>`).join("");
+  } catch (e) {
+    const el = $("nmiRealBars");
+    if (el) el.innerHTML = '<p class="note">Real NMI ranking not available.</p>';
+  }
+}
+
 /* ---------- 3. FRR walkthrough ---------- */
 let frr = null;
+let frrReal = null;
+let frrNmi = null;
 
 function makeFRR() {
   const r = rng(1234);
   const features = [];
   for (let i = 0; i < 40; i++) {
-    const cluster = Math.floor(i / 10);           // four latent clusters
+    const cluster = Math.floor(i / 10);
     const relevance = 0.25 + 0.6 * r() + 0.15 * (cluster === 0 ? 1 : 0);
     features.push({ name: `f${String(i + 1).padStart(2, "0")}`, relevance, cluster });
   }
-  // cross NMI: high inside a cluster, low outside
   const cross = features.map((a) => features.map((b) =>
     a.name === b.name ? 1 : (a.cluster === b.cluster ? 0.55 + 0.35 * r() : 0.05 + 0.12 * r())
   ));
-  return { features, cross, selected: [], last: null };
+  return { mode: "synthetic", features, cross, selected: [], last: null };
+}
+
+function makeFRRReal() {
+  return { mode: "real", selected: [], step: -1, last: null };
 }
 
 function frrStep() {
   if (!frr) return;
+  if (frr.mode === "real") {
+    if (frr.step + 1 >= frrReal.seq.length) return;
+    frr.step++;
+    const f = frrReal.seq[frr.step];
+    const r = frrReal.rankByFeat[f];
+    frr.selected.push(f);
+    frr.last = { p: r.p, c: r.c, score: r.rr_score, red: r.max_redundancy, nmi: r.nmi_target };
+    drawFRR();
+    return;
+  }
   const n = frr.selected.length;
   if (n >= 12) return;
   const p = Math.max(0.1, 4.5 - Math.pow(n, 0.4));
   const c = 1e-6 * Math.pow(n, 3);
-  let best = null, bestScore = -Infinity, bestRed = 0;
+  let best = null, bestScore = -Infinity;
   frr.features.forEach((f, i) => {
     if (frr.selected.includes(i)) return;
     let maxRed = 0;
     frr.selected.forEach((j) => { maxRed = Math.max(maxRed, frr.cross[i][j]); });
     const score = f.relevance / (Math.pow(maxRed, p) + c);
-    if (score > bestScore) { bestScore = score; best = i; bestRed = maxRed; }
+    if (score > bestScore) { bestScore = score; best = i; }
   });
   if (best === null) return;
   frr.selected.push(best);
-  frr.last = { p, c, score: bestScore, red: bestRed };
+  frr.last = { p, c, score: bestScore };
   drawFRR();
 }
 
+function drawFRRReal() {
+  const svg = $("frrScatter");
+  if (!svg || !frr) return;
+  const W = 440, H = 330, P = { t: 18, r: 18, b: 46, l: 48 };
+  const sx = (v) => P.l + v * (W - P.l - P.r);
+  const sy = (v) => H - P.b - v * (H - P.t - P.b);
+  svg.innerHTML = "";
+  const ax = el("g", { class: "axis" });
+  [0, 0.25, 0.5, 0.75, 1].forEach((t) => {
+    ax.appendChild(el("line", { x1: sx(t), x2: sx(t), y1: P.t, y2: H - P.b, class: "gridline" }));
+    ax.appendChild(el("line", { x1: P.l, x2: W - P.r, y1: sy(t), y2: sy(t), class: "gridline" }));
+    const tx = el("text", { x: sx(t), y: H - 26, "text-anchor": "middle" }); tx.textContent = t; ax.appendChild(tx);
+    const ty = el("text", { x: P.l - 8, y: sy(t) + 4, "text-anchor": "end" }); ty.textContent = t.toFixed(2); ax.appendChild(ty);
+  });
+  const xl = el("text", { x: (P.l + W - P.r) / 2, y: H - 6, "text-anchor": "middle" });
+  xl.textContent = "max redundancy with selected set";
+  const yl = el("text", { transform: `translate(12,${(P.t + H - P.b) / 2}) rotate(-90)`, "text-anchor": "middle" });
+  yl.textContent = "NMI with target";
+  ax.appendChild(xl); ax.appendChild(yl);
+  svg.appendChild(ax);
+
+  const cands = frrReal.cands;
+  const idxOf = Object.fromEntries(cands.map((f, i) => [f, i]));
+  const selSet = new Set(frr.selected);
+  const last = frr.selected[frr.selected.length - 1];
+  cands.forEach((c, ci) => {
+    if (selSet.has(c)) return;
+    let maxRed = 0;
+    frr.selected.forEach((s) => { maxRed = Math.max(maxRed, frrReal.M[ci][idxOf[s]]); });
+    svg.appendChild(el("circle", {
+      cx: sx(Math.min(1, maxRed)), cy: sy(frrNmi[c] || 0), r: 4,
+      fill: "#5a6cff", opacity: 0.55, class: "dot",
+    }));
+  });
+  selSet.forEach((s) => {
+    if (!(s in idxOf)) return;
+    const ci = idxOf[s];
+    const isLast = s === last;
+    svg.appendChild(el("circle", {
+      cx: sx(Math.min(1, frrReal.rankByFeat[s].max_redundancy || 0)),
+      cy: sy(frrNmi[s] || 0), r: 6,
+      fill: isLast ? "#45d6ff" : "#ff3d5a", class: "dot",
+    }));
+    if (isLast) {
+      const t = el("text", { x: sx(Math.min(1, frrReal.rankByFeat[s].max_redundancy || 0)) + 8, y: sy(frrNmi[s] || 0) - 8, fill: "#45d6ff", "font-size": 10 });
+      t.textContent = s.split("|").slice(0, 2).join("·"); svg.appendChild(t);
+    }
+  });
+
+  $("frrStep").textContent = frr.selected.length;
+  $("frrP").textContent = frr.last ? Number(frr.last.p).toFixed(2) : "–";
+  $("frrC").textContent = frr.last ? Number(frr.last.c).toExponential(1) : "–";
+  $("frrScore").textContent = frr.last && frr.last.score != null ? Number(frr.last.score).toFixed(2) : "–";
+  $("frrList").innerHTML = frr.selected.slice(-8).reverse().map((s) =>
+    `<li>${s.split("|").slice(0, 2).join(" · ")} — NMI ${(frrNmi[s] || 0).toFixed(3)}</li>`).join("");
+}
+
 function drawFRR() {
+  if (frr && frr.mode === "real") return drawFRRReal();
   const svg = $("frrScatter");
   if (!svg || !frr) return;
   const W = 440, H = 330, P = { t: 18, r: 18, b: 46, l: 48 };
@@ -343,11 +440,35 @@ function drawFRR() {
     `<li>${frr.features[i].name} — NMI ${frr.features[i].relevance.toFixed(2)}</li>`).join("");
 }
 
-function initFRR() {
-  frr = makeFRR();
+async function initFRR() {
+  try {
+    const [r1, r2, r3] = await Promise.all([
+      fetch("data/frr_ranking.json"),
+      fetch("data/cross_nmi.json"),
+      fetch("data/nmi_target.json"),
+    ]);
+    const [rank, cross, nmi] = await Promise.all([r1.json(), r2.json(), r3.json()]);
+    const cands = cross.features;
+    frrReal = {
+      seq: rank.ranking.map((r) => r.feature).filter((f) => cands.includes(f)),
+      rankByFeat: Object.fromEntries(rank.ranking.map((r) => [r.feature, r])),
+      cands,
+      M: cross.matrix,
+    };
+    frrNmi = Object.fromEntries(nmi.features.map((f) => [f.feature, f.nmi]));
+    if (frrReal.seq.length < 3) throw new Error("ranking too small");
+    frr = makeFRRReal();
+  } catch (e) {
+    console.error("FRR fallback:", e && e.message);
+    frrReal = null;
+    frr = makeFRR();
+  }
   drawFRR();
   $("frrNext").onclick = frrStep;
-  $("frrReset").onclick = () => { frr = makeFRR(); drawFRR(); };
+  $("frrReset").onclick = () => {
+    frr = frrReal ? makeFRRReal() : makeFRR();
+    drawFRR();
+  };
 }
 
 /* ---------- 4. architecture ---------- */
@@ -416,6 +537,70 @@ function drawJoint() {
   svg.appendChild(el("line", { x1: 710, y1: 115, x2: 746, y2: 85, stroke: "rgba(214,160,180,.4)", "stroke-width": 1.3 }));
   svg.appendChild(el("line", { x1: 710, y1: 155, x2: 746, y2: 185, stroke: "rgba(214,160,180,.4)", "stroke-width": 1.3 }));
   label(660, 230, "one network, shared representation", "#6e5f6e", 10);
+}
+
+/* ---------- 5b. joint vs single, real run ---------- */
+async function initJointChart() {
+  const svg = $("jointChart");
+  if (!svg) return;
+  let d;
+  try {
+    d = await (await fetch("data/joint_learning.json")).json();
+  } catch (e) {
+    svg.parentNode.style.display = "none";
+    return;
+  }
+  if (!d.rows || !d.rows.length) throw new Error("no joint data");
+  const sizes = [...new Set(d.rows.map((r) => r.n_train))].sort((a, b) => a - b);
+  const avg = (rows, key) => sizes.map((n) => {
+    const vals = rows.filter((r) => r.n_train === n).map((r) => r[key]);
+    return vals.reduce((a, v) => a + v, 0) / vals.length;
+  });
+  const W = 900, H = 320, P = { t: 20, r: 20, b: 44, l: 56 };
+  const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
+  const allVals = d.rows.flatMap((r) => [r.joint.eform, r.joint.egap, r.single.eform, r.single.egap]);
+  const ymin = 0, ymax = Math.max(...allVals) * 1.15;
+  const sx = (n) => x0 + (n - sizes[0]) / (sizes[sizes.length - 1] - sizes[0]) * (x1 - x0);
+  const sy = (v) => y1 - (v - ymin) / (ymax - ymin) * (y1 - y0);
+  svg.innerHTML = "";
+
+  const ax = el("g", { class: "axis" });
+  sizes.forEach((n) => {
+    const t = el("text", { x: sx(n), y: H - 20, "text-anchor": "middle" });
+    t.textContent = n; ax.appendChild(t);
+  });
+  for (let i = 0; i <= 4; i++) {
+    const v = ymin + (ymax - ymin) * i / 4;
+    const t = el("text", { x: x0 - 8, y: sy(v) + 4, "text-anchor": "end" });
+    t.textContent = v.toFixed(2); ax.appendChild(t);
+    ax.appendChild(el("line", { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: "gridline" }));
+  }
+  const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
+  xl.textContent = "training samples"; ax.appendChild(xl);
+  svg.appendChild(ax);
+
+  const series = [
+    { name: "eform · joint", color: "#ff3d5a", dash: "", vals: d.rows.filter((r) => true), y: "eform", joint: true },
+    { name: "eform · single", color: "#ff3d5a", dash: "5 4", y: "eform", joint: false },
+    { name: "egap · joint", color: "#45d6ff", dash: "", y: "egap", joint: true },
+    { name: "egap · single", color: "#45d6ff", dash: "5 4", y: "egap", joint: false },
+  ];
+  for (const s of series) {
+    const pts = sizes.map((n) => {
+      const rows = d.rows.filter((r) => r.n_train === n);
+      const vals = rows.map((r) => s.joint ? r.joint[s.y] : r.single[s.y]);
+      return [sx(n), sy(vals.reduce((a, v) => a + v, 0) / vals.length)];
+    });
+    svg.appendChild(el("path", {
+      class: "series", stroke: s.color,
+      "stroke-dasharray": s.dash,
+      d: pts.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" "),
+    }));
+  }
+
+  const lg = $("jointLegend");
+  lg.innerHTML = series.map((s) =>
+    `<span><i class="swatch" style="background:${s.color};height:2px;border-top:${s.dash ? "2px dashed " + s.color : "none"};background:transparent"></i>${s.name}</span>`).join("");
 }
 
 /* ---------- 6. toy GA ---------- */
@@ -495,7 +680,9 @@ function initGA() {
 initCross();
 initFeaturizer();
 initNMI();
+initNMIReal();
 initFRR();
 drawArch();
 drawJoint();
+initJointChart();
 initGA();

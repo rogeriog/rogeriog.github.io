@@ -117,7 +117,15 @@
           points. The real implementation uses scikit-learn's k-NN estimator.</p>
       </div>
     </div>
-    <details class="code-panel">
+    <div class="card" style="margin-top:16px">
+    <div class="bars" id="nmiRealBars"></div>
+    <p class="note">
+      <strong>Real run:</strong> top descriptors by normalized mutual information with the
+      refractive index, computed on the full 4 764-sample <code>matbench_dielectric</code>
+      set with the pinned MODNet pipeline.
+    </p>
+  </div>
+  <details class="code-panel">
       <summary>in the codebase · NMI</summary>
       <pre><span class="file">modnet/preprocessing.py:45</span>  compute_mi()
 <span class="file">modnet/preprocessing.py:68</span>  nmi_target()
@@ -150,9 +158,10 @@
           <ol id="frrList" style="font-size:.76rem;color:var(--muted);padding-left:18px;line-height:1.8"></ol>
         </div>
       </div>
-      <p class="note"><strong>Synthetic candidates</strong>, 40 features in four latent clusters.
-        The arithmetic is the real FRR rule with dynamic p and c; the feature names are labels, not
-        MODNet descriptors.</p>
+      <p class="note"><strong>Real run:</strong> the 60 highest-NMI descriptors of
+        <code>matbench_dielectric</code>, replaying the actual relevance–redundancy
+        selection (dynamic p and c, exact RR scores). Falls back to the synthetic
+        demo if the data files are missing.</p>
     </div>
     <details class="code-panel">
       <summary>in the codebase · relevance–redundancy</summary>
@@ -197,6 +206,15 @@
     </p>
     <div class="card">
       <svg id="jointSvg" viewBox="0 0 900 300" role="img" aria-label="Single-task versus joint architecture"></svg>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <svg id="jointChart" viewBox="0 0 900 320" role="img" aria-label="Joint versus single-task MAE"></svg>
+      <div class="legend" id="jointLegend"></div>
+      <p class="note">
+        <strong>Real run:</strong> 100 materials from the bundled MP_2018.6 subset,
+        two targets (formation energy, band gap), 3 seeds per training size,
+        MODNet 0.4.4, 300 epochs. Solid = joint, dashed = single-task.
+      </p>
       <div class="callout">
         <strong>Paper result, not a universal law:</strong> joint MODNet reduced test MAE
         by ~8% versus the best single-target MODNet on S(305 K); the gain was larger at

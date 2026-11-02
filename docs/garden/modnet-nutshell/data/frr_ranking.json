@@ -1,0 +1,917 @@
+{
+  "meta": {
+    "source": "matgenix/modnet @ 128197701adfe6407551a5af9441fc820908449d",
+    "script": "stage1b_frr.py",
+    "dataset": "matbench_dielectric",
+    "date": "2026-11-02T20:16:27.961746+00:00",
+    "versions": {
+      "python": "3.10.18",
+      "modnet": "0.4.4",
+      "matminer": "0.9.3",
+      "numpy": "1.26.4"
+    },
+    "n_feat": 100
+  },
+  "ranking": [
+    {
+      "step": 0,
+      "feature": "ValenceOrbital|frac p valence electrons",
+      "nmi_target": 0.09326976882807221,
+      "max_redundancy": null,
+      "rr_score": null,
+      "p": null,
+      "c": null
+    },
+    {
+      "step": 1,
+      "feature": "ElementFraction|C",
+      "nmi_target": 0.010659698939747891,
+      "max_redundancy": 0.01582670917152148,
+      "rr_score": 10235.461513345363,
+      "p": 4.1,
+      "c": 1e-06
+    },
+    {
+      "step": 2,
+      "feature": "ElementFraction|F",
+      "nmi_target": 0.03233878204753055,
+      "max_redundancy": 0.05583529818452259,
+      "rr_score": 1745.1051284238094,
+      "p": 3.972196835690842,
+      "c": 8e-06
+    },
+    {
+      "step": 3,
+      "feature": "ElementProperty|MagpieData minimum NUnfilled",
+      "nmi_target": 0.024941942106665414,
+      "max_redundancy": 0.056352169545680314,
+      "rr_score": 604.3449962162538,
+      "p": 3.879261770433856,
+      "c": 2.7e-05
+    },
+    {
+      "step": 4,
+      "feature": "AtomicPackingEfficiency|mean simul. packing efficiency",
+      "nmi_target": 0.04477448901430995,
+      "max_redundancy": 0.08587270413497906,
+      "rr_score": 294.42299313797736,
+      "p": 3.8035595493631007,
+      "c": 6.4e-05
+    },
+    {
+      "step": 5,
+      "feature": "ElementProperty|MagpieData mean MeltingT",
+      "nmi_target": 0.055028182813103725,
+      "max_redundancy": 0.10117256179143073,
+      "rr_score": 174.2960482566686,
+      "p": 3.7385384245136484,
+      "c": 0.000125
+    },
+    {
+      "step": 6,
+      "feature": "ElementProperty|MagpieData range CovalentRadius",
+      "nmi_target": 0.06757772506715297,
+      "max_redundancy": 0.12166487063833162,
+      "rr_score": 104.75579311812146,
+      "p": 3.6809309955683123,
+      "c": 0.000216
+    },
+    {
+      "step": 7,
+      "feature": "BandCenter|band center",
+      "nmi_target": 0.04939033811643781,
+      "max_redundancy": 0.11358088883484298,
+      "rr_score": 68.968710561112,
+      "p": 3.6288374302068878,
+      "c": 0.000343
+    },
+    {
+      "step": 8,
+      "feature": "ElementProperty|MagpieData mean Row",
+      "nmi_target": 0.07126821836286588,
+      "max_redundancy": 0.14506474371207112,
+      "rr_score": 47.313357669458476,
+      "p": 3.5810413160023717,
+      "c": 0.000512
+    },
+    {
+      "step": 9,
+      "feature": "Miedema|Miedema_deltaH_amor",
+      "nmi_target": 0.042554331381841254,
+      "max_redundancy": 0.12593048121993886,
+      "rr_score": 30.707727995373517,
+      "p": 3.536710125887723,
+      "c": 0.0007289999999999999
+    },
+    {
+      "step": 10,
+      "feature": "ElementProperty|MagpieData avg_dev Electronegativity",
+      "nmi_target": 0.05211381309500313,
+      "max_redundancy": 0.14955229580672424,
+      "rr_score": 22.606412599271703,
+      "p": 3.495245427396168,
+      "c": 0.001
+    },
+    {
+      "step": 11,
+      "feature": "ElementFraction|P",
+      "nmi_target": 0.02342894995553779,
+      "max_redundancy": 0.07526870162878714,
+      "rr_score": 16.02499956629887,
+      "p": 3.456200545888451,
+      "c": 0.001331
+    },
+    {
+      "step": 12,
+      "feature": "ElementProperty|MagpieData mode NdValence",
+      "nmi_target": 0.025279982039945376,
+      "max_redundancy": 0.09412942331633907,
+      "rr_score": 12.406188047860216,
+      "p": 3.4192319691835094,
+      "c": 0.001728
+    },
+    {
+      "step": 13,
+      "feature": "AtomicOrbitals|gap_AO",
+      "nmi_target": 0.04208828185696461,
+      "max_redundancy": 0.1563102543370514,
+      "rr_score": 10.342633250652057,
+      "p": 3.3840690256443655,
+      "c": 0.0021969999999999997
+    },
+    {
+      "step": 14,
+      "feature": "ElementProperty|MagpieData mean SpaceGroupNumber",
+      "nmi_target": 0.05582653919353967,
+      "max_redundancy": 0.1858322042543004,
+      "rr_score": 8.858678988917752,
+      "p": 3.350494097588745,
+      "c": 0.002744
+    },
+    {
+      "step": 15,
+      "feature": "ElementProperty|MagpieData avg_dev AtomicWeight",
+      "nmi_target": 0.032875018651657005,
+      "max_redundancy": 0.13017440754590728,
+      "rr_score": 7.2609154362988075,
+      "p": 3.3183292243748888,
+      "c": 0.003375
+    },
+    {
+      "step": 16,
+      "feature": "ElementProperty|MagpieData avg_dev MendeleevNumber",
+      "nmi_target": 0.03393542649873274,
+      "max_redundancy": 0.1460832702312355,
+      "rr_score": 5.762086693869326,
+      "p": 3.2874267467916813,
+      "c": 0.004096
+    },
+    {
+      "step": 17,
+      "feature": "AtomicPackingEfficiency|dist from 5 clusters |APE| < 0.010",
+      "nmi_target": 0.040802720951490755,
+      "max_redundancy": 0.17142997109378266,
+      "rr_score": 5.030383346269901,
+      "p": 3.257662599360907,
+      "c": 0.004913
+    },
+    {
+      "step": 18,
+      "feature": "ElementProperty|MagpieData mode MendeleevNumber",
+      "nmi_target": 0.08776535231191003,
+      "max_redundancy": 0.2663237839123548,
+      "rr_score": 4.435805987158463,
+      "p": 3.228931390741425,
+      "c": 0.0058319999999999995
+    },
+    {
+      "step": 19,
+      "feature": "TMetalFraction|transition metal fraction",
+      "nmi_target": 0.04222396486932484,
+      "max_redundancy": 0.18058607561188642,
+      "rr_score": 3.8271018040457085,
+      "p": 3.2011427235457326,
+      "c": 0.006859
+    },
+    {
+      "step": 20,
+      "feature": "ElementProperty|MagpieData mean CovalentRadius",
+      "nmi_target": 0.052163548108232774,
+      "max_redundancy": 0.21622350402888016,
+      "rr_score": 3.313716768851379,
+      "p": 3.174218393064005,
+      "c": 0.008
+    },
+    {
+      "step": 21,
+      "feature": "ElementProperty|MagpieData mean NUnfilled",
+      "nmi_target": 0.053431106798413085,
+      "max_redundancy": 0.22496552258047553,
+      "rr_score": 2.9055119689626205,
+      "p": 3.1480902219058287,
+      "c": 0.009261
+    },
+    {
+      "step": 22,
+      "feature": "YangSolidSolution|Yang delta",
+      "nmi_target": 0.07045226206735289,
+      "max_redundancy": 0.27057904203025107,
+      "rr_score": 2.5598242174807813,
+      "p": 3.1226983630393823,
+      "c": 0.010648
+    },
+    {
+      "step": 23,
+      "feature": "ElementProperty|MagpieData mean Electronegativity",
+      "nmi_target": 0.05555414604139391,
+      "max_redundancy": 0.2447992327406697,
+      "rr_score": 2.2268636509227426,
+      "p": 3.097989953393084,
+      "c": 0.012166999999999999
+    },
+    {
+      "step": 24,
+      "feature": "ElementProperty|MagpieData range Column",
+      "nmi_target": 0.058467947869745095,
+      "max_redundancy": 0.2688433860781654,
+      "rr_score": 1.8586587683060043,
+      "p": 3.073918033627197,
+      "c": 0.013824
+    },
+    {
+      "step": 25,
+      "feature": "ElementProperty|MagpieData maximum Row",
+      "nmi_target": 0.031865853825194114,
+      "max_redundancy": 0.16623802599418583,
+      "rr_score": 1.6076432310659832,
+      "p": 3.0504406726446085,
+      "c": 0.015625
+    },
+    {
+      "step": 26,
+      "feature": "YangSolidSolution|Yang omega",
+      "nmi_target": 0.05198163359971036,
+      "max_redundancy": 0.2671687024783223,
+      "rr_score": 1.4452992550693209,
+      "p": 3.0275202514612367,
+      "c": 0.017575999999999998
+    },
+    {
+      "step": 27,
+      "feature": "ElementProperty|MagpieData avg_dev GSbandgap",
+      "nmi_target": 0.06594350839713572,
+      "max_redundancy": 0.3128392384866137,
+      "rr_score": 1.3157558572997543,
+      "p": 3.0051228724613788,
+      "c": 0.019683
+    },
+    {
+      "step": 28,
+      "feature": "ElementProperty|MagpieData maximum NValence",
+      "nmi_target": 0.04987446581765883,
+      "max_redundancy": 0.2664566860636459,
+      "rr_score": 1.2077665969605915,
+      "p": 2.9832178682882144,
+      "c": 0.021952
+    },
+    {
+      "step": 29,
+      "feature": "ElementProperty|MagpieData mean NdValence",
+      "nmi_target": 0.05470735218980163,
+      "max_redundancy": 0.28895179773798824,
+      "rr_score": 1.1010412626414974,
+      "p": 2.9617773906324896,
+      "c": 0.024388999999999997
+    },
+    {
+      "step": 30,
+      "feature": "ElementProperty|MagpieData mean GSvolume_pa",
+      "nmi_target": 0.030398460847754223,
+      "max_redundancy": 0.18114212200303553,
+      "rr_score": 0.9053466329654416,
+      "p": 2.940776063633524,
+      "c": 0.027
+    },
+    {
+      "step": 31,
+      "feature": "ElementProperty|MagpieData mean AtomicWeight",
+      "nmi_target": 0.048679305000522075,
+      "max_redundancy": 0.3023112702756507,
+      "rr_score": 0.808790491226803,
+      "p": 2.920190689939881,
+      "c": 0.029790999999999998
+    },
+    {
+      "step": 32,
+      "feature": "AtomicOrbitals|HOMO_energy",
+      "nmi_target": 0.08063441829078251,
+      "max_redundancy": 0.40807825980723256,
+      "rr_score": 0.7529128690939108,
+      "p": 2.9,
+      "c": 0.032768
+    },
+    {
+      "step": 33,
+      "feature": "ElementProperty|MagpieData minimum GSvolume_pa",
+      "nmi_target": 0.07777924426171556,
+      "max_redundancy": 0.4044329454816227,
+      "rr_score": 0.7092297022071364,
+      "p": 2.8801844370817236,
+      "c": 0.035937
+    },
+    {
+      "step": 34,
+      "feature": "ElementFraction|O",
+      "nmi_target": 0.041908651873926187,
+      "max_redundancy": 0.28697030432907056,
+      "rr_score": 0.6215658983431808,
+      "p": 2.860725972007682,
+      "c": 0.039304
+    },
+    {
+      "step": 35,
+      "feature": "ElementProperty|MagpieData range SpaceGroupNumber",
+      "nmi_target": 0.06488531556901256,
+      "max_redundancy": 0.38540451793543007,
+      "rr_score": 0.5928084736578915,
+      "p": 2.8416079427514958,
+      "c": 0.042874999999999996
+    },
+    {
+      "step": 36,
+      "feature": "ElementProperty|MagpieData avg_dev NpValence",
+      "nmi_target": 0.06298950486894096,
+      "max_redundancy": 0.3827538895091517,
+      "rr_score": 0.5567830817014865,
+      "p": 2.82281491494821,
+      "c": 0.046655999999999996
+    },
+    {
+      "step": 37,
+      "feature": "ElementProperty|MagpieData mean MendeleevNumber",
+      "nmi_target": 0.03705990330576053,
+      "max_redundancy": 0.26486223763509403,
+      "rr_score": 0.49578710886293986,
+      "p": 2.8043325600904767,
+      "c": 0.050653
+    },
+    {
+      "step": 38,
+      "feature": "ElementProperty|MagpieData avg_dev NValence",
+      "nmi_target": 0.04296082714432477,
+      "max_redundancy": 0.3071527230732931,
+      "rr_score": 0.4661007194439052,
+      "p": 2.786147548753658,
+      "c": 0.054872
+    },
+    {
+      "step": 39,
+      "feature": "ElementProperty|MagpieData maximum MendeleevNumber",
+      "nmi_target": 0.08494494483850244,
+      "max_redundancy": 0.49447754377056774,
+      "rr_score": 0.4212339927748006,
+      "p": 2.768247456651154,
+      "c": 0.059319
+    },
+    {
+      "step": 40,
+      "feature": "ValenceOrbital|frac d valence electrons",
+      "nmi_target": 0.06375403661427598,
+      "max_redundancy": 0.44529221205671315,
+      "rr_score": 0.3705921652639441,
+      "p": 2.750620681690755,
+      "c": 0.064
+    },
+    {
+      "step": 41,
+      "feature": "AtomicPackingEfficiency|mean abs simul. packing efficiency",
+      "nmi_target": 0.05001745182903611,
+      "max_redundancy": 0.3827526581896332,
+      "rr_score": 0.35381522881627947,
+      "p": 2.733256370502553,
+      "c": 0.068921
+    },
+    {
+      "step": 42,
+      "feature": "IonProperty|max ionic char",
+      "nmi_target": 0.08405986157941178,
+      "max_redundancy": 0.5427569930086181,
+      "rr_score": 0.31809346864258153,
+      "p": 2.7161443531535125,
+      "c": 0.074088
+    },
+    {
+      "step": 43,
+      "feature": "AtomicPackingEfficiency|dist from 1 clusters |APE| < 0.010",
+      "nmi_target": 0.041900060362979934,
+      "max_redundancy": 0.35300889735439783,
+      "rr_score": 0.29998744280909495,
+      "p": 2.699275084964383,
+      "c": 0.079507
+    },
+    {
+      "step": 44,
+      "feature": "ElementProperty|MagpieData range Number",
+      "nmi_target": 0.035466385289992935,
+      "max_redundancy": 0.30365140797846946,
+      "rr_score": 0.2813597488870487,
+      "p": 2.6826395945100074,
+      "c": 0.085184
+    },
+    {
+      "step": 45,
+      "feature": "ElementProperty|MagpieData mean NValence",
+      "nmi_target": 0.04322544223459221,
+      "max_redundancy": 0.37863574672773387,
+      "rr_score": 0.2600952960313328,
+      "p": 2.666229437021041,
+      "c": 0.091125
+    },
+    {
+      "step": 46,
+      "feature": "ElementProperty|MagpieData avg_dev CovalentRadius",
+      "nmi_target": 0.032336350411591434,
+      "max_redundancy": 0.2814574094858424,
+      "rr_score": 0.2448175046451748,
+      "p": 2.6500366525191,
+      "c": 0.09733599999999999
+    },
+    {
+      "step": 47,
+      "feature": "IonProperty|avg ionic char",
+      "nmi_target": 0.049515516623649405,
+      "max_redundancy": 0.4327384569268663,
+      "rr_score": 0.23146116273519962,
+      "p": 2.634053728112602,
+      "c": 0.103823
+    },
+    {
+      "step": 48,
+      "feature": "ElementProperty|MagpieData range GSvolume_pa",
+      "nmi_target": 0.054512598340823316,
+      "max_redundancy": 0.46484568133238385,
+      "rr_score": 0.22236035253087835,
+      "p": 2.618273563960522,
+      "c": 0.110592
+    },
+    {
+      "step": 49,
+      "feature": "ElementProperty|MagpieData avg_dev Column",
+      "nmi_target": 0.05883500513562471,
+      "max_redundancy": 0.49067549880748146,
+      "rr_score": 0.2144066682154934,
+      "p": 2.6026894424786535,
+      "c": 0.11764899999999999
+    },
+    {
+      "step": 50,
+      "feature": "ElementProperty|MagpieData range MeltingT",
+      "nmi_target": 0.046531016130533405,
+      "max_redundancy": 0.4208546687735676,
+      "rr_score": 0.20096184544744597,
+      "p": 2.5872950004199256,
+      "c": 0.125
+    },
+    {
+      "step": 51,
+      "feature": "ElementProperty|MagpieData minimum NValence",
+      "nmi_target": 0.04024480845882039,
+      "max_redundancy": 0.38047850126529253,
+      "rr_score": 0.18637262975844282,
+      "p": 2.5720842035087106,
+      "c": 0.132651
+    },
+    {
+      "step": 52,
+      "feature": "ElementProperty|MagpieData range MendeleevNumber",
+      "nmi_target": 0.057181080281202355,
+      "max_redundancy": 0.5158970176650731,
+      "rr_score": 0.1761103283448393,
+      "p": 2.55705132335022,
+      "c": 0.14060799999999998
+    },
+    {
+      "step": 53,
+      "feature": "AtomicOrbitals|LUMO_element",
+      "nmi_target": 0.06453560200297553,
+      "max_redundancy": 0.5659775607613391,
+      "rr_score": 0.16799671324367724,
+      "p": 2.5421909163713288,
+      "c": 0.14887699999999998
+    },
+    {
+      "step": 54,
+      "feature": "ElementProperty|MagpieData minimum MeltingT",
+      "nmi_target": 0.08875728871333904,
+      "max_redundancy": 0.6973922500321164,
+      "rr_score": 0.15860430286204982,
+      "p": 2.527497804579329,
+      "c": 0.157464
+    },
+    {
+      "step": 55,
+      "feature": "ElementProperty|MagpieData mode SpaceGroupNumber",
+      "nmi_target": 0.0756558234421464,
+      "max_redundancy": 0.6498433190634394,
+      "rr_score": 0.1498423559235412,
+      "p": 2.512967057951065,
+      "c": 0.166375
+    },
+    {
+      "step": 56,
+      "feature": "ElementProperty|MagpieData minimum AtomicWeight",
+      "nmi_target": 0.06966575822623938,
+      "max_redundancy": 0.6250341295094989,
+      "rr_score": 0.14373602324267903,
+      "p": 2.498593978287325,
+      "c": 0.175616
+    },
+    {
+      "step": 57,
+      "feature": "ElementProperty|MagpieData mean Number",
+      "nmi_target": 0.05195152280498705,
+      "max_redundancy": 0.5298736049347894,
+      "rr_score": 0.1326621339202312,
+      "p": 2.4843740843866864,
+      "c": 0.185193
+    },
+    {
+      "step": 58,
+      "feature": "ElementProperty|MagpieData maximum Electronegativity",
+      "nmi_target": 0.08547505763337229,
+      "max_redundancy": 0.7368483095980608,
+      "rr_score": 0.12845251672709457,
+      "p": 2.470303098409847,
+      "c": 0.19511199999999998
+    },
+    {
+      "step": 59,
+      "feature": "AtomicPackingEfficiency|dist from 3 clusters |APE| < 0.010",
+      "nmi_target": 0.04103673957523139,
+      "max_redundancy": 0.44094697207982053,
+      "rr_score": 0.12098594357779145,
+      "p": 2.456376933320053,
+      "c": 0.20537899999999998
+    },
+    {
+      "step": 60,
+      "feature": "ElementProperty|MagpieData mode GSvolume_pa",
+      "nmi_target": 0.08992629654338757,
+      "max_redundancy": 0.7838701711782848,
+      "rr_score": 0.1171414312367591,
+      "p": 2.442591681297983,
+      "c": 0.216
+    },
+    {
+      "step": 61,
+      "feature": "ElementProperty|MagpieData maximum Number",
+      "nmi_target": 0.06052698838033498,
+      "max_redundancy": 0.6166535971323138,
+      "rr_score": 0.11291795409631711,
+      "p": 2.428943603040573,
+      "c": 0.226981
+    },
+    {
+      "step": 62,
+      "feature": "Stoichiometry|3-norm",
+      "nmi_target": 0.04167118723246751,
+      "max_redundancy": 0.4541493524629463,
+      "rr_score": 0.1077004805162889,
+      "p": 2.4154291178630047,
+      "c": 0.23832799999999998
+    },
+    {
+      "step": 63,
+      "feature": "ElementProperty|MagpieData range GSbandgap",
+      "nmi_target": 0.06647857295211,
+      "max_redundancy": 0.6696303460854771,
+      "rr_score": 0.10524057237514668,
+      "p": 2.402044794531664,
+      "c": 0.25004699999999996
+    },
+    {
+      "step": 64,
+      "feature": "ElementProperty|MagpieData range NpValence",
+      "nmi_target": 0.03908450151320146,
+      "max_redundancy": 0.42657378865081214,
+      "rr_score": 0.09950188439012989,
+      "p": 2.388787342763369,
+      "c": 0.262144
+    },
+    {
+      "step": 65,
+      "feature": "ElementProperty|MagpieData mode MeltingT",
+      "nmi_target": 0.08949483883361613,
+      "max_redundancy": 0.8332998765475969,
+      "rr_score": 0.09695688515969496,
+      "p": 2.3756536053328485,
+      "c": 0.274625
+    },
+    {
+      "step": 66,
+      "feature": "ElementProperty|MagpieData minimum CovalentRadius",
+      "nmi_target": 0.0812764802671238,
+      "max_redundancy": 0.7945582517246808,
+      "rr_score": 0.09360365183176599,
+      "p": 2.3626405507362853,
+      "c": 0.287496
+    },
+    {
+      "step": 67,
+      "feature": "ValenceOrbital|frac s valence electrons",
+      "nmi_target": 0.0534560484019906,
+      "max_redundancy": 0.5908415879489725,
+      "rr_score": 0.09042332597603074,
+      "p": 2.3497452663639553,
+      "c": 0.300763
+    },
+    {
+      "step": 68,
+      "feature": "ElementProperty|MagpieData mode Number",
+      "nmi_target": 0.0909037510031989,
+      "max_redundancy": 0.8751714407449868,
+      "rr_score": 0.08684744315776013,
+      "p": 2.33696495213959,
+      "c": 0.314432
+    },
+    {
+      "step": 69,
+      "feature": "ElementProperty|MagpieData mean NpValence",
+      "nmi_target": 0.059207991435245,
+      "max_redundancy": 0.6610109914524611,
+      "rr_score": 0.08332682113485271,
+      "p": 2.324296914588191,
+      "c": 0.328509
+    },
+    {
+      "step": 70,
+      "feature": "ElementProperty|MagpieData mode GSbandgap",
+      "nmi_target": 0.06418173608084607,
+      "max_redundancy": 0.7104351154627762,
+      "rr_score": 0.08056005933575866,
+      "p": 2.3117385612976644,
+      "c": 0.34299999999999997
+    },
+    {
+      "step": 71,
+      "feature": "ElementProperty|MagpieData minimum SpaceGroupNumber",
+      "nmi_target": 0.06383658493657715,
+      "max_redundancy": 0.7079885520247252,
+      "rr_score": 0.07881634424029065,
+      "p": 2.299287395742905,
+      "c": 0.357911
+    },
+    {
+      "step": 72,
+      "feature": "ElementProperty|MagpieData mean GSbandgap",
+      "nmi_target": 0.06508923443300123,
+      "max_redundancy": 0.7196918500104363,
+      "rr_score": 0.07706938783292423,
+      "p": 2.286941012443853,
+      "c": 0.37324799999999997
+    },
+    {
+      "step": 73,
+      "feature": "ElementProperty|MagpieData mode CovalentRadius",
+      "nmi_target": 0.08315148196156319,
+      "max_redundancy": 0.8778381464445684,
+      "rr_score": 0.0734213916861873,
+      "p": 2.27469709243165,
+      "c": 0.389017
+    },
+    {
+      "step": 74,
+      "feature": "ElementProperty|MagpieData mean NpUnfilled",
+      "nmi_target": 0.05678912853926728,
+      "max_redundancy": 0.6569438167831598,
+      "rr_score": 0.07172857226783502,
+      "p": 2.2625533989993625,
+      "c": 0.405224
+    },
+    {
+      "step": 75,
+      "feature": "ElementProperty|MagpieData mode NValence",
+      "nmi_target": 0.06478362225629757,
+      "max_redundancy": 0.743924609329595,
+      "rr_score": 0.06923024342457958,
+      "p": 2.2505077737158103,
+      "c": 0.421875
+    },
+    {
+      "step": 76,
+      "feature": "ElementProperty|MagpieData avg_dev NpUnfilled",
+      "nmi_target": 0.06170791199559978,
+      "max_redundancy": 0.7166682975687213,
+      "rr_score": 0.06756213500279909,
+      "p": 2.2385581326829356,
+      "c": 0.438976
+    },
+    {
+      "step": 77,
+      "feature": "ElementProperty|MagpieData mode Electronegativity",
+      "nmi_target": 0.08600535741910917,
+      "max_redundancy": 0.9436012474340519,
+      "rr_score": 0.06441020889721853,
+      "p": 2.226702463018838,
+      "c": 0.45653299999999997
+    },
+    {
+      "step": 78,
+      "feature": "ElementProperty|MagpieData avg_dev NUnfilled",
+      "nmi_target": 0.04243884067922403,
+      "max_redundancy": 0.5066664359369568,
+      "rr_score": 0.06094380573242537,
+      "p": 2.214938819550118,
+      "c": 0.474552
+    },
+    {
+      "step": 79,
+      "feature": "ElementProperty|MagpieData mode AtomicWeight",
+      "nmi_target": 0.08945827398128559,
+      "max_redundancy": 0.9984940583084292,
+      "rr_score": 0.06005023277773472,
+      "p": 2.203265321698565,
+      "c": 0.493039
+    },
+    {
+      "step": 80,
+      "feature": "ElementProperty|MagpieData minimum Row",
+      "nmi_target": 0.04698980223857909,
+      "max_redundancy": 0.5975283221410994,
+      "rr_score": 0.05624278482596812,
+      "p": 2.191680150548458,
+      "c": 0.512
+    },
+    {
+      "step": 81,
+      "feature": "ElementProperty|MagpieData range Electronegativity",
+      "nmi_target": 0.08267725533583191,
+      "max_redundancy": 0.9907161203358081,
+      "rr_score": 0.05470564301734753,
+      "p": 2.1801815460818843,
+      "c": 0.5314409999999999
+    },
+    {
+      "step": 82,
+      "feature": "AtomicOrbitals|HOMO_element",
+      "nmi_target": 0.07967374187697526,
+      "max_redundancy": 0.9705323107153401,
+      "rr_score": 0.05352410542221209,
+      "p": 2.1687678045705034,
+      "c": 0.551368
+    },
+    {
+      "step": 83,
+      "feature": "ElementProperty|MagpieData maximum Column",
+      "nmi_target": 0.049482277379455354,
+      "max_redundancy": 0.6554340596956423,
+      "rr_score": 0.05081684224621353,
+      "p": 2.1574372761131047,
+      "c": 0.5717869999999999
+    },
+    {
+      "step": 84,
+      "feature": "ElementProperty|MagpieData avg_dev SpaceGroupNumber",
+      "nmi_target": 0.04354479073673413,
+      "max_redundancy": 0.560943622850887,
+      "rr_score": 0.049378306633306335,
+      "p": 2.1461883623091613,
+      "c": 0.592704
+    },
+    {
+      "step": 85,
+      "feature": "ElementProperty|MagpieData minimum MendeleevNumber",
+      "nmi_target": 0.04234591921609843,
+      "max_redundancy": 0.5416534989497895,
+      "rr_score": 0.04789158840697184,
+      "p": 2.135019514059344,
+      "c": 0.6141249999999999
+    },
+    {
+      "step": 86,
+      "feature": "ElementProperty|MagpieData mean Column",
+      "nmi_target": 0.04314521782055597,
+      "max_redundancy": 0.5703447065035334,
+      "rr_score": 0.04592446373359907,
+      "p": 2.123929229484656,
+      "c": 0.636056
+    },
+    {
+      "step": 87,
+      "feature": "ElementProperty|MagpieData maximum GSbandgap",
+      "nmi_target": 0.06726867433247623,
+      "max_redundancy": 0.9259388953608113,
+      "rr_score": 0.0445946004843691,
+      "p": 2.112916051956494,
+      "c": 0.658503
+    },
+    {
+      "step": 88,
+      "feature": "Miedema|Miedema_deltaH_ss_min",
+      "nmi_target": 0.04212896091805256,
+      "max_redundancy": 0.5629955450101902,
+      "rr_score": 0.042971191148142705,
+      "p": 2.10197856823052,
+      "c": 0.681472
+    },
+    {
+      "step": 89,
+      "feature": "ElementProperty|MagpieData minimum Number",
+      "nmi_target": 0.06985570065110266,
+      "max_redundancy": 0.998609960649697,
+      "rr_score": 0.04104174772466484,
+      "p": 2.091115406677755,
+      "c": 0.704969
+    },
+    {
+      "step": 90,
+      "feature": "ElementProperty|MagpieData maximum NdValence",
+      "nmi_target": 0.036241308708115476,
+      "max_redundancy": 0.4468284632633553,
+      "rr_score": 0.039558468548098295,
+      "p": 2.0803252356068,
+      "c": 0.729
+    },
+    {
+      "step": 91,
+      "feature": "ElementProperty|MagpieData mode Row",
+      "nmi_target": 0.04453525520573491,
+      "max_redundancy": 0.6628131003668912,
+      "rr_score": 0.03772594084595619,
+      "p": 2.069606761671535,
+      "c": 0.753571
+    },
+    {
+      "step": 92,
+      "feature": "ElementProperty|MagpieData maximum GSvolume_pa",
+      "nmi_target": 0.0416929253787379,
+      "max_redundancy": 0.6245143188453555,
+      "rr_score": 0.036003339332891474,
+      "p": 2.0589587283590483,
+      "c": 0.7786879999999999
+    },
+    {
+      "step": 93,
+      "feature": "AtomicOrbitals|LUMO_energy",
+      "nmi_target": 0.06092965253300077,
+      "max_redundancy": 0.9770265975834651,
+      "rr_score": 0.03466116261248337,
+      "p": 2.048379914552926,
+      "c": 0.804357
+    },
+    {
+      "step": 94,
+      "feature": "ElementProperty|MagpieData avg_dev Row",
+      "nmi_target": 0.0342895239418543,
+      "max_redundancy": 0.47291307682286876,
+      "rr_score": 0.032719708521249044,
+      "p": 2.037869133167389,
+      "c": 0.830584
+    },
+    {
+      "step": 95,
+      "feature": "ElementProperty|MagpieData range AtomicWeight",
+      "nmi_target": 0.044871001909737925,
+      "max_redundancy": 0.7432240985559174,
+      "rr_score": 0.031930300496293466,
+      "p": 2.027425229848055,
+      "c": 0.857375
+    },
+    {
+      "step": 96,
+      "feature": "ElementProperty|MagpieData maximum AtomicWeight",
+      "nmi_target": 0.05866079494977267,
+      "max_redundancy": 0.9984001045481495,
+      "rr_score": 0.031177483128604404,
+      "p": 2.017047081735424,
+      "c": 0.884736
+    },
+    {
+      "step": 97,
+      "feature": "ElementProperty|MagpieData mode Column",
+      "nmi_target": 0.047062471914040886,
+      "max_redundancy": 0.7923328802205893,
+      "rr_score": 0.03057034610229168,
+      "p": 2.006733596287428,
+      "c": 0.912673
+    },
+    {
+      "step": 98,
+      "feature": "ElementProperty|MagpieData avg_dev NdValence",
+      "nmi_target": 0.04575780793312025,
+      "max_redundancy": 0.7733961534225108,
+      "rr_score": 0.029715287546431116,
+      "p": 1.9964837101576522,
+      "c": 0.9411919999999999
+    },
+    {
+      "step": 99,
+      "feature": "ElementProperty|MagpieData maximum MeltingT",
+      "nmi_target": 0.04177197872265901,
+      "max_redundancy": 0.6871054227753448,
+      "rr_score": 0.028911005503877155,
+      "p": 1.9862963881260556,
+      "c": 0.9702989999999999
+    }
+  ]
+}

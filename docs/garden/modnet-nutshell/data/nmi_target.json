@@ -1,0 +1,965 @@
+{
+  "meta": {
+    "source": "matgenix/modnet @ 128197701adfe6407551a5af9441fc820908449d",
+    "script": "stage1",
+    "dataset": "matbench_dielectric",
+    "date": "2026-11-02T16:59:49.782302+00:00",
+    "versions": {
+      "python": "3.10.18",
+      "modnet": "0.4.4",
+      "matminer": "0.9.3",
+      "pymatgen": "2024.5.1",
+      "numpy": "1.26.4",
+      "pandas": "1.5.3"
+    },
+    "target": "n",
+    "units": "normalized mutual information",
+    "n_rows": 236
+  },
+  "features": [
+    {
+      "feature": "ValenceOrbital|frac p valence electrons",
+      "nmi": 0.09362813986377623
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode Number",
+      "nmi": 0.09071599550216104
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode GSvolume_pa",
+      "nmi": 0.08985011196166257
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode MeltingT",
+      "nmi": 0.08946797488505741
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode AtomicWeight",
+      "nmi": 0.08926728453825836
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum MeltingT",
+      "nmi": 0.08847209434619713
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode MendeleevNumber",
+      "nmi": 0.0880910785553508
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode Electronegativity",
+      "nmi": 0.08611723520544222
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum Electronegativity",
+      "nmi": 0.08552355696967053
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum MendeleevNumber",
+      "nmi": 0.08514068673405319
+    },
+    {
+      "feature": "IonProperty|max ionic char",
+      "nmi": 0.08406737043791275
+    },
+    {
+      "feature": "ElementProperty|MagpieData range Electronegativity",
+      "nmi": 0.08308989813908038
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode CovalentRadius",
+      "nmi": 0.08261388518161093
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum CovalentRadius",
+      "nmi": 0.0805404030027912
+    },
+    {
+      "feature": "AtomicOrbitals|HOMO_energy",
+      "nmi": 0.08050697931566357
+    },
+    {
+      "feature": "AtomicOrbitals|HOMO_element",
+      "nmi": 0.08036035985776888
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum GSvolume_pa",
+      "nmi": 0.077895574271584
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode SpaceGroupNumber",
+      "nmi": 0.07582193493268043
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean Row",
+      "nmi": 0.07134963078634197
+    },
+    {
+      "feature": "YangSolidSolution|Yang delta",
+      "nmi": 0.07053664917210924
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum Number",
+      "nmi": 0.06978100634263328
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum AtomicWeight",
+      "nmi": 0.06961765898786745
+    },
+    {
+      "feature": "ElementProperty|MagpieData range CovalentRadius",
+      "nmi": 0.06794842588436827
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum GSbandgap",
+      "nmi": 0.0674184100018786
+    },
+    {
+      "feature": "ElementProperty|MagpieData range GSbandgap",
+      "nmi": 0.0666265219048819
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev GSbandgap",
+      "nmi": 0.06624700554048922
+    },
+    {
+      "feature": "ElementProperty|MagpieData range SpaceGroupNumber",
+      "nmi": 0.06500007808314077
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean GSbandgap",
+      "nmi": 0.06495579376543831
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode NValence",
+      "nmi": 0.06462899943140037
+    },
+    {
+      "feature": "AtomicOrbitals|LUMO_element",
+      "nmi": 0.06459917117996707
+    },
+    {
+      "feature": "ValenceOrbital|frac d valence electrons",
+      "nmi": 0.0642346488805171
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode GSbandgap",
+      "nmi": 0.06369903828689825
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum SpaceGroupNumber",
+      "nmi": 0.06354782290371748
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NpValence",
+      "nmi": 0.06273129671485562
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NpUnfilled",
+      "nmi": 0.06143608955367904
+    },
+    {
+      "feature": "AtomicOrbitals|LUMO_energy",
+      "nmi": 0.06093550823126505
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum Number",
+      "nmi": 0.06066514678291968
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NpValence",
+      "nmi": 0.059270065654109014
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev Column",
+      "nmi": 0.05855763168797171
+    },
+    {
+      "feature": "ElementProperty|MagpieData range Column",
+      "nmi": 0.058518406052286996
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum AtomicWeight",
+      "nmi": 0.05836728160444448
+    },
+    {
+      "feature": "ElementProperty|MagpieData range MendeleevNumber",
+      "nmi": 0.05709903613644489
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NpUnfilled",
+      "nmi": 0.05696465240195812
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean SpaceGroupNumber",
+      "nmi": 0.055815033453459006
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean Electronegativity",
+      "nmi": 0.055565216774657374
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean MeltingT",
+      "nmi": 0.05504376434329443
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NdValence",
+      "nmi": 0.05485767842253364
+    },
+    {
+      "feature": "ElementProperty|MagpieData range GSvolume_pa",
+      "nmi": 0.05432531094860722
+    },
+    {
+      "feature": "ValenceOrbital|frac s valence electrons",
+      "nmi": 0.05368440379520029
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NUnfilled",
+      "nmi": 0.053333203721352376
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean CovalentRadius",
+      "nmi": 0.052372064420167314
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev Electronegativity",
+      "nmi": 0.05207494535872254
+    },
+    {
+      "feature": "YangSolidSolution|Yang omega",
+      "nmi": 0.05200340686225547
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean Number",
+      "nmi": 0.05200017894845802
+    },
+    {
+      "feature": "AtomicPackingEfficiency|mean abs simul. packing efficiency",
+      "nmi": 0.049929958172915574
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NValence",
+      "nmi": 0.04981257197016866
+    },
+    {
+      "feature": "IonProperty|avg ionic char",
+      "nmi": 0.04955387815822859
+    },
+    {
+      "feature": "BandCenter|band center",
+      "nmi": 0.04936266566873595
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum Column",
+      "nmi": 0.04908099457787213
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean AtomicWeight",
+      "nmi": 0.04863826489903875
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NpValence",
+      "nmi": 0.048253484776902875
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum Row",
+      "nmi": 0.04692423660383335
+    },
+    {
+      "feature": "ElementProperty|MagpieData range MeltingT",
+      "nmi": 0.04660233316822084
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode Column",
+      "nmi": 0.04641450170338745
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NdValence",
+      "nmi": 0.045954462902372345
+    },
+    {
+      "feature": "AtomicPackingEfficiency|mean simul. packing efficiency",
+      "nmi": 0.04476012069822746
+    },
+    {
+      "feature": "ElementProperty|MagpieData range AtomicWeight",
+      "nmi": 0.04470921225083375
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode Row",
+      "nmi": 0.044198891446645044
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean Column",
+      "nmi": 0.04366417329884853
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev SpaceGroupNumber",
+      "nmi": 0.04360875826981645
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NValence",
+      "nmi": 0.0430742207348717
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NValence",
+      "nmi": 0.042686692065052885
+    },
+    {
+      "feature": "TMetalFraction|transition metal fraction",
+      "nmi": 0.04237503276884648
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NUnfilled",
+      "nmi": 0.042374687542087015
+    },
+    {
+      "feature": "Miedema|Miedema_deltaH_ss_min",
+      "nmi": 0.04226903175083907
+    },
+    {
+      "feature": "Miedema|Miedema_deltaH_amor",
+      "nmi": 0.0420910606319026
+    },
+    {
+      "feature": "AtomicOrbitals|gap_AO",
+      "nmi": 0.042005286635411476
+    },
+    {
+      "feature": "AtomicPackingEfficiency|dist from 1 clusters |APE| < 0.010",
+      "nmi": 0.041972568220018054
+    },
+    {
+      "feature": "Stoichiometry|3-norm",
+      "nmi": 0.04183472228612681
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum MendeleevNumber",
+      "nmi": 0.041799661391166566
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum MeltingT",
+      "nmi": 0.04157463248689072
+    },
+    {
+      "feature": "ElementFraction|O",
+      "nmi": 0.04155952824700555
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum CovalentRadius",
+      "nmi": 0.04125201046158592
+    },
+    {
+      "feature": "AtomicPackingEfficiency|dist from 3 clusters |APE| < 0.010",
+      "nmi": 0.04105161879162111
+    },
+    {
+      "feature": "AtomicPackingEfficiency|dist from 5 clusters |APE| < 0.010",
+      "nmi": 0.04092084491787532
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum GSvolume_pa",
+      "nmi": 0.04070970236658948
+    },
+    {
+      "feature": "Miedema|Miedema_deltaH_inter",
+      "nmi": 0.04036962338628572
+    },
+    {
+      "feature": "Stoichiometry|5-norm",
+      "nmi": 0.04030150304326317
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum NValence",
+      "nmi": 0.040237422875857735
+    },
+    {
+      "feature": "ElementProperty|MagpieData range NpValence",
+      "nmi": 0.039480477217733255
+    },
+    {
+      "feature": "Stoichiometry|7-norm",
+      "nmi": 0.037932373026662664
+    },
+    {
+      "feature": "Stoichiometry|2-norm",
+      "nmi": 0.03776413750283257
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum Column",
+      "nmi": 0.037410099298483795
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean MendeleevNumber",
+      "nmi": 0.03704635066323415
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NdValence",
+      "nmi": 0.03600283387032433
+    },
+    {
+      "feature": "ElementProperty|MagpieData range Number",
+      "nmi": 0.035866452494858946
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum Electronegativity",
+      "nmi": 0.035633977558526646
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev MendeleevNumber",
+      "nmi": 0.033945922568372505
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev Row",
+      "nmi": 0.03380456396375772
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode NUnfilled",
+      "nmi": 0.0335287822046563
+    },
+    {
+      "feature": "ElementProperty|MagpieData range NValence",
+      "nmi": 0.03322179265987346
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev AtomicWeight",
+      "nmi": 0.032906193619699355
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode NpValence",
+      "nmi": 0.032806981493208875
+    },
+    {
+      "feature": "ElementFraction|F",
+      "nmi": 0.03246240785693443
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev CovalentRadius",
+      "nmi": 0.03229977177715784
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode NpUnfilled",
+      "nmi": 0.03214311347562427
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum Row",
+      "nmi": 0.03169817169493634
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NsUnfilled",
+      "nmi": 0.03059088947638474
+    },
+    {
+      "feature": "Stoichiometry|10-norm",
+      "nmi": 0.030447678349331278
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean GSvolume_pa",
+      "nmi": 0.030372183107063855
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NdUnfilled",
+      "nmi": 0.030020124300904314
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NsValence",
+      "nmi": 0.02946431160145401
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev Number",
+      "nmi": 0.02854775688403523
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NdUnfilled",
+      "nmi": 0.027976250717391415
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NsValence",
+      "nmi": 0.027679679451766147
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NsUnfilled",
+      "nmi": 0.027192966413545336
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev MeltingT",
+      "nmi": 0.02715371136145829
+    },
+    {
+      "feature": "ElementProperty|MagpieData range NdValence",
+      "nmi": 0.02569582490380131
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum NUnfilled",
+      "nmi": 0.02546420705630953
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode NdValence",
+      "nmi": 0.02532984231589407
+    },
+    {
+      "feature": "ElementFraction|P",
+      "nmi": 0.02311777024919039
+    },
+    {
+      "feature": "ElementFraction|H",
+      "nmi": 0.022414220122313602
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NfValence",
+      "nmi": 0.02160354965817262
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NUnfilled",
+      "nmi": 0.020780324453083258
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev GSvolume_pa",
+      "nmi": 0.02022978966123667
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NfValence",
+      "nmi": 0.019883660803970974
+    },
+    {
+      "feature": "ElementProperty|MagpieData range Row",
+      "nmi": 0.01952033243551792
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NdUnfilled",
+      "nmi": 0.018795187980395166
+    },
+    {
+      "feature": "ElementFraction|S",
+      "nmi": 0.018039681643798915
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NpUnfilled",
+      "nmi": 0.017898087756101317
+    },
+    {
+      "feature": "ValenceOrbital|frac f valence electrons",
+      "nmi": 0.017733536097311948
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum NdValence",
+      "nmi": 0.017347829823016424
+    },
+    {
+      "feature": "ElementFraction|Si",
+      "nmi": 0.01678191719669296
+    },
+    {
+      "feature": "Stoichiometry|0-norm",
+      "nmi": 0.01641840461386752
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum SpaceGroupNumber",
+      "nmi": 0.014992712294425385
+    },
+    {
+      "feature": "ElementFraction|Li",
+      "nmi": 0.014656335581860707
+    },
+    {
+      "feature": "ElementProperty|MagpieData range NpUnfilled",
+      "nmi": 0.014069134917764929
+    },
+    {
+      "feature": "ElementFraction|Se",
+      "nmi": 0.013389035365966272
+    },
+    {
+      "feature": "ElementFraction|N",
+      "nmi": 0.012878915639099315
+    },
+    {
+      "feature": "ElementProperty|MagpieData range NfValence",
+      "nmi": 0.012808021800828722
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NfValence",
+      "nmi": 0.012471998817907497
+    },
+    {
+      "feature": "ElementProperty|MagpieData range NUnfilled",
+      "nmi": 0.01242362189045184
+    },
+    {
+      "feature": "ElementFraction|C",
+      "nmi": 0.01104821463984417
+    },
+    {
+      "feature": "ElementFraction|Te",
+      "nmi": 0.010819483696636299
+    },
+    {
+      "feature": "ElementFraction|Cl",
+      "nmi": 0.010556758211786399
+    },
+    {
+      "feature": "ElementFraction|Cu",
+      "nmi": 0.010097995451364337
+    },
+    {
+      "feature": "ElementFraction|K",
+      "nmi": 0.009405578416977223
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev GSmagmom",
+      "nmi": 0.009189977869810012
+    },
+    {
+      "feature": "ElementFraction|As",
+      "nmi": 0.008993745675245175
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean GSmagmom",
+      "nmi": 0.008871619161337956
+    },
+    {
+      "feature": "ElementFraction|Sb",
+      "nmi": 0.008232183540962081
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum GSbandgap",
+      "nmi": 0.008177904787179707
+    },
+    {
+      "feature": "ElementFraction|Na",
+      "nmi": 0.00811777444658983
+    },
+    {
+      "feature": "ElementFraction|Ag",
+      "nmi": 0.007298020043563622
+    },
+    {
+      "feature": "ElementFraction|B",
+      "nmi": 0.007038051770951652
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum NpUnfilled",
+      "nmi": 0.007019362688316874
+    },
+    {
+      "feature": "ElementFraction|Ge",
+      "nmi": 0.006802583649994787
+    },
+    {
+      "feature": "ElementFraction|Ca",
+      "nmi": 0.006622383464190195
+    },
+    {
+      "feature": "ElementFraction|Zn",
+      "nmi": 0.006439764081123547
+    },
+    {
+      "feature": "ElementProperty|MagpieData range NsUnfilled",
+      "nmi": 0.006264552999765583
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NsUnfilled",
+      "nmi": 0.0061825266025911695
+    },
+    {
+      "feature": "ElementFraction|Sn",
+      "nmi": 0.0060063500926653265
+    },
+    {
+      "feature": "ElementFraction|Fe",
+      "nmi": 0.0059870873040328695
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum NsValence",
+      "nmi": 0.005957935108859411
+    },
+    {
+      "feature": "ElementProperty|MagpieData range NsValence",
+      "nmi": 0.005789392724553991
+    },
+    {
+      "feature": "ElementFraction|Nb",
+      "nmi": 0.005667376315133683
+    },
+    {
+      "feature": "ElementFraction|Al",
+      "nmi": 0.005545408390725643
+    },
+    {
+      "feature": "ElementFraction|Pt",
+      "nmi": 0.005535815538307392
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum NpValence",
+      "nmi": 0.005260028474838888
+    },
+    {
+      "feature": "ElementFraction|Ba",
+      "nmi": 0.005251364781418602
+    },
+    {
+      "feature": "ElementFraction|W",
+      "nmi": 0.0051483329753871845
+    },
+    {
+      "feature": "ElementFraction|Ta",
+      "nmi": 0.005050036921760776
+    },
+    {
+      "feature": "ElementProperty|MagpieData mean NfUnfilled",
+      "nmi": 0.004835105066073291
+    },
+    {
+      "feature": "ElementFraction|Rb",
+      "nmi": 0.004803490331014024
+    },
+    {
+      "feature": "ElementFraction|Be",
+      "nmi": 0.004746869555725957
+    },
+    {
+      "feature": "ElementFraction|Bi",
+      "nmi": 0.004644370106096495
+    },
+    {
+      "feature": "ElementFraction|I",
+      "nmi": 0.004504890242182591
+    },
+    {
+      "feature": "ElementFraction|Mn",
+      "nmi": 0.004423272228238794
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum GSmagmom",
+      "nmi": 0.0044025312309709
+    },
+    {
+      "feature": "ElementFraction|Sr",
+      "nmi": 0.0043168061989229765
+    },
+    {
+      "feature": "ElementFraction|Ti",
+      "nmi": 0.004316622040130754
+    },
+    {
+      "feature": "ElementFraction|Br",
+      "nmi": 0.004282810828404711
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NfUnfilled",
+      "nmi": 0.003943917908821635
+    },
+    {
+      "feature": "AtomicOrbitals|LUMO_character",
+      "nmi": 0.0038503577426702955
+    },
+    {
+      "feature": "ElementProperty|MagpieData avg_dev NfUnfilled",
+      "nmi": 0.003798727800518404
+    },
+    {
+      "feature": "ElementFraction|Cd",
+      "nmi": 0.0037356453111209082
+    },
+    {
+      "feature": "ElementFraction|Cr",
+      "nmi": 0.0032959237758879655
+    },
+    {
+      "feature": "ElementFraction|Ga",
+      "nmi": 0.003216041467641743
+    },
+    {
+      "feature": "ElementFraction|In",
+      "nmi": 0.0032108469216571654
+    },
+    {
+      "feature": "ElementFraction|Mg",
+      "nmi": 0.003208885006318707
+    },
+    {
+      "feature": "AtomicOrbitals|HOMO_character",
+      "nmi": 0.003154289447759635
+    },
+    {
+      "feature": "ElementFraction|Ni",
+      "nmi": 0.0031510072397769938
+    },
+    {
+      "feature": "ElementFraction|V",
+      "nmi": 0.0029850910991249674
+    },
+    {
+      "feature": "ElementFraction|Au",
+      "nmi": 0.002962983761320788
+    },
+    {
+      "feature": "ElementFraction|Tl",
+      "nmi": 0.0029355003926352535
+    },
+    {
+      "feature": "ElementFraction|Co",
+      "nmi": 0.0027714363342565824
+    },
+    {
+      "feature": "ElementFraction|Ru",
+      "nmi": 0.002428691644887662
+    },
+    {
+      "feature": "ElementFraction|La",
+      "nmi": 0.0024040274928547435
+    },
+    {
+      "feature": "ElementFraction|Zr",
+      "nmi": 0.0021123830241939127
+    },
+    {
+      "feature": "ElementFraction|Cs",
+      "nmi": 0.001798880830280303
+    },
+    {
+      "feature": "ElementFraction|Rh",
+      "nmi": 0.0014513814857331831
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum NsUnfilled",
+      "nmi": 0.001370351641568231
+    },
+    {
+      "feature": "ElementFraction|Hg",
+      "nmi": 0.0013137510668531115
+    },
+    {
+      "feature": "ElementFraction|Sc",
+      "nmi": 0.0013012291873149644
+    },
+    {
+      "feature": "ElementFraction|Os",
+      "nmi": 0.0012278870154874648
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode NfValence",
+      "nmi": 0.001172270443526068
+    },
+    {
+      "feature": "ElementFraction|Y",
+      "nmi": 0.0010555188894723882
+    },
+    {
+      "feature": "ElementProperty|MagpieData maximum NsValence",
+      "nmi": 0.0010433233417388547
+    },
+    {
+      "feature": "ElementFraction|Nd",
+      "nmi": 0.0009987008700062183
+    },
+    {
+      "feature": "ElementFraction|Pd",
+      "nmi": 0.0009906164575304432
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode GSmagmom",
+      "nmi": 0.0009679692787877692
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode NdUnfilled",
+      "nmi": 0.0009602513279654184
+    },
+    {
+      "feature": "ElementFraction|Pb",
+      "nmi": 0.0009466958547002393
+    },
+    {
+      "feature": "ElementFraction|Sm",
+      "nmi": 0.0009376606652728647
+    },
+    {
+      "feature": "ElementFraction|Pr",
+      "nmi": 0.0008804541580130568
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode NsUnfilled",
+      "nmi": 0.0008351201458188168
+    },
+    {
+      "feature": "ElementProperty|MagpieData mode NsValence",
+      "nmi": 0.0008154976666697518
+    },
+    {
+      "feature": "ElementFraction|Ir",
+      "nmi": 0.0006844365250130467
+    },
+    {
+      "feature": "ElementFraction|Ce",
+      "nmi": 0.0006391735962810772
+    },
+    {
+      "feature": "ElementFraction|Ho",
+      "nmi": 0.0006113154040586796
+    },
+    {
+      "feature": "ElementFraction|Er",
+      "nmi": 0.0005032750256133123
+    },
+    {
+      "feature": "ElementFraction|Hf",
+      "nmi": 0.0004400304973448132
+    },
+    {
+      "feature": "ElementFraction|Th",
+      "nmi": 0.00036813433157911106
+    },
+    {
+      "feature": "ElementFraction|Dy",
+      "nmi": 0.0003162656642835583
+    },
+    {
+      "feature": "ElementFraction|Tm",
+      "nmi": 0.00023404892685822845
+    },
+    {
+      "feature": "ElementFraction|Mo",
+      "nmi": 0.00022139896858707508
+    },
+    {
+      "feature": "ElementFraction|Ac",
+      "nmi": 0.00015563663045678835
+    },
+    {
+      "feature": "ElementFraction|Tb",
+      "nmi": 0.00011873169639064964
+    },
+    {
+      "feature": "ElementFraction|Lu",
+      "nmi": 0.00011726034155236377
+    },
+    {
+      "feature": "ElementFraction|Eu",
+      "nmi": 0.00011476022746978226
+    },
+    {
+      "feature": "ElementFraction|Yb",
+      "nmi": 7.206749337643639e-05
+    },
+    {
+      "feature": "ElementFraction|Re",
+      "nmi": 5.3994522874031106e-05
+    },
+    {
+      "feature": "ElementFraction|Tc",
+      "nmi": 5.2731078527267466e-05
+    },
+    {
+      "feature": "ElementProperty|MagpieData minimum NfValence",
+      "nmi": 0.0
+    },
+    {
+      "feature": "ElementFraction|Gd",
+      "nmi": 0.0
+    },
+    {
+      "feature": "ElementFraction|U",
+      "nmi": 0.0
+    }
+  ]
+}
