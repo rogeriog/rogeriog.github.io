@@ -381,6 +381,15 @@
       and the best individuals are selected, crossed over, and mutated. Elitism keeps
       the best; early stopping ends a stagnant run; refit turns the winner into an ensemble.
     </p>
+    <p class="sub">
+      Mechanically: each generation scores every individual by the mean validation MAE
+      over the inner folds. Parents are drawn with probability proportional to
+      <code>1/loss<sup>5</sup></code>, so good individuals are strongly favoured without
+      excluding the rest. Crossover takes a random half of each parent's genes; mutation
+      perturbs one or more genes. The best two individuals survive unchanged (elitism).
+      If the best loss does not improve for four generations, the run stops; the winner
+      is refit on the full training set, optionally as a bootstrap ensemble.
+    </p>
     <div class="card">
       <svg id="gaChart" viewBox="0 0 900 320" role="img" aria-label="Real GA generations"></svg>
       <div class="grid2" style="margin-top:12px">
