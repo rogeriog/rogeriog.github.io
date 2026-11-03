@@ -14,9 +14,12 @@ let showDensity = true;
 let showCutoff = true;
 let showSlices = true;
 let sliceAngle = 0;
+let sliceTilt = 0;
 let autoRotate = false;
 let pair = "all";
-let lChan = "all";
+let lChan = "0";
+let selCell = null;
+let heatLayout = null;
 
 /* ---------------- three.js scene ---------------- */
 const canvas = $("three");
@@ -45,6 +48,7 @@ scene.add(root);
 let densityPts = null;
 let cutoffMesh = null;
 let sliceGroup = null;
+let sliceMesh = null;
 
 function clearGroup(g) {
   while (g.children.length) {
@@ -100,28 +104,20 @@ function buildScene() {
   cutoffMesh.visible = showCutoff;
   root.add(cutoffMesh);
 
-  // cross-section planes with rainbow density
-  if (!showSlices) { sliceGroup = null; } else {
-  sliceGroup = new THREE.Group();
-  sliceGroup.rotation.y = sliceAngle * Math.PI / 180;
-  const R = cutoff;
-  const axes = [
-    { name: "xy", rot: [0, 0, 0] },
-    { name: "xz", rot: [-Math.PI / 2, 0, 0] },
-    { name: "yz", rot: [0, Math.PI / 2, 0] },
-  ];
-  axes.forEach((a) => {
-    const tex = new THREE.CanvasTexture(makeSliceCanvas(a.name));
-    tex.needsUpdate = true;
-    const m = new THREE.Mesh(
-      new THREE.PlaneGeometry(2 * R, 2 * R),
-      new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false })
-    );
-    m.rotation.set(...a.rot);
-    sliceGroup.add(m);
-  });
-  sliceGroup.visible = showSlices;
-  root.add(sliceGroup);
+  // one rotating cross-section plane, re-textured in world space
+  sliceGroup = null;
+  sliceMesh = null;
+  if (showSlices) {
+    sliceGroup = new THREE.Group();
+    const geo = new THREE.PlaneGeometry(2 * cutoff, 2 * cutoff);
+    sliceMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      map: new THREE.CanvasTexture(makeSliceCanvas()),
+      transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false,
+    }));
+    sliceGroup.add(sliceMesh);
+    orientSlice();
+    sliceGroup.visible = true;
+    root.add(sliceGroup);
   }
 
   // density cloud: Gaussian samples around each neighbor
@@ -226,7 +222,12 @@ function initSceneControls() {
   $("sliceAngle").oninput = (e) => {
     sliceAngle = Number(e.target.value);
     $("sliceAngleVal").textContent = sliceAngle + "°";
-    if (sliceGroup) sliceGroup.rotation.y = sliceAngle * Math.PI / 180;
+    refreshSlices();
+  };
+  $("sliceTilt").oninput = (e) => {
+    sliceTilt = Number(e.target.value);
+    $("sliceTiltVal").textContent = sliceTilt + "°";
+    refreshSlices();
   };
   $("toggleSpin").onclick = (e) => {
     autoRotate = !autoRotate;
@@ -251,7 +252,9 @@ function renderHeatmap() {
   const cells = spectrumCells(values, labels);
   const rows = [...new Set(cells.map((c) => c.n + "-" + c.n2))];
   const lvals = [0, 1, 2, 3, 4];
-  const max = Math.max(...cells.flatMap((c) => lvals.map((l) => c.values[l] || 0)), 1e-9);
+  const allVals = cells.flatMap((c) => lvals.map((l) => c.values[l] || 0));
+  const vmax = Math.max(...allVals, 1e-9);
+  const vmin = Math.min(...allVals, 0);
 
   const canvas = $("heatmap");
   const ctx = canvas.getContext("2d");
@@ -259,6 +262,7 @@ function renderHeatmap() {
   ctx.clearRect(0, 0, W, H);
   const left = 90, top = 30, cellW = (W - left - 20) / lvals.length;
   const cellH = (H - top - 44) / Math.max(rows.length, 1);
+  heatLayout = { left, top, cellW, cellH, rows };
 
   ctx.font = "11px Inter, sans-serif";
   ctx.textAlign = "center";
@@ -272,14 +276,16 @@ function renderHeatmap() {
     const cell = cells.find((c) => c.n + "-" + c.n2 === r);
     lvals.forEach((l, j) => {
       const v = cell ? (cell.values[l] || 0) : 0;
-      const t = Math.pow(v / max, 0.45);
-      ctx.fillStyle = rainbow(t);
+      const t = Math.max(0, Math.min(1, (v - vmin) / (vmax - vmin || 1)));
+      ctx.fillStyle = rainbow(Math.pow(t, 0.75));
       ctx.fillRect(left + cellW * j + 1, top + cellH * i + 1, cellW - 2, cellH - 2);
-      if (t > 0.62) {
-        ctx.fillStyle = "#14060a";
-        ctx.font = "10px ui-monospace, monospace";
-        ctx.fillText(v.toFixed(2), left + cellW * (j + 0.5), top + cellH * (i + 0.5) + 3);
-        ctx.font = "11px Inter, sans-serif";
+      ctx.fillStyle = t > 0.55 ? "#14060a" : "#eee9ee";
+      ctx.font = "9px ui-monospace, monospace";
+      ctx.fillText(v.toFixed(2), left + cellW * (j + 0.5), top + cellH * (i + 0.5) + 3);
+      ctx.font = "11px Inter, sans-serif";
+      if (selCell === r + "|" + l) {
+        ctx.strokeStyle = "#45d6ff"; ctx.lineWidth = 1.5;
+        ctx.strokeRect(left + cellW * j + 1.5, top + cellH * i + 1.5, cellW - 3, cellH - 3);
       }
     });
   });
@@ -292,7 +298,35 @@ function renderHeatmap() {
     ? `Rows are radial channel pairs <code>(n, n′)</code>, columns <code>l</code>. Pair filter: <strong>${pair}</strong>. Uncompressed length: ${DATA.meta.descriptor_lengths.off}.`
     : `mu1nu1 rows are <code>(n, n′)</code>, columns <code>l</code>, summed over species. Length drops to ${DATA.meta.descriptor_lengths.mu1nu1} for ${species} species.`;
 
+  $("heatMax").textContent = `${vmin.toFixed(2)} … ${vmax.toFixed(2)}`;
+  const sel = selCell ? findSelectedCell(cells) : null;
+  if (sel) {
+    $("cellInfo").innerHTML = `Selected channel: <strong>n=${sel.n}, n′=${sel.n2}, l=${sel.l}</strong>
+      → <strong>p = ${sel.v.toFixed(3)}</strong>. This box is one number in the descriptor;
+      the colour is only a visual aid.`;
+  } else {
+    $("cellInfo").innerHTML = "Click any box to inspect its n, n′, l and value.";
+  }
+  renderSpectrumTable(cells);
   renderSpectrum(values, labels);
+}
+
+function findSelectedCell(cells) {
+  if (!selCell) return null;
+  const [row, l] = selCell.split("|");
+  const [n, n2] = row.split("-").map(Number);
+  const c = cells.find((x) => x.n === n && x.n2 === n2);
+  if (!c) return null;
+  return { n, n2, l: Number(l), v: c.values[Number(l)] || 0 };
+}
+
+function renderSpectrumTable(cells) {
+  const box = $("spectrumTable");
+  if (!box) return;
+  const rows = cells.sort((a, b) => a.n - b.n || a.n2 - b.n2);
+  box.innerHTML = `<table><thead><tr><th>n, n′</th>${[0,1,2,3,4].map(l=>`<th>l=${l}</th>`).join("")}</tr></thead><tbody>` +
+    rows.map((c) => `<tr><td>${c.n}, ${c.n2}</td>${[0,1,2,3,4].map(l=>`<td>${(c.values[l]||0).toFixed(2)}</td>`).join("")}</tr>`).join("") +
+    `</tbody></table>`;
 }
 
 /* ---------------- PCA ---------------- */
@@ -357,9 +391,21 @@ async function init() {
   buildScene();
   initSceneControls();
   initSpectrumControls();
+  $("heatmap").onclick = (e) => {
+    if (!heatLayout) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (e.currentTarget.width / r.width);
+    const y = (e.clientY - r.top) * (e.currentTarget.height / r.height);
+    const col = Math.floor((x - heatLayout.left) / heatLayout.cellW);
+    const row = Math.floor((y - heatLayout.top) / heatLayout.cellH);
+    if (row < 0 || row >= heatLayout.rows.length || col < 0 || col > 4) return;
+    selCell = heatLayout.rows[row] + "|" + col;
+    renderHeatmap();
+  };
   renderHeatmap();
   renderPCA();
   initDimension();
+  initSH();
   window.addEventListener("resize", resize);
   animate();
 
@@ -418,52 +464,65 @@ function rainbow(t) {
   return "rgb(216,27,60)";
 }
 
-function sliceDensity(u, v, axis) {
-  // maximum-intensity projection through the slice normal: makes the
-  // cross-section readable even when no atom lies exactly in the plane.
+function sliceBasis() {
+  const yaw = sliceAngle * Math.PI / 180;
+  const tilt = sliceTilt * Math.PI / 180;
+  const n = new THREE.Vector3(Math.sin(tilt) * Math.cos(yaw), Math.sin(tilt) * Math.sin(yaw), Math.cos(tilt)).normalize();
+  let up = new THREE.Vector3(0, 0, 1);
+  if (Math.abs(n.dot(up)) > 0.95) up = new THREE.Vector3(0, 1, 0);
+  const e1 = new THREE.Vector3().crossVectors(up, n).normalize();
+  const e2 = new THREE.Vector3().crossVectors(n, e1).normalize();
+  return { n, e1, e2 };
+}
+
+function sliceDensityAt(u, v) {
+  const { n, e1, e2 } = sliceBasis();
   let best = 0;
-  const steps = 17;
+  const steps = 11;
   for (let k = 0; k < steps; k++) {
-    const t = -cutoff + (2 * cutoff) * k / (steps - 1);
-    let x = 0, y = 0, z = 0;
-    if (axis === "xy") { x = u; y = v; z = t; }
-    else if (axis === "xz") { x = u; z = v; y = t; }
-    else { y = u; z = v; x = t; }
+    const t = -0.9 + 1.8 * k / (steps - 1);
+    const x = e1.x * u + e2.x * v + n.x * t;
+    const y = e1.y * u + e2.y * v + n.y * t;
+    const z = e1.z * u + e2.z * v + n.z * t;
     best = Math.max(best, densityAt(x, y, z));
   }
   return best;
 }
 
-function makeSliceCanvas(axis) {
+function makeSliceCanvas() {
   const N = 180;
   const R = cutoff;
   const cv = document.createElement("canvas");
   cv.width = cv.height = N;
   const ctx = cv.getContext("2d");
   const img = ctx.createImageData(N, N);
-  const max = 1.0;
   for (let i = 0; i < N; i++) {
     for (let j = 0; j < N; j++) {
       const u = (i / (N - 1)) * 2 * R - R;
       const v = (R - j / (N - 1) * 2 * R);
-      const rho = sliceDensity(u, v, axis) / max;
-      const m = rainbow(Math.pow(rho, 0.5)).match(/\d+/g).map(Number);
+      const rho = Math.min(1, sliceDensityAt(u, v));
+      const m = rainbow(Math.pow(rho, 0.55)).match(/\d+/g).map(Number);
       const k = (j * N + i) * 4;
-      img.data[k] = m[0]; img.data[k + 1] = m[1]; img.data[k + 2] = m[2]; img.data[k + 3] = 220;
+      img.data[k] = m[0]; img.data[k + 1] = m[1]; img.data[k + 2] = m[2]; img.data[k + 3] = 225;
     }
   }
   ctx.putImageData(img, 0, 0);
   return cv;
 }
 
+function orientSlice() {
+  if (!sliceMesh) return;
+  const { n, e1, e2 } = sliceBasis();
+  const m = new THREE.Matrix4().makeBasis(e1, e2, n);
+  sliceMesh.quaternion.setFromRotationMatrix(m);
+}
+
 function refreshSlices() {
-  if (!sliceGroup) return;
-  sliceGroup.children.forEach((m, idx) => {
-    const axis = ["xy", "xz", "yz"][idx];
-    m.material.map.dispose();
-    m.material.map = new THREE.CanvasTexture(makeSliceCanvas(axis));
-    m.material.map.needsUpdate = true;
-  });
+  if (!sliceMesh) return;
+  sliceMesh.material.map.dispose();
+  sliceMesh.material.map = new THREE.CanvasTexture(makeSliceCanvas());
+  sliceMesh.material.map.needsUpdate = true;
+  orientSlice();
 }
 
 /* ---------------- better power-spectrum views ---------------- */
@@ -502,7 +561,7 @@ function spectrumAt(cell) {
 
 function renderSpectrum(values, labels) {
   const cells = spectrumCells(values, labels);
-  const max = Math.max(...cells.map(spectrumAt), 1e-9);
+  const max = Math.max(...cells.map((c) => Math.abs(spectrumAt(c))), 1e-9);
   const cv = $("spectrumBars");
   if (!cv) return;
   const ctx = cv.getContext("2d");
@@ -515,14 +574,20 @@ function renderSpectrum(values, labels) {
     const cell = cells.find((c) => c.n === n && c.n2 === n2);
     const x = pad + n2 * cw, y = pad + n * ch;
     const val = cell ? spectrumAt(cell) : 0;
-    const h = (val / max) * (ch - 26);
+    const h = (Math.abs(val) / max) * (ch - 26);
     ctx.fillStyle = "rgba(214,160,180,.06)";
     ctx.fillRect(x + 2, y + 2, cw - 4, ch - 4);
-    ctx.fillStyle = rainbow(Math.pow(val / max, 0.5));
+    ctx.fillStyle = val >= 0 ? rainbow(Math.pow(val / max, 0.5)) : `rgba(69,150,255,${0.35 + 0.6 * Math.abs(val) / max})`;
     ctx.fillRect(x + 6, y + ch - 8 - h, cw - 12, h);
     ctx.fillStyle = "#6e5f6e";
     ctx.textAlign = "center";
     ctx.fillText(`n=${n},n′=${n2}`, x + cw / 2, y + ch - 1);
+    if (val > 0) {
+      ctx.fillStyle = "#eee9ee";
+      ctx.font = "8px ui-monospace, monospace";
+      ctx.fillText(val.toFixed(2), x + cw / 2, y + ch - 12 - h);
+      ctx.font = "11px Inter, sans-serif";
+    }
   }
   ctx.fillStyle = "#a79ba6";
   ctx.textAlign = "left";
@@ -606,4 +671,193 @@ function initDimension() {
     };
   });
   drawDim();
+}
+/* ---------------- spherical harmonics gallery ---------------- */
+function realSH(l, m, x, y, z) {
+  const r2 = x * x + y * y + z * z;
+  const r = Math.sqrt(r2) || 1e-12;
+  const X = x / r, Y = y / r, Z = z / r;
+  if (l === 0) return 0.282095;
+  if (l === 1) {
+    if (m === -1) return 0.488603 * Y;
+    if (m === 0) return 0.488603 * Z;
+    return 0.488603 * X;
+  }
+  if (l === 2) {
+    if (m === -2) return 1.092548 * X * Y;
+    if (m === -1) return 1.092548 * Y * Z;
+    if (m === 0) return 0.315392 * (3 * Z * Z - 1);
+    if (m === 1) return 1.092548 * X * Z;
+    return 0.546274 * (X * X - Y * Y);
+  }
+  if (l === 3) {
+    if (m === -3) return 0.590044 * Y * (3 * X * X - Y * Y);
+    if (m === -2) return 2.890611 * X * Y * Z;
+    if (m === -1) return 0.457046 * Y * (5 * Z * Z - 1);
+    if (m === 0) return 0.373176 * Z * (5 * Z * Z - 3);
+    if (m === 1) return 0.457046 * X * (5 * Z * Z - 1);
+    if (m === 2) return 1.445306 * Z * (X * X - Y * Y);
+    return 0.590044 * X * (X * X - 3 * Y * Y);
+  }
+  return 0;
+}
+
+const SH_FORMULAS = {
+  "0,0": "Y₀₀ = 0.2821",
+  "1,-1": "Y₁,₋₁ = 0.4886 · y/r",
+  "1,0": "Y₁,₀ = 0.4886 · z/r",
+  "1,1": "Y₁,₁ = 0.4886 · x/r",
+  "2,-2": "Y₂,₋₂ = 1.0925 · xy/r²",
+  "2,-1": "Y₂,₋₁ = 1.0925 · yz/r²",
+  "2,0": "Y₂,₀ = 0.3154 · (3z²−r²)/r²",
+  "2,1": "Y₂,₁ = 1.0925 · xz/r²",
+  "2,2": "Y₂,₂ = 0.5463 · (x²−y²)/r²",
+  "3,-3": "Y₃,₋₃ = 0.5900 · y(3x²−y²)/r³",
+  "3,-2": "Y₃,₋₂ = 2.8906 · xyz/r³",
+  "3,-1": "Y₃,₋₁ = 0.4570 · y(5z²−r²)/r³",
+  "3,0": "Y₃,₀ = 0.3732 · z(5z²−3r²)/r³",
+  "3,1": "Y₃,₁ = 0.4570 · x(5z²−r²)/r³",
+  "3,2": "Y₃,₂ = 1.4453 · z(x²−y²)/r³",
+  "3,3": "Y₃,₃ = 0.5900 · x(x²−3y²)/r³",
+};
+
+let selL = 2, selM = 0;
+
+function shColor(v, max) {
+  const t = Math.max(-1, Math.min(1, v / (max || 1)));
+  const a = Math.abs(t);
+  return t >= 0
+    ? `rgba(255,61,90,${0.15 + 0.85 * a})`
+    : `rgba(69,150,255,${0.15 + 0.85 * a})`;
+}
+
+function drawSHCanvas(canvas, l, m, showAxes) {
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  let max = 0;
+  const vals = [];
+  for (let j = 0; j < H; j++) {
+    const theta = (j / (H - 1)) * Math.PI;
+    for (let i = 0; i < W; i++) {
+      const phi = (i / (W - 1)) * 2 * Math.PI;
+      const x = Math.sin(theta) * Math.cos(phi);
+      const y = Math.sin(theta) * Math.sin(phi);
+      const z = Math.cos(theta);
+      const v = realSH(l, m, x, y, z);
+      vals.push(v);
+      max = Math.max(max, Math.abs(v));
+    }
+  }
+  const img = ctx.createImageData(W, H);
+  let k = 0;
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const v = vals[k];
+    const c = shColor(v, max).match(/[\d.]+/g).map(Number);
+    const p = (j * W + i) * 4;
+    img.data[p] = c[0]; img.data[p + 1] = c[1]; img.data[p + 2] = c[2];
+    img.data[p + 3] = Math.abs(v) > 1e-6 ? 235 : 25;
+    k++;
+  }
+  ctx.putImageData(img, 0, 0);
+  if (showAxes) {
+    ctx.strokeStyle = "rgba(238,233,238,.25)";
+    ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
+    ctx.fillStyle = "#6e5f6e"; ctx.font = "10px Inter, sans-serif";
+    ctx.fillText("φ = 0", 6, H - 8); ctx.fillText("φ = 2π", W - 44, H - 8);
+    ctx.fillText("θ = 0", 6, 14); ctx.fillText("θ = π", 6, H - 4);
+  }
+}
+
+function buildSHGallery() {
+  const g = $("shGallery");
+  g.innerHTML = "";
+  for (let l = 0; l <= 3; l++) {
+    for (let m = -l; m <= l; m++) {
+      const tile = document.createElement("button");
+      tile.className = "sh-tile";
+      tile.setAttribute("aria-pressed", l === selL && m === selM);
+      const cv = document.createElement("canvas");
+      cv.width = 70; cv.height = 70;
+      drawSHCanvas(cv, l, m, false);
+      const label = document.createElement("span");
+      label.textContent = `l=${l}, m=${m}`;
+      tile.appendChild(cv); tile.appendChild(label);
+      tile.onclick = () => {
+        selL = l; selM = m;
+        [...g.children].forEach((c) => c.setAttribute("aria-pressed", c === tile));
+        drawSHDetail();
+      };
+      g.appendChild(tile);
+    }
+  }
+}
+
+function drawSHDetail() {
+  drawSHCanvas($("shDetail"), selL, selM, true);
+  updateSH3D(selL, selM);
+  $("shLm").textContent = `l=${selL}, m=${selM}`;
+  $("shFormula").textContent = SH_FORMULAS[`${selL},${selM}`] || "";
+  const lobes = selL === 0 ? 1 : 2 * selL;
+  $("shExplain").innerHTML = `This harmonic has <strong>${lobes}</strong> angular lobe${lobes === 1 ? "" : "s"}.
+    For a fixed <code>l</code> there are <strong>2l+1</strong> values of <code>m</code>
+    (here ${2 * selL + 1}); they span the orientations that the power spectrum sums over.`;
+}
+
+function initSH() {
+  initSH3D();
+  buildSHGallery();
+  drawSHDetail();
+}
+
+/* ---------------- 3D spherical harmonic lobe viewer ---------------- */
+let shRenderer, shScene, shCamera, shMesh, shControls;
+function initSH3D() {
+  const canvas = $("sh3d");
+  if (!canvas) return;
+  shRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  shRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  shRenderer.setSize(canvas.clientWidth || 360, canvas.clientHeight || 300, false);
+  shScene = new THREE.Scene();
+  shCamera = new THREE.PerspectiveCamera(40, 1, 0.1, 20);
+  shCamera.position.set(2.2, 1.6, 2.8);
+  shControls = new OrbitControls(shCamera, canvas);
+  shControls.enableDamping = true;
+  shControls.autoRotate = true;
+  shControls.autoRotateSpeed = 1.4;
+  shScene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const l1 = new THREE.PointLight(0xff6a7f, 40, 20); l1.position.set(4, 5, 4); shScene.add(l1);
+  const l2 = new THREE.PointLight(0x5a6cff, 30, 20); l2.position.set(-4, -3, -4); shScene.add(l2);
+  (function loop() {
+    requestAnimationFrame(loop);
+    shControls.update();
+    shRenderer.render(shScene, shCamera);
+  })();
+}
+
+function updateSH3D(l, m) {
+  if (!shScene) return;
+  if (shMesh) { shScene.remove(shMesh); shMesh.geometry.dispose(); shMesh.material.dispose(); }
+  const geo = new THREE.SphereGeometry(1, 96, 64);
+  const pos = geo.attributes.position;
+  const colors = [];
+  let max = 0;
+  const vals = [];
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const v = realSH(l, m, x, y, z);
+    vals.push(v); max = Math.max(max, Math.abs(v));
+  }
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const v = vals[i] / (max || 1);
+    const r = 0.35 + 0.65 * Math.abs(v);
+    pos.setXYZ(i, x * r, y * r, z * r);
+    if (v >= 0) colors.push(1.0, 0.24, 0.35); else colors.push(0.27, 0.55, 1.0);
+  }
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.15, side: THREE.DoubleSide });
+  shMesh = new THREE.Mesh(geo, mat);
+  shScene.add(shMesh);
 }

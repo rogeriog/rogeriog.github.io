@@ -17,7 +17,7 @@
 </header>
 
 <main>
-  <div class="wip">Draft preview · 3D explainer · 6 sections</div>
+  <div class="wip">Draft preview · 3D explainer · 7 sections</div>
   <h1>SOAP in <em>3D</em></h1>
   <p class="lede">
     Smooth Overlap of Atomic Positions turns a local atomic environment into a
@@ -45,7 +45,8 @@
           <button class="pill" id="toggleSlices" aria-pressed="true">cross-sections</button>
           <button class="pill" id="toggleSpin" aria-pressed="false">auto-rotate</button>
         </div>
-        <label class="slider">slice rotation <input id="sliceAngle" type="range" min="0" max="180" step="1" value="0"><span id="sliceAngleVal">0°</span></label>
+        <label class="slider">slice yaw <input id="sliceAngle" type="range" min="0" max="180" step="1" value="0"><span id="sliceAngleVal">0°</span></label>
+        <label class="slider">slice tilt <input id="sliceTilt" type="range" min="0" max="90" step="1" value="0"><span id="sliceTiltVal">0°</span></label>
         <div class="legend" id="sliceLegend"></div>
       </div>
       <div class="legend" id="atomLegend"></div>
@@ -71,8 +72,62 @@
     </div>
   </section>
 
+  <section id="harmonics">
+    <h2>3 · Spherical harmonics and where c<sub>nlm</sub> comes from</h2>
+    <p class="sub">
+      The density is a function of position. To turn it into numbers, SOAP projects
+      it onto a basis: a radial function <code>g<sub>n</sub>(r)</code> that asks
+      “at what distance?” and a spherical harmonic <code>Y<sub>lm</sub>(θ,φ)</code>
+      that asks “in which angular shape?”. Their product is one basis function;
+      integrating the density against it gives one coefficient <code>c<sub>nlm</sub></code>.
+    </p>
+    <div class="card">
+      <p class="note" style="margin-top:0">Real spherical harmonics up to <code>l=3</code>.
+        Red is positive, blue is negative; the number of angular lobes grows with
+        <code>l</code>. Click a tile to inspect it.</p>
+      <div class="sh-grid" id="shGallery"></div>
+      <div class="grid2" style="margin-top:16px;align-items:start">
+        <canvas id="shDetail" width="540" height="260"></canvas>
+        <div>
+          <canvas id="sh3d" width="360" height="300" style="background:#0d090d;border-radius:10px;margin-bottom:10px"></canvas>
+          <div class="kv"><div><b id="shLm">–</b><small>selected harmonic</small></div></div>
+          <div class="formula" id="shFormula" style="font-size:.86rem">–</div>
+          <p class="note" id="shExplain"></p>
+        </div>
+      </div>
+    </div>
+
+    <h3>One coefficient, step by step</h3>
+    <div class="flow">
+      <div class="flow-step"><b>ρ(r)</b><span>the neighbor density</span></div>
+      <div class="flow-arrow">×</div>
+      <div class="flow-step"><b>g<sub>n</sub>(r)</b><span>radial profile</span></div>
+      <div class="flow-arrow">×</div>
+      <div class="flow-step"><b>Y<sub>lm</sub>(θ,φ)</b><span>angular shape</span></div>
+      <div class="flow-arrow">∫</div>
+      <div class="flow-step out"><b>c<sub>nlm</sub></b><span>one number</span></div>
+    </div>
+    <p class="sub" style="margin-top:14px">
+      For every radial channel <code>n</code> and angular channel <code>(l,m)</code>
+      you get one complex number. The power spectrum multiplies pairs and sums over
+      <code>m</code>:
+    </p>
+    <div class="formula accent">p<sub>nn′l</sub> = Σ<sub>m=-l..l</sub> c<sub>nlm</sub> c<sub>n′lm</sub><sup>*</sup></div>
+    <div class="callout">
+      <strong>Why this removes orientation:</strong> rotating the environment mixes
+      the <code>m</code> components among themselves but leaves the sum over
+      <code>m</code> unchanged. That is the invariance SOAP is built on.
+    </div>
+    <details class="code-panel">
+      <summary>what the code computes</summary>
+      <pre>dscribe SOAP: n_max=4 radial functions, l_max=4 angular channels, Gaussian width σ.
+For 3 species it returns 390 power-spectrum values (240 with mu1nu1).
+The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pre>
+    </details>
+  </section>
+
   <section id="spectrum">
-    <h2>3 · The power spectrum is the fingerprint</h2>
+    <h2>4 · The power spectrum is the fingerprint</h2>
     <p class="sub">
       Each cell is one <code>(n, n′, l)</code> channel, summed over species pairs.
       Change the geometry or the cutoff and watch the fingerprint change. The
@@ -92,17 +147,29 @@
         <div class="controls" id="pairButtons" style="margin:0"></div>
         <div class="controls" id="lButtons" style="margin:0"></div>
       </div>
+      <p class="note" style="margin:8px 0 4px"><strong>How to read it:</strong>
+        rows are radial pairs <code>(n, n′)</code>, columns are <code>l</code>.
+        Every printed number is one <code>p<sub>nn′l</sub></code> value. Colour is
+        only a visual aid; the numbers are the data. Negative values are real:
+        for <code>n ≠ n′</code> the power spectrum is a cross term and can be
+        negative. Click a box to inspect it.</p>
       <div class="grid2" style="align-items:start">
-        <canvas id="heatmap" width="520" height="360"></canvas>
-        <canvas id="spectrumBars" width="520" height="360"></canvas>
+        <div><div class="canvas-label">all values · heatmap</div><canvas id="heatmap" width="520" height="360"></canvas></div>
+        <div><div class="canvas-label">bar view · selected l</div><canvas id="spectrumBars" width="520" height="360"></canvas></div>
       </div>
+      <div class="colorbar"><span>0</span><i></i><span id="heatMax">–</span></div>
+      <div id="cellInfo" class="note"></div>
       <div id="topComponents" class="toplist"></div>
+      <details class="code-panel" style="margin-top:12px">
+        <summary>show every value for this species pair</summary>
+        <div id="spectrumTable" style="padding:10px 14px"></div>
+      </details>
       <p class="note" id="heatNote"></p>
     </div>
   </section>
 
   <section id="compression">
-    <h2>4 · Compression: from hundreds of numbers to a map</h2>
+    <h2>5 · Compression: from hundreds of numbers to a map</h2>
     <p class="sub">
       SOAP vectors are high-dimensional and grow with the number of species.
       The <strong>mu1nu1</strong> scheme from Darby et al. compresses the
@@ -134,7 +201,7 @@
   </section>
 
   <section id="dimension">
-    <h2>5 · The dimensionality problem</h2>
+    <h2>6 · The dimensionality problem</h2>
     <p class="sub">
       The uncompressed power spectrum grows with the <em>square</em> of the number
       of species-resolved radial channels. On a three-element demo that is 390
@@ -164,7 +231,7 @@
   </section>
 
   <section id="limits">
-    <h2>6 · What to remember</h2>
+    <h2>7 · What to remember</h2>
     <div class="card">
       <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
         invariant, fixed-length, and interpretable through its radial/angular

@@ -74,3 +74,33 @@ footer{max-width:1080px;margin:0 auto;padding:26px 24px;border-top:1px solid var
 .toplist b{color:var(--ice);font-weight:500}
 select{font:inherit}
 #heatmap,#spectrumBars,#dimChart{background:#0d090d;border-radius:10px}
+
+/* spherical harmonics gallery */
+.sh-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:6px;margin-top:8px}
+@media(max-width:720px){.sh-grid{grid-template-columns:repeat(6,1fr)}}
+.sh-tile{position:relative;border:1px solid var(--border);border-radius:8px;overflow:hidden;
+  background:#0d090d;cursor:pointer;transition:.15s}
+.sh-tile:hover{border-color:var(--red)}
+.sh-tile[aria-pressed="true"]{border-color:var(--ice);box-shadow:0 0 0 1px rgba(69,214,255,.4)}
+.sh-tile canvas{width:100%;height:auto;display:block}
+.sh-tile span{display:block;font-size:.62rem;color:var(--dim);text-align:center;padding:2px 0 3px;
+  font-family:ui-monospace,monospace}
+.flow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.flow-step{flex:1 1 120px;min-width:110px;background:rgba(22,14,22,.7);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;text-align:center}
+.flow-step b{display:block;font-family:ui-monospace,monospace;color:var(--ice);font-size:.9rem}
+.flow-step span{display:block;font-size:.68rem;color:var(--dim);margin-top:2px}
+.flow-step.out{border-color:rgba(255,61,90,.4)}
+.flow-step.out b{color:var(--red)}
+.flow-arrow{color:var(--dim);font-size:1.1rem;flex:0 0 auto}
+
+.colorbar{display:flex;align-items:center;gap:8px;font-size:.68rem;color:var(--dim);margin:8px 0 2px}
+.colorbar .ramp,.sh-tile canvas{image-rendering:auto}
+.colorbar i{flex:1;height:9px;border-radius:5px;display:block;
+  background:linear-gradient(90deg,#2b1a6b,#2456d8,#18c6c6,#8bd646,#ffd93b,#ff7a1a,#d81b3c)}
+.toplist{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.toplist span{font-size:.72rem;color:var(--muted);border:1px solid var(--border);
+  border-radius:8px;padding:4px 8px;background:rgba(13,9,13,.6)}
+.toplist b{color:var(--ice);font-weight:500}
+
+.canvas-label{font-size:.7rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;margin:0 0 4px}
