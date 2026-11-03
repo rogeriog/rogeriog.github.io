@@ -149,6 +149,7 @@ function buildScene() {
   }
 
   $("presetNote").textContent = p.description;
+  if (integ && integ._rebuild) integ._rebuild();
 }
 
 function resize() {
@@ -406,6 +407,8 @@ async function init() {
   renderPCA();
   initDimension();
   initSH();
+  initIntegration();
+  initIntegControls();
   window.addEventListener("resize", resize);
   animate();
 
@@ -860,4 +863,235 @@ function updateSH3D(l, m) {
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.15, side: THREE.DoubleSide });
   shMesh = new THREE.Mesh(geo, mat);
   shScene.add(shMesh);
+}
+
+/* ---------------- integration animation ---------------- */
+let integ = null;
+const COEFF_ORDER = (() => {
+  const out = [];
+  for (let n = 0; n < 4; n++)
+    for (let l = 0; l <= 3; l++)
+      for (let m = -l; m <= l; m++) out.push({ n, l, m });
+  return out;
+})();
+
+function integKey(n, l, m) { return `${n},${l},${m}`; }
+
+function buildIntegPoints() {
+  const N = 18;
+  const R = cutoff;
+  const pts = [];
+  for (let i = 0; i < N; i++) {
+    const x = -R + 2 * R * i / (N - 1);
+    for (let j = 0; j < N; j++) {
+      const y = -R + 2 * R * j / (N - 1);
+      for (let k = 0; k < N; k++) {
+        const z = -R + 2 * R * k / (N - 1);
+        const rho = densityAt(x, y, z);
+        if (rho > 1e-6) pts.push({ x, y, z, rho });
+      }
+    }
+  }
+  return { pts, dV: Math.pow(2 * R / (N - 1), 3) };
+}
+
+function integradial(n, r) {
+  const rn = 0.8 + 0.55 * n;
+  return Math.exp(-Math.pow(r - rn, 2) / (2 * 0.45 * 0.45));
+}
+
+function initIntegration() {
+  const canvas = $("integrand3d");
+  if (!canvas) return;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(canvas.clientWidth || 540, canvas.clientHeight || 400, false);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 30);
+  camera.position.set(4.2, 3.2, 5.2);
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.0;
+  scene.add(new THREE.AmbientLight(0xffffff, 1));
+  let points = null;
+  let geometry = null;
+  let colors = null;
+
+  const build = () => {
+    const { pts, dV } = buildIntegPoints();
+    const pos = new Float32Array(pts.length * 3);
+    const col = new Float32Array(pts.length * 3);
+    pts.forEach((p, i) => { pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z; });
+    if (points) { scene.remove(points); geometry.dispose(); points.material.dispose(); }
+    geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    colors = new THREE.BufferAttribute(col, 3);
+    geometry.setAttribute("color", colors);
+    points = new THREE.Points(geometry, new THREE.PointsMaterial({
+      size: 0.11, vertexColors: true, transparent: true, opacity: 0.95,
+      depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    scene.add(points);
+    integ = { renderer, scene, camera, controls, points, geometry, colors, pts, dV,
+      idx: 0, batch: 0, sum: 0, current: COEFF_ORDER[0], coeffs: {}, playing: false, timer: null };
+    resetIntegration();
+  };
+
+  (function loop() {
+    requestAnimationFrame(loop);
+    if (integ) { integ.controls.update(); integ.renderer.render(integ.scene, integ.camera); }
+  })();
+
+  build();
+  integ._rebuild = build;
+  window.addEventListener("resize", () => {
+    const w = canvas.clientWidth || 540, h = canvas.clientHeight || 400;
+    integ.renderer.setSize(w, h, false);
+    integ.camera.aspect = w / h; integ.camera.updateProjectionMatrix();
+  });
+}
+
+function buildCGrid() {
+  const g = $("cGrid");
+  if (!g) return;
+  g.innerHTML = "";
+  const pairs = [];
+  for (let l = 0; l <= 3; l++) for (let m = -l; m <= l; m++) pairs.push([l, m]);
+  g.appendChild(document.createElement("div"));
+  pairs.forEach(([l, m]) => {
+    const h = document.createElement("div");
+    h.className = "h"; h.textContent = `${l},${m}`; g.appendChild(h);
+  });
+  for (let n = 0; n < 4; n++) {
+    const rl = document.createElement("div");
+    rl.className = "rowlabel"; rl.textContent = `n=${n}`; g.appendChild(rl);
+    pairs.forEach(([l, m]) => {
+      const c = document.createElement("div");
+      c.className = "cell"; c.id = `cell-${n}-${l}-${m}`;
+      c.textContent = "·"; g.appendChild(c);
+    });
+  }
+}
+
+function resetIntegration() {
+  if (!integ) return;
+  clearTimeout(integ.timer); integ.playing = false;
+  integ.idx = 0; integ.batch = 0; integ.sum = 0; integ.coeffs = {};
+  integ.current = COEFF_ORDER[0];
+  const col = integ.colors.array;
+  for (let i = 0; i < col.length; i++) col[i] = 0.09;
+  integ.colors.needsUpdate = true;
+  buildCGrid();
+  startCoeff();
+  updateIntegUI(0);
+  $("intBar").style.width = "0%";
+}
+
+function startCoeff() {
+  const c = COEFF_ORDER[integ.idx];
+  if (!c) { stopInteg(); return; }
+  integ.current = c; integ.batch = 0; integ.sum = 0;
+  const col = integ.colors.array;
+  for (let i = 0; i < col.length; i++) col[i] = 0.09;
+  integ.colors.needsUpdate = true;
+  document.querySelectorAll(".cgrid .cell.cur").forEach((el) => el.classList.remove("cur"));
+  const cell = $(`cell-${c.n}-${c.l}-${c.m}`);
+  if (cell) cell.classList.add("cur");
+  $("intCoeff").textContent = `n=${c.n}, l=${c.l}, m=${c.m}`;
+  $("intSum").textContent = "0.000";
+  $("intProgress").textContent = "0%";
+  $("intBar").style.width = "0%";
+}
+
+function stepIntegration() {
+  if (!integ) return;
+  const c = integ.current;
+  const total = integ.pts.length;
+  const batches = 24;
+  const per = Math.ceil(total / batches);
+  const start = integ.batch * per;
+  const end = Math.min(total, start + per);
+  const col = integ.colors.array;
+  let scale = 0;
+  for (let i = start; i < end; i++) {
+    const p = integ.pts[i];
+    const r = Math.hypot(p.x, p.y, p.z) || 1e-9;
+    const ylm = realSH(c.l, c.m, p.x, p.y, p.z);
+    const val = p.rho * integradial(c.n, r) * ylm;
+    integ.sum += val * integ.dV * 1e6;
+    scale = Math.max(scale, Math.abs(val));
+  }
+  scale = scale || 1;
+  for (let i = start; i < end; i++) {
+    const p = integ.pts[i];
+    const r = Math.hypot(p.x, p.y, p.z) || 1e-9;
+    const val = p.rho * integradial(c.n, r) * realSH(c.l, c.m, p.x, p.y, p.z);
+    const t = Math.min(1, Math.abs(val) / scale);
+    if (val >= 0) { col[i * 3] = 1.0 * t; col[i * 3 + 1] = 0.22 * t; col[i * 3 + 2] = 0.35 * t; }
+    else { col[i * 3] = 0.25 * t; col[i * 3 + 1] = 0.5 * t; col[i * 3 + 2] = 1.0 * t; }
+  }
+  integ.colors.needsUpdate = true;
+  integ.batch++;
+  const pct = Math.min(1, end / total);
+  $("intBar").style.width = (pct * 100).toFixed(0) + "%";
+  $("intProgress").textContent = (pct * 100).toFixed(0) + "%";
+  $("intSum").textContent = Math.abs(integ.sum) < 0.01 ? integ.sum.toExponential(2) : integ.sum.toFixed(3);
+  if (end >= total) {
+    integ.coeffs[integKey(c.n, c.l, c.m)] = integ.sum;
+    const cell = $(`cell-${c.n}-${c.l}-${c.m}`);
+    if (cell) {
+      cell.textContent = Math.abs(integ.sum) < 0.01 ? integ.sum.toExponential(1) : integ.sum.toFixed(2);
+      cell.classList.add("done");
+      if (integ.sum < 0) cell.classList.add("neg");
+      cell.classList.remove("cur");
+    }
+    integ.idx++;
+    if (integ.idx < COEFF_ORDER.length) {
+      if (integ.playing) integ.timer = setTimeout(() => { startCoeff(); integ.timer = setTimeout(playTick, 30); }, 60);
+      else startCoeff();
+    } else {
+      stopInteg();
+      $("intExplain").textContent = "All 64 coefficients filled. Each is one integral; the power spectrum is built from pairs of them.";
+    }
+  }
+  updateIntegUI(pct);
+}
+
+function updateIntegUI(pct) {
+  const c = integ.current;
+  $("intExplain").innerHTML = `Currently integrating <strong>n=${c.n}, l=${c.l}, m=${c.m}</strong>.
+    Red samples add, blue samples subtract. The running sum is one <code>c<sub>nlm</sub></code> (arbitrary units).`;
+}
+
+function playTick() {
+  if (!integ || !integ.playing) return;
+  integ.timer = null;
+  stepIntegration();
+  if (integ.playing && integ.idx < COEFF_ORDER.length && !integ.timer) {
+    integ.timer = setTimeout(playTick, 45);
+  }
+}
+
+function startInteg() {
+  if (!integ) return;
+  integ.playing = true; clearTimeout(integ.timer); integ.timer = setTimeout(playTick, 30);
+}
+function stopInteg() { if (integ) { integ.playing = false; clearTimeout(integ.timer); integ.timer = null; } }
+function pauseInteg() { stopInteg(); }
+function stepOneCoeff() {
+  pauseInteg();
+  if (!integ) return;
+  const startIdx = integ.idx;
+  while (integ && integ.idx === startIdx && integ.idx < COEFF_ORDER.length) {
+    stepIntegration();
+  }
+}
+
+function initIntegControls() {
+  buildCGrid();
+  $("intPlay").onclick = () => { if (integ.idx >= COEFF_ORDER.length) resetIntegration(); startInteg(); };
+  $("intPause").onclick = pauseInteg;
+  $("intReset").onclick = () => { pauseInteg(); resetIntegration(); };
+  $("intStep").onclick = stepOneCoeff;
 }

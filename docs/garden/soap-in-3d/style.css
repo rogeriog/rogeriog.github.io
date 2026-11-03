@@ -104,3 +104,20 @@ select{font:inherit}
 .toplist b{color:var(--ice);font-weight:500}
 
 .canvas-label{font-size:.7rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;margin:0 0 4px}
+
+/* integration animation */
+#integrand3d{background:radial-gradient(circle at 50% 45%, #1a1020, #08060a 70%);
+  border-radius:12px;width:100%;height:auto}
+.progress{height:8px;border-radius:4px;background:rgba(214,160,180,.12);overflow:hidden;margin:6px 0 2px}
+.progress i{display:block;height:100%;width:0%;border-radius:4px;
+  background:linear-gradient(90deg,var(--blue),var(--ice),var(--red));transition:width .08s linear}
+.cgrid-wrap{overflow-x:auto;margin-top:18px}
+.cgrid{display:grid;grid-template-columns:repeat(17,minmax(44px,1fr));gap:3px;min-width:780px}
+.cgrid .h{font-size:.58rem;color:var(--dim);text-align:center;padding-bottom:2px}
+.cgrid .cell{border:1px solid var(--border);border-radius:5px;background:#0d090d;
+  min-height:34px;display:flex;align-items:center;justify-content:center;
+  font-family:ui-monospace,monospace;font-size:.58rem;color:var(--dim)}
+.cgrid .cell.done{color:#eee9ee;border-color:rgba(214,160,180,.3)}
+.cgrid .cell.neg{color:#7fb0ff}
+.cgrid .cell.cur{border-color:var(--ice);box-shadow:0 0 0 1px rgba(69,214,255,.4)}
+.cgrid .rowlabel{font-size:.58rem;color:var(--dim);display:flex;align-items:center;justify-content:flex-end;padding-right:4px}

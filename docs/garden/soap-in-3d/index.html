@@ -17,7 +17,7 @@
 </header>
 
 <main>
-  <div class="wip">Draft preview · 3D explainer · 7 sections</div>
+  <div class="wip">Draft preview · 3D explainer · 8 sections</div>
   <h1>SOAP in <em>3D</em></h1>
   <p class="lede">
     Smooth Overlap of Atomic Positions turns a local atomic environment into a
@@ -126,8 +126,46 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     </details>
   </section>
 
+  <section id="integration">
+    <h2>4 · Watch a coefficient being integrated</h2>
+    <p class="sub">
+      This is the step the formulas hide. For one <code>(n, l, m)</code>, the page
+      samples the density on a 3D grid, multiplies by the radial function and the
+      spherical harmonic, and adds the contributions one by one. The running sum
+      is <code>c<sub>nlm</sub></code>. Press play to fill the whole coefficient
+      table.
+    </p>
+    <div class="card">
+      <div class="grid2" style="align-items:start">
+        <canvas id="integrand3d" width="540" height="400"></canvas>
+        <div>
+          <div class="kv">
+            <div><b id="intCoeff">n=0, l=0, m=0</b><small>current coefficient</small></div>
+            <div><b id="intSum">0.000</b><small>running integral</small></div>
+            <div><b id="intProgress">0%</b><small>samples</small></div>
+          </div>
+          <div class="progress"><i id="intBar"></i></div>
+          <div class="controls" style="margin-top:12px">
+            <button class="pill primary" id="intPlay">play all</button>
+            <button class="pill" id="intPause">pause</button>
+            <button class="pill" id="intReset">reset</button>
+            <button class="pill" id="intStep">one coefficient</button>
+          </div>
+          <p class="note" id="intExplain">Red points contribute positively, blue negatively.
+            The integrand is <code>ρ(r) · g<sub>n</sub>(r) · Y<sub>lm</sub>(r)</code>;
+            the sum over samples times the cell volume is <code>c<sub>nlm</sub></code>.</p>
+        </div>
+      </div>
+      <div class="cgrid-wrap"><div id="cGrid" class="cgrid"></div></div>
+      <p class="note"><strong>What is illustrative here:</strong> the grid integration
+        uses a simple Gaussian radial basis to make the arithmetic visible. dscribe
+        uses its own GTO basis and returns the final power spectrum; the idea is
+        identical, the numbers here are not the dscribe values.</p>
+    </div>
+  </section>
+
   <section id="spectrum">
-    <h2>4 · The power spectrum is the fingerprint</h2>
+    <h2>5 · The power spectrum is the fingerprint</h2>
     <p class="sub">
       Each cell is one <code>(n, n′, l)</code> channel, summed over species pairs.
       Change the geometry or the cutoff and watch the fingerprint change. The
@@ -169,7 +207,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="compression">
-    <h2>5 · Compression: from hundreds of numbers to a map</h2>
+    <h2>6 · Compression: from hundreds of numbers to a map</h2>
     <p class="sub">
       SOAP vectors are high-dimensional and grow with the number of species.
       The <strong>mu1nu1</strong> scheme from Darby et al. compresses the
@@ -201,7 +239,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="dimension">
-    <h2>6 · The dimensionality problem</h2>
+    <h2>7 · The dimensionality problem</h2>
     <p class="sub">
       The uncompressed power spectrum grows with the <em>square</em> of the number
       of species-resolved radial channels. On a three-element demo that is 390
@@ -231,7 +269,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="limits">
-    <h2>7 · What to remember</h2>
+    <h2>8 · What to remember</h2>
     <div class="card">
       <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
         invariant, fixed-length, and interpretable through its radial/angular
