@@ -17,7 +17,7 @@
 </header>
 
 <main>
-  <div class="wip">Draft preview · 3D explainer · 8 sections</div>
+  <div class="wip">Draft preview · 3D explainer · 10 sections</div>
   <h1>SOAP in <em>3D</em></h1>
   <p class="lede">
     Smooth Overlap of Atomic Positions turns a local atomic environment into a
@@ -149,6 +149,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
             <button class="pill" data-sample="grid" aria-pressed="true">uniform grid</button>
             <button class="pill" data-sample="random" aria-pressed="false">random sphere</button>
             <button class="pill" data-sample="cloud" aria-pressed="false">atom cloud</button>
+            <button class="pill" data-sample="sites" aria-pressed="false">atomic sites</button>
           </div>
           <p class="note" style="margin:6px 0 4px"><strong>Try the sampling modes:</strong>
             a uniform grid is symmetric, so for <code>l&gt;0</code> positive and negative
@@ -215,8 +216,41 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     </div>
   </section>
 
+  <section id="rotation">
+    <h2>6 · Rotate the environment: c changes, the fingerprint doesn’t</h2>
+    <p class="sub">
+      Individual <code>c<sub>nlm</sub></code> values are tied to the axes: rotate
+      the neighbour geometry and they change. The power spectrum sums over
+      <code>m</code>, so the fingerprint is unchanged. This is the invariance
+      that makes SOAP usable as a descriptor.
+    </p>
+    <div class="card">
+      <label class="slider">rotation around z <input id="rotAngle" type="range" min="0" max="180" step="5" value="0"><span id="rotAngleVal">0°</span></label>
+      <div class="grid2" style="align-items:start">
+        <div>
+          <div class="canvas-label">individual coefficients</div>
+          <table id="rotTable"><thead><tr><th>coefficient</th><th>θ=0</th><th>θ</th><th>change</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div>
+          <div class="kv">
+            <div><b id="rotCChange">–</b><small>Σ |Δc|</small></div>
+            <div><b id="rotPChange">–</b><small>Σ |Δp|</small></div>
+          </div>
+          <p class="note">A deliberately asymmetric four-neighbour cluster. The
+            <code>c</code> values swing with the angle; the power spectrum stays
+            put (up to grid integration error).</p>
+        </div>
+      </div>
+      <p class="note"><strong>Local vs global:</strong> everything on this page is
+        a <em>local</em> fingerprint — one vector per central site. Materials
+        property models usually use a <em>global</em> fingerprint: average (or
+        species-weighted average) of the local vectors over all sites in the
+        structure. Same invariance, one vector per crystal.</p>
+    </div>
+  </section>
+
   <section id="compression">
-    <h2>6 · Compression: from hundreds of numbers to a map</h2>
+    <h2>7 · Compression: from hundreds of numbers to a map</h2>
     <p class="sub">
       SOAP vectors are high-dimensional and grow with the number of species.
       The <strong>mu1nu1</strong> scheme from Darby et al. compresses the
@@ -248,7 +282,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="dimension">
-    <h2>7 · The dimensionality problem</h2>
+    <h2>8 · The dimensionality problem</h2>
     <p class="sub">
       The uncompressed power spectrum grows with the <em>square</em> of the number
       of species-resolved radial channels. On a three-element demo that is 390
@@ -277,8 +311,52 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     </div>
   </section>
 
+  <section id="localglobal">
+    <h2>9 · Local fingerprint vs global fingerprint</h2>
+    <p class="sub">
+      Everything in the 3D scene is a <strong>local</strong> SOAP vector: one
+      descriptor for one central atom and its neighbours. A materials property
+      model usually needs one vector per crystal, so the local vectors are combined
+      into a <strong>global</strong> fingerprint.
+    </p>
+    <div class="card">
+      <div class="flow">
+        <div class="flow-step"><b>p<sub>site 1</sub></b><span>local</span></div>
+        <div class="flow-step"><b>p<sub>site 2</sub></b><span>local</span></div>
+        <div class="flow-step"><b>…</b><span>all sites</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step out"><b>p<sub>global</sub></b><span>one vector per structure</span></div>
+      </div>
+      <p class="sub" style="margin-top:18px">
+        The usual global descriptor is the average over sites:
+      </p>
+      <div class="formula accent">p<sub>global</sub> = (1/N<sub>sites</sub>) Σ<sub>i</sub> p<sub>site i</sub></div>
+      <p class="sub">
+        Sometimes it is species-weighted, or concatenated with composition
+        features. The invariance arguments are unchanged: each local vector is
+        rotation-invariant, and so is the average.
+      </p>
+      <div class="grid2" style="margin-top:16px">
+        <div>
+          <h3 style="margin-top:0">Use local when…</h3>
+          <p class="note">you care about environments: clustering sites, detecting
+            motifs, comparing coordination, or explaining which local geometry
+            drives a prediction. It is also what you use for a single adsorbed
+            molecule or surface site.</p>
+        </div>
+        <div>
+          <h3 style="margin-top:0">Use global when…</h3>
+          <p class="note">you train a structure-level property model (band gap,
+            formation energy, refractive index). One vector per crystal is what
+            scikit-learn/MODNet-style regressors expect; the cost is that site-level
+            information is averaged away.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="limits">
-    <h2>8 · What to remember</h2>
+    <h2>10 · What to remember</h2>
     <div class="card">
       <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
         invariant, fixed-length, and interpretable through its radial/angular

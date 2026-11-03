@@ -407,6 +407,7 @@ async function init() {
   renderPCA();
   initDimension();
   initSH();
+  initRotation();
   initIntegration();
   initIntegControls();
   window.addEventListener("resize", resize);
@@ -899,6 +900,14 @@ function buildIntegPoints() {
     }
     return { pts };
   }
+  if (sampleMode === "sites") {
+    const w = 1 / atoms.length * SCALE;
+    atoms.forEach((a) => pts.push({
+      x: a.position[0], y: a.position[1], z: a.position[2],
+      rho: densityAt(a.position[0], a.position[1], a.position[2]), w,
+    }));
+    return { pts };
+  }
   const N = 3500;
   if (sampleMode === "random") {
     const w = (4 / 3 * Math.PI * R * R * R) / N * SCALE;
@@ -990,6 +999,7 @@ function initIntegration() {
   let colors = null;
 
   const build = () => {
+    if (integ) { clearTimeout(integ.timer); integ.playing = false; removeLobe(); }
     const { pts } = buildIntegPoints();
     const pos = new Float32Array(pts.length * 3);
     const col = new Float32Array(pts.length * 3);
@@ -1176,6 +1186,7 @@ function initIntegControls() {
     b.onclick = () => {
       sampleMode = b.dataset.sample;
       document.querySelectorAll("[data-sample]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+      pauseInteg();
       if (integ && integ._rebuild) integ._rebuild();
     };
   });
@@ -1183,4 +1194,92 @@ function initIntegControls() {
   $("intPause").onclick = pauseInteg;
   $("intReset").onclick = () => { pauseInteg(); resetIntegration(); };
   $("intStep").onclick = stepOneCoeff;
+}
+/* ---------------- rotation invariance ---------------- */
+const ROT_ATOMS = [
+  { x: 0, y: 0, z: 0 },
+  { x: 1.35, y: 0.05, z: 0.0 },
+  { x: -0.55, y: 1.15, z: 0.15 },
+  { x: -0.55, y: -1.00, z: 0.35 },
+  { x: 0.10, y: 0.15, z: 1.50 },
+];
+
+function densityAtoms(atoms, x, y, z, sig = sigma) {
+  let rho = 0;
+  const s2 = 2 * sig * sig;
+  atoms.forEach((a) => {
+    const dx = x - a.x, dy = y - a.y, dz = z - a.z;
+    rho += Math.exp(-(dx * dx + dy * dy + dz * dz) / s2);
+  });
+  return rho;
+}
+
+function rotatedAtoms(deg) {
+  const t = deg * Math.PI / 180;
+  return ROT_ATOMS.map((a) => ({
+    x: a.x * Math.cos(t) - a.y * Math.sin(t),
+    y: a.x * Math.sin(t) + a.y * Math.cos(t),
+    z: a.z,
+  }));
+}
+
+function toyC(deg, n, l, m) {
+  const atoms = rotatedAtoms(deg);
+  const N = 14, R = cutoff;
+  const dV = Math.pow(2 * R / (N - 1), 3);
+  let sum = 0;
+  for (let i = 0; i < N; i++) {
+    const x = -R + 2 * R * i / (N - 1);
+    for (let j = 0; j < N; j++) {
+      const y = -R + 2 * R * j / (N - 1);
+      for (let k = 0; k < N; k++) {
+        const z = -R + 2 * R * k / (N - 1);
+        const rho = densityAtoms(atoms, x, y, z);
+        if (rho < 1e-6) continue;
+        const r = Math.hypot(x, y, z) || 1e-9;
+        sum += rho * integradial(n, r) * realSH(l, m, x, y, z) * dV;
+      }
+    }
+  }
+  return sum;
+}
+
+function pFromC(deg, l) {
+  let p = 0;
+  for (let m = -l; m <= l; m++) {
+    const c = toyC(deg, 0, l, m);
+    p += c * c;
+  }
+  return p;
+}
+
+function drawRotation() {
+  const angle = Number($("rotAngle").value);
+  $("rotAngleVal").textContent = angle + "°";
+  const rows = [];
+  for (let l = 1; l <= 2; l++) {
+    for (let m = -l; m <= l; m++) {
+      const c0 = toyC(0, 0, l, m);
+      const c1 = toyC(angle, 0, l, m);
+      rows.push({ label: `c(0,${l},${m})`, a: c0, b: c1, d: c1 - c0 });
+    }
+  }
+  let dc = 0, dp = 0, c0sum = 0, p0sum = 0;
+  const ps = [];
+  for (let l = 0; l <= 2; l++) {
+    const p0 = pFromC(0, l), p1 = pFromC(angle, l);
+    ps.push({ label: `p(0,0,${l})`, a: p0, b: p1, d: p1 - p0 });
+    dp += Math.abs(p1 - p0); p0sum += Math.abs(p0);
+  }
+  rows.forEach((r) => { dc += Math.abs(r.d); c0sum += Math.abs(r.a); });
+  const tbody = $("rotTable").querySelector("tbody");
+  tbody.innerHTML = rows.map((r) => `<tr><td>${r.label}</td><td>${r.a.toFixed(3)}</td><td>${r.b.toFixed(3)}</td><td>${r.d.toFixed(3)}</td></tr>`).join("") +
+    ps.map((r) => `<tr><td><strong>${r.label}</strong></td><td>${r.a.toFixed(3)}</td><td>${r.b.toFixed(3)}</td><td>${r.d.toExponential(1)}</td></tr>`).join("");
+  $("rotCChange").textContent = (100 * dc / (c0sum || 1)).toFixed(1) + "%";
+  $("rotPChange").textContent = (100 * dp / (p0sum || 1)).toFixed(2) + "%";
+}
+
+function initRotation() {
+  $("rotAngle").oninput = drawRotation;
+  drawRotation();
 }
