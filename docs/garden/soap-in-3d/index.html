@@ -17,7 +17,7 @@
 </header>
 
 <main>
-  <div class="wip">Draft preview · 3D explainer</div>
+  <div class="wip">Draft preview · 3D explainer · 6 sections</div>
   <h1>SOAP in <em>3D</em></h1>
   <p class="lede">
     Smooth Overlap of Atomic Positions turns a local atomic environment into a
@@ -42,8 +42,11 @@
         <div class="controls">
           <button class="pill" id="toggleDensity" aria-pressed="true">density cloud</button>
           <button class="pill" id="toggleCutoff" aria-pressed="true">cutoff sphere</button>
+          <button class="pill" id="toggleSlices" aria-pressed="true">cross-sections</button>
           <button class="pill" id="toggleSpin" aria-pressed="false">auto-rotate</button>
         </div>
+        <label class="slider">slice rotation <input id="sliceAngle" type="range" min="0" max="180" step="1" value="0"><span id="sliceAngleVal">0°</span></label>
+        <div class="legend" id="sliceLegend"></div>
       </div>
       <div class="legend" id="atomLegend"></div>
       <p class="note" id="presetNote"></p>
@@ -85,7 +88,15 @@
         <div><b id="descMode">–</b><small>mode</small></div>
         <div><b id="descCut">–</b><small>cutoff (Å)</small></div>
       </div>
-      <canvas id="heatmap" width="900" height="360"></canvas>
+      <div class="controls">
+        <div class="controls" id="pairButtons" style="margin:0"></div>
+        <div class="controls" id="lButtons" style="margin:0"></div>
+      </div>
+      <div class="grid2" style="align-items:start">
+        <canvas id="heatmap" width="520" height="360"></canvas>
+        <canvas id="spectrumBars" width="520" height="360"></canvas>
+      </div>
+      <div id="topComponents" class="toplist"></div>
       <p class="note" id="heatNote"></p>
     </div>
   </section>
@@ -122,8 +133,38 @@
     </div>
   </section>
 
+  <section id="dimension">
+    <h2>5 · The dimensionality problem</h2>
+    <p class="sub">
+      The uncompressed power spectrum grows with the <em>square</em> of the number
+      of species-resolved radial channels. On a three-element demo that is 390
+      numbers; on a general dataset it is a different beast. Drag the species
+      count and watch the length.
+    </p>
+    <div class="card">
+      <label class="slider">species in the dataset <input id="speciesSlider" type="range" min="1" max="90" step="1" value="20"><span id="speciesVal">20</span></label>
+      <div class="kv">
+        <div><b id="lenOff">–</b><small>uncompressed</small></div>
+        <div><b id="lenMu1">–</b><small>mu1nu1</small></div>
+        <div><b id="lenMu2">–</b><small>mu2</small></div>
+      </div>
+      <canvas id="dimChart" width="900" height="320"></canvas>
+      <div class="controls">
+        <button class="pill" data-species="3">our demo (3)</button>
+        <button class="pill" data-species="20">MP-20 (20)</button>
+        <button class="pill" data-species="89">full MP (89)</button>
+      </div>
+      <p class="note"><strong>Formulas:</strong> uncompressed =
+        <code>(S·n_max)(S·n_max+1)/2 · (l_max+1)</code>;
+        mu1nu1 = <code>n_max² · S · (l_max+1)</code>;
+        mu2 = <code>n_max(n_max+1)/2 · (l_max+1)</code>, independent of S.
+        At S=20, uncompressed is <strong>16 200</strong> numbers, mu1nu1 is
+        <strong>1 600</strong>, mu2 is <strong>50</strong>.</p>
+    </div>
+  </section>
+
   <section id="limits">
-    <h2>5 · What to remember</h2>
+    <h2>6 · What to remember</h2>
     <div class="card">
       <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
         invariant, fixed-length, and interpretable through its radial/angular

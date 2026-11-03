@@ -12,7 +12,11 @@ let pcaMode = "off";
 let sigma = 0.45;
 let showDensity = true;
 let showCutoff = true;
+let showSlices = true;
+let sliceAngle = 0;
 let autoRotate = false;
+let pair = "all";
+let lChan = "all";
 
 /* ---------------- three.js scene ---------------- */
 const canvas = $("three");
@@ -40,6 +44,7 @@ const root = new THREE.Group();
 scene.add(root);
 let densityPts = null;
 let cutoffMesh = null;
+let sliceGroup = null;
 
 function clearGroup(g) {
   while (g.children.length) {
@@ -90,10 +95,34 @@ function buildScene() {
   // cutoff sphere
   cutoffMesh = new THREE.Mesh(
     new THREE.SphereGeometry(cutoff, 40, 28),
-    new THREE.MeshBasicMaterial({ color: 0x45d6ff, wireframe: true, transparent: true, opacity: 0.07 })
+    new THREE.MeshBasicMaterial({ color: 0x45d6ff, wireframe: true, transparent: true, opacity: 0.045 })
   );
   cutoffMesh.visible = showCutoff;
   root.add(cutoffMesh);
+
+  // cross-section planes with rainbow density
+  if (!showSlices) { sliceGroup = null; } else {
+  sliceGroup = new THREE.Group();
+  sliceGroup.rotation.y = sliceAngle * Math.PI / 180;
+  const R = cutoff;
+  const axes = [
+    { name: "xy", rot: [0, 0, 0] },
+    { name: "xz", rot: [-Math.PI / 2, 0, 0] },
+    { name: "yz", rot: [0, Math.PI / 2, 0] },
+  ];
+  axes.forEach((a) => {
+    const tex = new THREE.CanvasTexture(makeSliceCanvas(a.name));
+    tex.needsUpdate = true;
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(2 * R, 2 * R),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false })
+    );
+    m.rotation.set(...a.rot);
+    sliceGroup.add(m);
+  });
+  sliceGroup.visible = showSlices;
+  root.add(sliceGroup);
+  }
 
   // density cloud: Gaussian samples around each neighbor
   if (showDensity) {
@@ -189,6 +218,16 @@ function initSceneControls() {
     e.currentTarget.setAttribute("aria-pressed", showCutoff);
     if (cutoffMesh) cutoffMesh.visible = showCutoff;
   };
+  $("toggleSlices").onclick = (e) => {
+    showSlices = !showSlices;
+    e.currentTarget.setAttribute("aria-pressed", showSlices);
+    buildScene();
+  };
+  $("sliceAngle").oninput = (e) => {
+    sliceAngle = Number(e.target.value);
+    $("sliceAngleVal").textContent = sliceAngle + "°";
+    if (sliceGroup) sliceGroup.rotation.y = sliceAngle * Math.PI / 180;
+  };
   $("toggleSpin").onclick = (e) => {
     autoRotate = !autoRotate;
     e.currentTarget.setAttribute("aria-pressed", autoRotate);
@@ -209,56 +248,38 @@ function descriptorFor() {
 function renderHeatmap() {
   const values = descriptorFor();
   const labels = DATA.labels[mode];
-  const map = new Map();
-  values.forEach((v, i) => {
-    const L = labels[i];
-    let key, rowLabel;
-    if (mode === "off") {
-      const a = L.a_n, b = L.b_n;
-      if (a > b) return;
-      key = `${a}-${b}-${L.l}`;
-      rowLabel = `n=${a}, n′=${b}`;
-    } else {
-      key = `${L.n}-${L.n2}-${L.l}`;
-      rowLabel = `n=${L.n}, n′=${L.n2}`;
-    }
-    const cur = map.get(key) || { v: 0, row: rowLabel, l: L.l, n: L.n, n2: L.n2 };
-    cur.v += v;
-    map.set(key, cur);
-  });
+  const cells = spectrumCells(values, labels);
+  const rows = [...new Set(cells.map((c) => c.n + "-" + c.n2))];
+  const lvals = [0, 1, 2, 3, 4];
+  const max = Math.max(...cells.flatMap((c) => lvals.map((l) => c.values[l] || 0)), 1e-9);
 
-  const rows = [...new Set([...map.values()].map((d) => d.row))];
-  const cols = DATA.meta.cutoffs ? [0, 1, 2, 3, 4] : [0, 1, 2, 3, 4];
-  const max = Math.max(...[...map.values()].map((d) => d.v));
   const canvas = $("heatmap");
   const ctx = canvas.getContext("2d");
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
-  const left = 100, top = 34, cellW = (W - left - 24) / cols.length, cellH = (H - top - 42) / rows.length;
+  const left = 90, top = 30, cellW = (W - left - 20) / lvals.length;
+  const cellH = (H - top - 44) / Math.max(rows.length, 1);
 
-  ctx.font = "12px Inter, sans-serif";
+  ctx.font = "11px Inter, sans-serif";
   ctx.textAlign = "center";
   ctx.fillStyle = "#6e5f6e";
-  cols.forEach((l, j) => ctx.fillText("l=" + l, left + cellW * (j + 0.5), top - 12));
+  lvals.forEach((l, j) => ctx.fillText("l=" + l, left + cellW * (j + 0.5), top - 10));
   ctx.textAlign = "right";
-  rows.forEach((r, i) => ctx.fillText(r, left - 10, top + cellH * (i + 0.5) + 4));
+  rows.forEach((r, i) => ctx.fillText("n=" + r.split("-")[0] + ",n′=" + r.split("-")[1],
+    left - 8, top + cellH * (i + 0.5) + 4));
 
   rows.forEach((r, i) => {
-    cols.forEach((l, j) => {
-      const d = [...map.values()].find((x) => x.row === r && x.l === l);
-      const v = d ? d.v : 0;
-      const t = max > 0 ? Math.pow(v / max, 0.45) : 0;
-      const red = Math.round(20 + 235 * t);
-      const green = Math.round(10 + 150 * t);
-      const blue = Math.round(24 + 80 * t);
-      ctx.fillStyle = `rgb(${red},${green},${blue})`;
+    const cell = cells.find((c) => c.n + "-" + c.n2 === r);
+    lvals.forEach((l, j) => {
+      const v = cell ? (cell.values[l] || 0) : 0;
+      const t = Math.pow(v / max, 0.45);
+      ctx.fillStyle = rainbow(t);
       ctx.fillRect(left + cellW * j + 1, top + cellH * i + 1, cellW - 2, cellH - 2);
-      if (t > 0.55) {
+      if (t > 0.62) {
         ctx.fillStyle = "#14060a";
         ctx.font = "10px ui-monospace, monospace";
-        ctx.textAlign = "center";
         ctx.fillText(v.toFixed(2), left + cellW * (j + 0.5), top + cellH * (i + 0.5) + 3);
-        ctx.font = "12px Inter, sans-serif";
+        ctx.font = "11px Inter, sans-serif";
       }
     });
   });
@@ -268,8 +289,10 @@ function renderHeatmap() {
   $("descCut").textContent = cutoff.toFixed(1);
   const species = DATA.meta.species.length;
   $("heatNote").innerHTML = mode === "off"
-    ? `Rows are radial channel pairs <code>(n, n′)</code>, columns angular <code>l</code>; values summed over the ${species} species pairs. Uncompressed length: ${DATA.meta.descriptor_lengths.off}.`
-    : `mu1nu1 rows are <code>(n, n′)</code>, columns <code>l</code>; values summed over species. Length drops to ${DATA.meta.descriptor_lengths.mu1nu1} for ${species} species.`;
+    ? `Rows are radial channel pairs <code>(n, n′)</code>, columns <code>l</code>. Pair filter: <strong>${pair}</strong>. Uncompressed length: ${DATA.meta.descriptor_lengths.off}.`
+    : `mu1nu1 rows are <code>(n, n′)</code>, columns <code>l</code>, summed over species. Length drops to ${DATA.meta.descriptor_lengths.mu1nu1} for ${species} species.`;
+
+  renderSpectrum(values, labels);
 }
 
 /* ---------------- PCA ---------------- */
@@ -302,14 +325,41 @@ function renderPCA() {
   $("pcaVar").textContent = ((ev[0] + ev[1]) * 100).toFixed(1) + "%";
 }
 
+function initSpectrumControls() {
+  const ps = $("pairButtons");
+  ps.innerHTML = "";
+  pairList().forEach((p) => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.textContent = p === "all" ? "all pairs" : p;
+    b.setAttribute("aria-pressed", pair === p);
+    b.onclick = () => { pair = p; [...ps.children].forEach((x) => x.setAttribute("aria-pressed", x === b)); renderHeatmap(); };
+    ps.appendChild(b);
+  });
+  if (!pairList().includes(pair)) pair = "all";
+
+  const ls = $("lButtons");
+  ls.innerHTML = "";
+  [["all", "all l"], ...Array.from({ length: 5 }, (_, i) => [String(i), "l=" + i])].forEach(([v, t]) => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.textContent = t;
+    b.setAttribute("aria-pressed", lChan === v);
+    b.onclick = () => { lChan = v; [...ls.children].forEach((x) => x.setAttribute("aria-pressed", x === b)); renderHeatmap(); };
+    ls.appendChild(b);
+  });
+}
+
 /* ---------------- boot ---------------- */
 async function init() {
   DATA = await (await fetch("data/soap_data.json")).json();
   resize();
   buildScene();
   initSceneControls();
+  initSpectrumControls();
   renderHeatmap();
   renderPCA();
+  initDimension();
   window.addEventListener("resize", resize);
   animate();
 
@@ -317,6 +367,7 @@ async function init() {
     b.onclick = () => {
       mode = b.dataset.mode;
       document.querySelectorAll("[data-mode]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+      initSpectrumControls();
       renderHeatmap();
     };
   });
@@ -333,3 +384,226 @@ init().catch((e) => {
   console.error(e);
   $("presetNote").textContent = "Could not load SOAP data: " + e.message;
 });
+
+/* ---------------- cross-section density slices ---------------- */
+function densityAt(x, y, z) {
+  const p = DATA.presets[preset];
+  let rho = 0;
+  const s2 = 2 * sigma * sigma;
+  p.atoms.slice(1).forEach((a) => {
+    const dx = x - a.position[0], dy = y - a.position[1], dz = z - a.position[2];
+    rho += Math.exp(-(dx * dx + dy * dy + dz * dz) / s2);
+  });
+  return rho;
+}
+
+function rainbow(t) {
+  t = Math.max(0, Math.min(1, t));
+  const stops = [
+    [0.00, [43, 26, 107]],
+    [0.18, [36, 86, 216]],
+    [0.38, [24, 198, 198]],
+    [0.58, [139, 214, 70]],
+    [0.74, [255, 217, 59]],
+    [0.88, [255, 122, 26]],
+    [1.00, [216, 27, 60]],
+  ];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (t <= stops[i + 1][0]) {
+      const [a, ca] = stops[i], [b, cb] = stops[i + 1];
+      const k = (t - a) / (b - a);
+      return `rgb(${Math.round(ca[0] + (cb[0] - ca[0]) * k)},${Math.round(ca[1] + (cb[1] - ca[1]) * k)},${Math.round(ca[2] + (cb[2] - ca[2]) * k)})`;
+    }
+  }
+  return "rgb(216,27,60)";
+}
+
+function sliceDensity(u, v, axis) {
+  // maximum-intensity projection through the slice normal: makes the
+  // cross-section readable even when no atom lies exactly in the plane.
+  let best = 0;
+  const steps = 17;
+  for (let k = 0; k < steps; k++) {
+    const t = -cutoff + (2 * cutoff) * k / (steps - 1);
+    let x = 0, y = 0, z = 0;
+    if (axis === "xy") { x = u; y = v; z = t; }
+    else if (axis === "xz") { x = u; z = v; y = t; }
+    else { y = u; z = v; x = t; }
+    best = Math.max(best, densityAt(x, y, z));
+  }
+  return best;
+}
+
+function makeSliceCanvas(axis) {
+  const N = 180;
+  const R = cutoff;
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = N;
+  const ctx = cv.getContext("2d");
+  const img = ctx.createImageData(N, N);
+  const max = 1.0;
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const u = (i / (N - 1)) * 2 * R - R;
+      const v = (R - j / (N - 1) * 2 * R);
+      const rho = sliceDensity(u, v, axis) / max;
+      const m = rainbow(Math.pow(rho, 0.5)).match(/\d+/g).map(Number);
+      const k = (j * N + i) * 4;
+      img.data[k] = m[0]; img.data[k + 1] = m[1]; img.data[k + 2] = m[2]; img.data[k + 3] = 220;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return cv;
+}
+
+function refreshSlices() {
+  if (!sliceGroup) return;
+  sliceGroup.children.forEach((m, idx) => {
+    const axis = ["xy", "xz", "yz"][idx];
+    m.material.map.dispose();
+    m.material.map = new THREE.CanvasTexture(makeSliceCanvas(axis));
+    m.material.map.needsUpdate = true;
+  });
+}
+
+/* ---------------- better power-spectrum views ---------------- */
+function pairKey(L) {
+  if (mode === "mu1nu1") return "all";
+  return `${L.a_species}-${L.b_species}`;
+}
+
+function pairList() {
+  if (mode === "mu1nu1") return ["all"];
+  const set = new Set();
+  DATA.labels.off.forEach((L) => set.add(`${L.a_species}-${L.b_species}`));
+  return ["all", ...[...set].sort()];
+}
+
+function spectrumCells(values, labels) {
+  const cells = new Map();
+  values.forEach((v, i) => {
+    const L = labels[i];
+    if (mode === "off" && pair !== "all" && pairKey(L) !== pair) return;
+    const a = mode === "off" ? L.a_n : L.n;
+    const b = mode === "off" ? L.b_n : L.n2;
+    if (a > b) return;
+    const key = `${a}-${b}`;
+    const cell = cells.get(key) || { n: a, n2: b, values: {} };
+    cell.values[L.l] = (cell.values[L.l] || 0) + v;
+    cells.set(key, cell);
+  });
+  return [...cells.values()].sort((x, y) => x.n - y.n || x.n2 - y.n2);
+}
+
+function spectrumAt(cell) {
+  if (lChan === "all") return Object.values(cell.values).reduce((a, b) => a + b, 0);
+  return cell.values[Number(lChan)] || 0;
+}
+
+function renderSpectrum(values, labels) {
+  const cells = spectrumCells(values, labels);
+  const max = Math.max(...cells.map(spectrumAt), 1e-9);
+  const cv = $("spectrumBars");
+  if (!cv) return;
+  const ctx = cv.getContext("2d");
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  const pad = 34, cols = 4, rows = 4;
+  const cw = (W - 2 * pad) / cols, ch = (H - 2 * pad) / rows;
+  ctx.font = "11px Inter, sans-serif";
+  for (let n = 0; n < 4; n++) for (let n2 = 0; n2 < 4; n2++) {
+    const cell = cells.find((c) => c.n === n && c.n2 === n2);
+    const x = pad + n2 * cw, y = pad + n * ch;
+    const val = cell ? spectrumAt(cell) : 0;
+    const h = (val / max) * (ch - 26);
+    ctx.fillStyle = "rgba(214,160,180,.06)";
+    ctx.fillRect(x + 2, y + 2, cw - 4, ch - 4);
+    ctx.fillStyle = rainbow(Math.pow(val / max, 0.5));
+    ctx.fillRect(x + 6, y + ch - 8 - h, cw - 12, h);
+    ctx.fillStyle = "#6e5f6e";
+    ctx.textAlign = "center";
+    ctx.fillText(`n=${n},n′=${n2}`, x + cw / 2, y + ch - 1);
+  }
+  ctx.fillStyle = "#a79ba6";
+  ctx.textAlign = "left";
+  ctx.fillText(mode === "off" ? "uncompressed · cells n ≤ n′" : "mu1nu1 · all n,n′ cells", pad, 18);
+  ctx.fillText((lChan === "all" ? "sum over l" : "l = " + lChan) + " · height = power", pad, H - 8);
+
+  const top = [...cells].map((c) => ({ ...c, v: spectrumAt(c) })).sort((a, b) => b.v - a.v).slice(0, 6);
+  $("topComponents").innerHTML = top.map((c) =>
+    `<span>(n=${c.n}, n′=${c.n2}) <b>${c.v.toFixed(2)}</b></span>`).join("");
+}
+
+/* ---------------- dimension chart ---------------- */
+function dimCounts(S) {
+  const off = (S * 4) * (S * 4 + 1) / 2 * 5;
+  const mu1 = 16 * S * 5;
+  const mu2 = 4 * 5 / 2 * 5;
+  return { off, mu1, mu2 };
+}
+
+function drawDim() {
+  const cv = $("dimChart");
+  if (!cv) return;
+  const ctx = cv.getContext("2d");
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  const S = Number($("speciesSlider").value);
+  const pad = { l: 70, r: 24, t: 24, b: 40 };
+  const xmin = 1, xmax = 90;
+  const maxV = dimCounts(90).off;
+  const ly = (v) => Math.log10(Math.max(1, v));
+  const sy = (v) => H - pad.b - (ly(v) / ly(maxV)) * (H - pad.t - pad.b);
+  const sx = (s) => pad.l + (s - xmin) / (xmax - xmin) * (W - pad.l - pad.r);
+
+  ctx.strokeStyle = "rgba(214,160,180,.18)";
+  [0, 0.5, 1].forEach((t) => {
+    const y = H - pad.b - t * (H - pad.t - pad.b);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+  });
+  const series = [
+    { key: "off", color: "#ff3d5a", label: "uncompressed" },
+    { key: "mu1", color: "#5a6cff", label: "mu1nu1" },
+    { key: "mu2", color: "#45d6ff", label: "mu2" },
+  ];
+  series.forEach((s) => {
+    ctx.beginPath();
+    for (let i = 1; i <= 90; i++) {
+      const v = dimCounts(i)[s.key];
+      const x = sx(i), y = sy(v);
+      i === 1 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2.2; ctx.stroke();
+  });
+  // current marker
+  const cur = dimCounts(S);
+  ctx.strokeStyle = "rgba(238,233,238,.35)";
+  ctx.beginPath(); ctx.moveTo(sx(S), pad.t); ctx.lineTo(sx(S), H - pad.b); ctx.stroke();
+  series.forEach((s) => {
+    ctx.beginPath(); ctx.arc(sx(S), sy(cur[s.key]), 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = s.color; ctx.fill();
+  });
+
+  ctx.fillStyle = "#6e5f6e"; ctx.font = "11px Inter, sans-serif";
+  for (let s = 1; s <= 90; s += 10) {
+    ctx.fillText(s, sx(s) - 6, H - pad.b + 16);
+  }
+  ctx.fillText("species", W - 60, H - 8);
+  ctx.fillText("descriptor length (log)", 4, 16);
+
+  $("speciesVal").textContent = S;
+  $("lenOff").textContent = cur.off.toLocaleString();
+  $("lenMu1").textContent = cur.mu1.toLocaleString();
+  $("lenMu2").textContent = cur.mu2.toLocaleString();
+}
+
+function initDimension() {
+  $("speciesSlider").oninput = drawDim;
+  document.querySelectorAll("[data-species]").forEach((b) => {
+    b.onclick = () => {
+      $("speciesSlider").value = b.dataset.species;
+      drawDim();
+    };
+  });
+  drawDim();
+}
