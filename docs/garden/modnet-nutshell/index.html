@@ -9,6 +9,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
 </head>
 <body>
 <header>
@@ -58,6 +61,12 @@
     <div class="card" style="margin-top:16px">
       <svg id="lcChart" viewBox="0 0 900 360" role="img" aria-label="Real learning curves"></svg>
       <div class="legend" id="lcLegend"></div>
+      <ul class="defs">
+        <li><strong>MODNet</strong> — the full pipeline: feature selection (FRR) inside the fold, then the small shared network.</li>
+        <li><strong>all features</strong> — the same network, but every descriptor; no selection. This isolates the value of selection.</li>
+        <li><strong>ridge</strong> — a linear model on the selected features. A cheap sanity check, not a competitor.</li>
+        <li><strong>mean baseline</strong> — always predicts the training-set mean. Any useful model must beat this.</li>
+      </ul>
       <p class="note">
         <strong>Real run:</strong> MODNet, all-features, ridge and mean baselines on
         <code>matbench_dielectric</code>, six training sizes × 3 seeds, fixed 800-sample
@@ -76,23 +85,29 @@
     </p>
     <div class="card">
       <div class="controls" id="compoundControls"></div>
-      <div class="kv">
-        <div><b id="featComp">–</b><small>composition features</small></div>
-        <div><b id="featStruct">–</b><small>structure features</small></div>
-        <div><b id="featTotal">–</b><small>total</small></div>
-        <div><b id="featProto">–</b><small>prototype</small></div>
-      </div>
+      <p class="note" style="margin-top:0">
+        <strong>Feature space:</strong> every material gets the same
+        <b id="featComp">–</b> composition descriptors; adding the structure block
+        makes <b id="featStruct">–</b> more, <b id="featTotal">–</b> in total.
+        The count is identical for every material — the interesting part is which
+        descriptors <em>deviate</em>.
+      </p>
       <label class="controls" style="align-items:center">
         <button class="pill" id="structToggle" aria-pressed="false">include structure features</button>
         <span class="note" id="structNote" style="margin:0"></span>
       </label>
-      <div class="bars" id="groupBars"></div>
-      <h3 style="margin-top:18px">Actual descriptor values</h3>
+      <div class="controls" id="chemFilters"></div>
+      <div id="featMatrix" class="matrix"></div>
+      <div class="legend" id="featScale"></div>
+      <h3>Selected material</h3>
       <div id="featValues"></div>
-      <p class="note">
-        <strong>Real counts</strong> from the pinned <code>Matminer2023</code> presets on these
-        prototypes. Structure mode is only offered for NaCl, GaAs and CsPbI3; the other
-        compounds are shown composition-only rather than inventing a structure.
+      <div class="callout">
+        <strong>What to look for.</strong> Oxides separate from non-oxides on
+        electronegativity and ion-property descriptors; multi-element samples sit
+        apart on stoichiometry and element-fraction features; an extreme cell means
+        that descriptor is far from the six-material mean. This is the same matrix
+        the selector sees — before any target is involved.
+      </div>
       </p>
     </div>
     <details class="code-panel">
@@ -115,36 +130,81 @@
   <section id="nmi">
     <h2>2 · Normalized mutual information</h2>
     <p class="sub">
-      Feature selection needs a measure of “how much does this feature tell me about
-      the target?”. MODNet uses normalized mutual information: it catches nonlinear
-      dependence, unlike Pearson correlation, and it is bounded between 0 and 1.
-      Drag the dependence and watch NMI move.
+      Feature selection needs a number for “how much does this feature tell me about
+      the target?”. Correlation is the obvious choice, but it only sees straight
+      lines and is sensitive to outliers. Mutual information asks a more general
+      question: how much does knowing <em>X</em> reduce the uncertainty about
+      <em>Y</em>? It sees any dependence — linear, quadratic, periodic.
     </p>
-    <div class="card grid2">
+
+    <div class="card">
+      <p style="margin-top:0">Mutual information is the average reduction in uncertainty:</p>
+      <p style="text-align:center;font-size:1.05rem">
+        \[ \mathrm{MI}(X,Y) = \sum_{x,y} p(x,y)\,\log\frac{p(x,y)}{p(x)\,p(y)} \]
+      </p>
+      <p>Entropy measures the uncertainty of one variable:</p>
+      <p style="text-align:center;font-size:1.05rem">
+        \[ H(X) = -\sum_x p(x)\log p(x) \]
+      </p>
+      <p>MODNet normalizes MI by the average entropy, so the result is bounded and
+        comparable across features:</p>
+      <p style="text-align:center;font-size:1.05rem">
+        \[ \mathrm{NMI}(X,Y) = \frac{\mathrm{MI}(X,Y)}{\big(H(X)+H(Y)\big)/2} \]
+      </p>
+      <p class="note" style="margin-bottom:0">
+        Values near 0 mean “knowing X tells you nothing about Y”; values near 1 mean
+        “X determines Y”. In materials data, useful features often sit around
+        0.01–0.10 — small numbers, but far above noise.
+      </p>
+    </div>
+
+    <div class="card grid2" style="margin-top:16px">
       <div>
         <svg id="nmiScatter" viewBox="0 0 420 320" role="img" aria-label="Synthetic scatter plot"></svg>
       </div>
       <div>
-        <div class="kv"><div><b id="nmiValue">–</b><small>NMI(X, Y)</small></div></div>
-        <label class="sub" style="display:block">dependence <input id="nmiSlider" type="range" min="0" max="100" value="65" style="width:100%"></label>
+        <table>
+          <tbody>
+            <tr><td>MI(X, Y)</td><td id="nmiMI">–</td></tr>
+            <tr><td>H(X)</td><td id="nmiHX">–</td></tr>
+            <tr><td>H(Y)</td><td id="nmiHY">–</td></tr>
+            <tr><td><strong>NMI(X, Y)</strong></td><td><strong id="nmiValue">–</strong></td></tr>
+            <tr><td>Pearson r</td><td id="nmiPearson">–</td></tr>
+          </tbody>
+        </table>
+        <label class="sub" style="display:block;margin-top:14px">dependence
+          <input id="nmiSlider" type="range" min="0" max="100" value="65" style="width:100%">
+        </label>
         <div class="controls">
           <button class="pill" data-nmi="linear">linear</button>
           <button class="pill" data-nmi="quadratic">quadratic</button>
           <button class="pill" data-nmi="independent">independent</button>
         </div>
-        <p class="note">NMI is estimated here with equal-width binning on 180 synthetic
-          points. The real implementation uses scikit-learn's k-NN estimator.</p>
+        <p class="note" id="nmiModeNote">NMI is estimated here with equal-width binning
+          on 400 synthetic points; the real implementation uses scikit-learn's k-NN
+          estimator.</p>
       </div>
     </div>
+
+    <div class="callout">
+      <strong>Why not just use correlation?</strong> In the quadratic mode the
+      relationship is strong but symmetric: Pearson r is close to zero while NMI
+      stays high. That is the whole reason MODNet uses NMI. In independent mode the
+      slider only spreads the points; the variables stay unrelated, so NMI stays at
+      zero — a scale change is not a dependence.
+    </div>
+
     <div class="card" style="margin-top:16px">
-    <div class="bars" id="nmiRealBars"></div>
-    <p class="note">
-      <strong>Real run:</strong> top descriptors by normalized mutual information with the
-      refractive index, computed on the full 4 764-sample <code>matbench_dielectric</code>
-      set with the pinned MODNet pipeline.
-    </p>
-  </div>
-  <details class="code-panel">
+      <div class="bars" id="nmiRealBars"></div>
+      <p class="note">
+        <strong>Real run:</strong> top descriptors by NMI with the refractive index,
+        computed on the full 4 764-sample <code>matbench_dielectric</code> set with
+        the pinned MODNet pipeline. Notice the absolute values: the best descriptor
+        is ~0.07, which is why the FRR plot uses a sqrt scale.
+      </p>
+    </div>
+
+    <details class="code-panel">
       <summary>in the codebase · NMI</summary>
       <pre><a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/preprocessing.py#L45" target="_blank">compute_mi(x, y, x_name, y_name, random_state, n_neighbors=3)</a>
   wraps sklearn.feature_selection.mutual_info_regression (k-NN estimator)
@@ -165,6 +225,19 @@
       NMI to the target, then repeatedly pick the feature with the best trade-off between
       relevance and redundancy with what is already selected. The score is Eq. 2 of the paper.
     </p>
+    <div class="card">
+      <p style="margin-top:0">At each step, every remaining candidate gets a score that
+        rewards relevance and punishes redundancy with what is already selected:</p>
+      <p style="text-align:center;font-size:1.05rem">
+        \[ \mathrm{RR}(f) = \frac{\mathrm{NMI}(f,y)}{\left(\max_{s\in S}\mathrm{NMI}(f,s)\right)^{p}+c} \]
+      </p>
+      <p style="text-align:center">
+        \[ p = \max\!\left(0.1,\; 4.5 - n^{0.4}\right), \qquad c = 10^{-6}n^{3} \]
+      </p>
+      <p class="note" style="margin-bottom:0">where <em>n</em> is the number of features
+        already selected. The next feature is the one with the largest RR — equivalently,
+        the largest of the per-row minima in the plot below.</p>
+    </div>
     <div class="card">
       <div class="grid2">
         <div><svg id="frrScatter" viewBox="0 0 440 330" role="img" aria-label="Relevance versus redundancy"></svg></div>
@@ -206,15 +279,27 @@
   <section id="model">
     <h2>4 · The network is deliberately small</h2>
     <p class="sub">
-      Four blocks, not a deep monster. A shared encoder turns the selected descriptors
-      into an all-round vector; one intermediate block per property group; then one
-      output block per property. The descriptor work does the heavy lifting.
+      “Deliberately small” is the design choice, not an accident. The descriptors
+      already encode physics, chemistry and geometry; the network's job is only to
+      combine them. At a few hundred samples, every extra weight is another parameter
+      to fit from too little data, so MODNet spends its capacity budget on features
+      and selection instead of depth. The default architecture has four blocks and
+      roughly ten thousand weights — thousands, not millions. A graph network, by
+      contrast, must learn the representation from raw structures and needs orders of
+      magnitude more data to do it.
     </p>
     <div class="card">
       <svg id="archSvg" viewBox="0 0 900 360" role="img" aria-label="MODNet architecture"></svg>
-      <p class="note">Default architecture: <code>num_neurons=([64],[32],[16],[16])</code>,
-        <code>n_feat=64</code>, ReLU. Batch normalization is added when there is more than
-        one target.</p>
+      <ul class="defs">
+        <li><strong>Shared encoder</strong> — one block of dense layers that every target sees. It turns the selected descriptors into an all-round material vector.</li>
+        <li><strong>Group block</strong> — one per family of related targets (e.g. thermodynamic properties): a more specialised representation, still shared inside the group.</li>
+        <li><strong>Property block</strong> — narrows further toward one property.</li>
+        <li><strong>Output head</strong> — one neuron per regression target (or one softmax per class).</li>
+      </ul>
+      <p class="note">Default: <code>num_neurons=([64],[32],[16],[16])</code>, <code>n_feat=64</code>,
+        ReLU, batch normalization only when there is more than one target. With 64
+        inputs that is about 6–7k weights; with 200 inputs, about 15k. The exact count
+        is printed in the code map.</p>
     </div>
     <details class="code-panel">
       <summary>in the codebase · model</summary>
@@ -232,10 +317,13 @@
   <section id="joint">
     <h2>5 · Joint learning: related targets regularize each other</h2>
     <p class="sub">
-      Train one network on several related properties at once. The shared trunk sees
-      more samples than any single target would provide, which acts like a virtual
-      larger dataset. In the paper this gave a ~8% MAE improvement on vibrational
-      entropy, and it is what lets one model predict a whole temperature curve.
+      Joint learning trains one network on several targets at once: a shared trunk,
+      then one head per target. It only helps when the targets actually share
+      structure — then the trunk sees more signal than any single target provides and
+      the extra heads act as regularizers. My first attempt used formation energy and
+      band gap; those are weakly related, so that was a bad example. The demo below
+      uses the case where joint learning should work: two noisy measurements of the
+      same latent property.
     </p>
     <div class="card">
       <svg id="jointSvg" viewBox="0 0 900 300" role="img" aria-label="Single-task versus joint architecture"></svg>
@@ -244,15 +332,19 @@
       <svg id="jointChart" viewBox="0 0 900 320" role="img" aria-label="Joint versus single-task MAE"></svg>
       <div class="legend" id="jointLegend"></div>
       <p class="note">
-        <strong>Real run:</strong> 100 materials from the bundled MP_2018.6 subset,
-        two targets (formation energy, band gap), 3 seeds per training size,
-        MODNet 0.4.4, 300 epochs. Solid = joint, dashed = single-task.
+        <strong>Synthetic demonstration:</strong> two targets are independent noisy
+        views of the same latent function (noise σ = 0.35); 8 seeds per training size;
+        identical MLP capacity (one hidden layer, 16 units). Joint = one network with
+        two outputs; single = one network per target. This is not a MODNet result —
+        it is the mechanism MODNet exploits.
       </p>
       <div class="callout">
-        <strong>Paper result, not a universal law:</strong> joint MODNet reduced test MAE
-        by ~8% versus the best single-target MODNet on S(305 K); the gain was larger at
-        smaller training sizes. The vibrational dataset has 1 245 materials and a
-        145-sample test set.
+        <strong>What it shows.</strong> From 40 samples upward the joint model wins:
+        the shared hidden layer averages the two noise realisations. At 20 samples it
+        loses — there is not enough data to fit the shared representation. Joint
+        learning is not free accuracy; it is a bet that the targets share structure.
+        In the paper the related targets were vibrational properties at different
+        temperatures, with a ~8% MAE gain on S(305 K).
       </div>
     </div>
     <div class="card" style="margin-top:16px">
@@ -307,6 +399,7 @@
         </div>
         <div>
           <div id="gaTable"></div>
+          <div id="gaEvents" class="note"></div>
         </div>
       </div>
     </div>

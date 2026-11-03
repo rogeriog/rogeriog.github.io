@@ -81,3 +81,14 @@ td:first-child{color:var(--text)}
 .stepnum{font-family:'Space Grotesk';font-size:.8rem;color:var(--dim)}
 footer{max-width:1040px;margin:0 auto;padding:26px 24px;border-top:1px solid var(--border);
   color:var(--dim);font-size:.76rem}
+
+.defs{margin:12px 0 0;padding-left:18px;color:var(--muted);font-size:.8rem;line-height:1.7}
+.defs strong{color:var(--text)}
+.matrix{display:grid;gap:2px;margin-top:10px;font-size:.68rem}
+.matrix .cell{height:18px;border-radius:2px}
+.matrix .rowlabel,.matrix .collabel{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.matrix .rowlabel{padding-right:6px;cursor:pointer}
+.matrix .rowlabel.active{color:var(--red);font-weight:600}
+.matrix .rowlabel.dim{opacity:.35}
+.matrix .collabel{writing-mode:vertical-rl;transform:rotate(180deg);height:110px;font-size:.62rem}
+.matrix .cell.dim{opacity:.18}

@@ -166,15 +166,15 @@ async function initLearningCurves() {
     pts.forEach((p, i) => p && svg.appendChild(el("circle", { cx: sx(i), cy: sy(p.mean), r: 4, fill: colors[m], class: "dot" })));
   }
   // highlight sizes where MODNet beats the all-features net
-  const wins = sizes.map((_, i) => rows.modnet[i] && rows.allnet[i] && rows.modnet[i].mean < rows.allnet[i].mean);
+  const wins = sizes.map((_, i) => rows.modnet[i] && rows.allnet[i] && rows.modnet[i].mean < rows.allnet[i].mean - 0.001);
   wins.forEach((w, i) => {
     if (!w) return;
     const half = i === 0 ? (sx(1) - sx(0)) / 2 : (sx(i) - sx(i - 1)) / 2;
     svg.appendChild(el("rect", {
       x: sx(i) - half, y: y1, width: 2 * half, height: y0 - y1,
-      fill: "rgba(255,61,90,.07)", stroke: "none",
+      fill: "rgba(255,61,90,.14)", stroke: "rgba(255,61,90,.35)", "stroke-width": 1,
     }));
-    const t = el("text", { x: sx(i), y: y1 + 14, "text-anchor": "middle", fill: "#ff3d5a", "font-size": 10 });
+    const t = el("text", { x: sx(i), y: y1 - 4, "text-anchor": "middle", fill: "#ff3d5a", "font-size": 10 });
     t.textContent = "MODNet wins";
     svg.appendChild(t);
   });
@@ -210,6 +210,16 @@ async function initFeaturizer() {
     };
     box.appendChild(b);
   });
+  const filters = [["all", "all"], ["oxide", "oxides"], ["nonoxide", "non-oxides"], ["binary", "binary"], ["ternary", "ternary"], ["multi", "multi-element"]];
+  const fbox = $("chemFilters");
+  filters.forEach(([k, label]) => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.textContent = label;
+    b.setAttribute("aria-pressed", k === featFilter);
+    b.onclick = () => { featFilter = k; renderFeaturizer(); [...fbox.children].forEach((x) => x.setAttribute("aria-pressed", x === b)); };
+    fbox.appendChild(b);
+  });
   $("structToggle").onclick = () => {
     const c = featData.compounds.find((x) => x.name === featCurrent);
     const has = c.structure_features && Object.keys(c.structure_features).length > 0;
@@ -220,6 +230,8 @@ async function initFeaturizer() {
   renderFeaturizer();
 }
 
+let featFilter = "all";
+
 function renderFeaturizer() {
   const c = featData.compounds.find((x) => x.name === featCurrent);
   const hasStruct = c.structure_features && Object.keys(c.structure_features).length > 0;
@@ -229,43 +241,103 @@ function renderFeaturizer() {
   $("featComp").textContent = comp;
   $("featStruct").textContent = hasStruct ? struct : "n/a";
   $("featTotal").textContent = total;
-  $("featProto").textContent = c.prototype || (c.is_oxide ? "oxide" : "non-oxide");
   const toggle = $("structToggle");
   toggle.disabled = !hasStruct;
   toggle.setAttribute("aria-pressed", includeStructure && hasStruct);
   $("structNote").textContent = hasStruct ? "" : "no structure featurization for this sample";
 
-  const fams = includeStructure && hasStruct
-    ? featData.preset_summary.with_structure.families
-    : featData.preset_summary.composition_only.families;
-  const groups = Object.entries(fams).sort((a, b) => b[1] - a[1]);
-  const max = Math.max(...groups.map((g) => g[1]));
-  $("groupBars").innerHTML = groups.map(([name, count]) => `
-    <div class="bar-row">
-      <span>${name}</span>
-      <span class="bar-track"><span class="bar-fill" style="width:${(count / max) * 100}%"></span></span>
-      <b>${count}</b>
-    </div>`).join("");
-
-  // actual values: pick the 10 descriptors that vary most across the six real samples
   const useStruct = includeStructure && hasStruct;
   const key = useStruct ? "structure_features" : "composition_features";
   const dicts = featData.compounds.map((x) => x[key] || {});
   const cols = Object.keys(dicts[0] || {});
-  const variances = cols.map((col) => {
+  const varOf = (col) => {
     const vals = dicts.map((dd) => Number(dd[col])).filter((v) => Number.isFinite(v));
-    if (vals.length < 2) return [col, -1];
-    const mean = vals.reduce((a, v) => a + v, 0) / vals.length;
-    return [col, vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length];
-  }).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    if (vals.length < 2) return -1;
+    const m = vals.reduce((a, v) => a + v, 0) / vals.length;
+    return vals.reduce((a, v) => a + (v - m) ** 2, 0) / vals.length;
+  };
+  const familyOrder = ["ElementProperty", "Stoichiometry", "OxidationStates", "IonProperty",
+    "AtomicOrbitals", "ValenceOrbital", "Miedema", "YangSolidSolution", "TMetalFraction",
+    "AtomicPackingEfficiency", "BandCenter", "ElementFraction"];
+  const byFamily = {};
+  cols.forEach((col) => {
+    const fam = col.split("|")[0];
+    (byFamily[fam] = byFamily[fam] || []).push([col, varOf(col)]);
+  });
+  const chosen = [];
+  familyOrder.forEach((fam) => {
+    (byFamily[fam] || []).sort((a, b) => b[1] - a[1]).slice(0, 3).forEach((x) => chosen.push(x));
+  });
+  Object.keys(byFamily).sort().forEach((fam) => {
+    if (chosen.length >= 24 || familyOrder.includes(fam)) return;
+    byFamily[fam].sort((a, b) => b[1] - a[1]).slice(0, 2).forEach((x) => chosen.push(x));
+  });
+  const feats = chosen.slice(0, 24).map((x) => x[0]);
+
+  const stats = {};
+  feats.forEach((col) => {
+    const vals = dicts.map((dd) => Number(dd[col])).filter((v) => Number.isFinite(v));
+    const m = vals.reduce((a, v) => a + v, 0) / vals.length;
+    const sd = Math.sqrt(vals.reduce((a, v) => a + (v - m) ** 2, 0) / vals.length) || 1;
+    stats[col] = { m, sd };
+  });
+  const color = (z) => {
+    const a = Math.min(0.85, Math.abs(z) / 2.5 * 0.85);
+    return z >= 0 ? `rgba(255,61,90,${a})` : `rgba(90,108,255,${a})`;
+  };
+
+  const rows = featData.compounds;
+  const grid = $("featMatrix");
+  grid.style.gridTemplateColumns = `160px repeat(${feats.length}, minmax(14px, 1fr))`;
+  grid.innerHTML = "";
+  grid.appendChild(document.createElement("div"));
+  feats.forEach((col) => {
+    const d = document.createElement("div");
+    d.className = "collabel";
+    d.title = col;
+    d.textContent = col.split("|").slice(0, 2).join(" ");
+    grid.appendChild(d);
+  });
+  rows.forEach((r) => {
+    const isSelected = r.name === featCurrent;
+    const dim = !matchesFilter(r, featFilter);
+    const lab = document.createElement("div");
+    lab.className = "rowlabel" + (isSelected ? " active" : "") + (dim ? " dim" : "");
+    lab.textContent = `${r.name} · ${r.prototype}`;
+    lab.onclick = () => { featCurrent = r.name; renderFeaturizer(); };
+    grid.appendChild(lab);
+    const dict = r[key] || {};
+    feats.forEach((col) => {
+      const v = Number(dict[col]);
+      const z = Number.isFinite(v) ? (v - stats[col].m) / stats[col].sd : 0;
+      const cell = document.createElement("div");
+      cell.className = "cell" + (dim ? " dim" : "");
+      cell.style.background = Number.isFinite(v) ? color(z) : "rgba(255,255,255,.04)";
+      cell.title = `${r.name} · ${col}\nvalue ${Number.isFinite(v) ? v.toPrecision(3) : "null"} · z ${z.toFixed(2)}`;
+      grid.appendChild(cell);
+    });
+  });
+
+  $("featScale").innerHTML = '<span><i class="swatch" style="background:#5a6cff"></i>below mean</span><span><i class="swatch" style="background:#ff3d5a"></i>above mean</span><span>color = z-score across the six materials (clamped ±2.5)</span>';
 
   const selDict = c[key] || {};
-  $("featValues").innerHTML = `<table><thead><tr><th>descriptor</th><th>${c.name}</th></tr></thead><tbody>` +
-    variances.map(([col]) => {
-      const v = selDict[col];
-      const shown = typeof v === "number" ? (Math.abs(v) >= 1e4 || (Math.abs(v) < 1e-3 && v !== 0) ? v.toExponential(2) : v.toFixed(3)) : (v == null ? "null" : v);
-      return `<tr><td title="${col}">${col.length > 52 ? col.slice(0, 52) + "…" : col}</td><td>${shown}</td></tr>`;
-    }).join("") + "</tbody></table>";
+  const scored = feats.map((col) => {
+    const v = Number(selDict[col]);
+    return { col, v, z: Number.isFinite(v) ? (v - stats[col].m) / stats[col].sd : 0 };
+  }).filter((x) => Number.isFinite(x.v)).sort((a, b) => Math.abs(b.z) - Math.abs(a.z)).slice(0, 8);
+  $("featValues").innerHTML = `<table><thead><tr><th>descriptor</th><th>${c.name}</th><th>z</th></tr></thead><tbody>` +
+    scored.map((x) => `<tr><td title="${x.col}">${x.col.length > 46 ? x.col.slice(0, 46) + "…" : x.col}</td><td>${x.v.toPrecision(4)}</td><td>${x.z.toFixed(2)}</td></tr>`).join("") +
+    "</tbody></table>";
+}
+
+function matchesFilter(r, f) {
+  if (f === "all") return true;
+  if (f === "oxide") return r.prototype.includes("oxide");
+  if (f === "nonoxide") return !r.prototype.includes("oxide");
+  if (f === "binary") return r.prototype.includes("binary");
+  if (f === "ternary") return r.prototype.includes("ternary");
+  if (f === "multi") return r.prototype.includes("many-element");
+  return true;
 }
 
 /* ---------- 2. NMI playground ---------- */
@@ -288,26 +360,31 @@ function nmiPoints() {
   const r = rng(42);
   const pts = [];
   const dep = Number($("nmiSlider").value) / 100;
-  for (let i = 0; i < 180; i++) {
+  for (let i = 0; i < 400; i++) {
     const x = gauss(r);
     let y;
-    if (nmiMode === "independent") y = gauss(r);
-    else if (nmiMode === "quadratic") y = dep * (x * x - 1) + (1 - dep) * gauss(r);
-    else y = dep * x + (1 - dep) * gauss(r);
+    if (nmiMode === "independent") {
+      // no dependence: the slider only changes the spread of Y
+      y = (0.3 + 1.7 * dep) * gauss(r);
+    } else if (nmiMode === "quadratic") {
+      y = dep * (x * x - 1) + (1 - dep) * 1.5 * gauss(r);
+    } else {
+      y = dep * x + (1 - dep) * 1.5 * gauss(r);
+    }
     pts.push([x, y]);
   }
   return pts;
 }
 
-function binNMI(pts, bins = 10) {
-  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
-  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+function entropyBin(p) {
+  return -p.reduce((a, v) => a + (v > 0 ? v * Math.log(v) : 0), 0);
+}
+
+function binStats(pts, bins = 8) {
+  const lo = -3, hi = 3;
   const grid = Array.from({ length: bins }, () => new Array(bins).fill(0));
-  for (const [x, y] of pts) {
-    const ix = Math.min(bins - 1, Math.floor((x - minX) / (maxX - minX + 1e-9) * bins));
-    const iy = Math.min(bins - 1, Math.floor((y - minY) / (maxY - minY + 1e-9) * bins));
-    grid[ix][iy]++;
-  }
+  const idx = (v) => Math.max(0, Math.min(bins - 1, Math.floor((v - lo) / (hi - lo) * bins)));
+  for (const [x, y] of pts) grid[idx(x)][idx(y)]++;
   const n = pts.length;
   const px = new Array(bins).fill(0), py = new Array(bins).fill(0);
   for (let i = 0; i < bins; i++) for (let j = 0; j < bins; j++) { px[i] += grid[i][j] / n; py[j] += grid[i][j] / n; }
@@ -316,8 +393,21 @@ function binNMI(pts, bins = 10) {
     const p = grid[i][j] / n;
     if (p > 0) mi += p * Math.log(p / (px[i] * py[j]));
   }
-  const h = (p) => -p.reduce((a, v) => a + (v > 0 ? v * Math.log(v) : 0), 0);
-  return Math.max(0, mi / ((h(px) + h(py)) / 2));
+  const hx = entropyBin(px), hy = entropyBin(py);
+  return { mi: Math.max(0, mi), hx, hy, nmi: Math.max(0, mi / ((hx + hy) / 2)) };
+}
+
+function pearson(pts) {
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const n = xs.length;
+  const mx = xs.reduce((a, v) => a + v, 0) / n, my = ys.reduce((a, v) => a + v, 0) / n;
+  let num = 0, dx = 0, dy = 0;
+  for (let i = 0; i < n; i++) {
+    num += (xs[i] - mx) * (ys[i] - my);
+    dx += (xs[i] - mx) ** 2;
+    dy += (ys[i] - my) ** 2;
+  }
+  return num / Math.sqrt(dx * dy + 1e-12);
 }
 
 function drawNMI() {
@@ -326,21 +416,25 @@ function drawNMI() {
   const W = 420, H = 320, P = { t: 16, r: 16, b: 34, l: 40 };
   const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
   const xmin = Math.min(...xs), xmax = Math.max(...xs), ymin = Math.min(...ys), ymax = Math.max(...ys);
-  const sx = (x) => P.l + (x - xmin) / (xmax - xmin) * (W - P.l - P.r);
-  const sy = (y) => H - P.b - (y - ymin) / (ymax - ymin) * (H - P.t - P.b);
+  const sx = (x) => P.l + (x - xmin) / (xmax - xmin + 1e-9) * (W - P.l - P.r);
+  const sy = (y) => H - P.b - (y - ymin) / (ymax - ymin + 1e-9) * (H - P.t - P.b);
   svg.innerHTML = "";
   const ax = el("g", { class: "axis" });
   ax.appendChild(el("line", { x1: P.l, x2: W - P.r, y1: H - P.b, y2: H - P.b }));
   ax.appendChild(el("line", { x1: P.l, x2: P.l, y1: P.t, y2: H - P.b }));
   const lx = el("text", { x: W - P.r, y: H - 14, "text-anchor": "end" }); lx.textContent = "feature X";
-  const ly = el("text", { x: 12, y: P.t + 10 }); ly.textContent = "Y";
+  const ly = el("text", { x: 12, y: P.t + 10 }); ly.textContent = "target Y";
   ax.appendChild(lx); ax.appendChild(ly);
   svg.appendChild(ax);
   pts.forEach(([x, y]) => svg.appendChild(el("circle", { cx: sx(x), cy: sy(y), r: 2.4, fill: "#ff3d5a", opacity: 0.65 })));
-  $("nmiValue").textContent = binNMI(pts).toFixed(2);
+
+  const st = binStats(pts);
+  $("nmiMI").textContent = st.mi.toFixed(3);
+  $("nmiHX").textContent = st.hx.toFixed(3);
+  $("nmiHY").textContent = st.hy.toFixed(3);
+  $("nmiValue").textContent = st.nmi.toFixed(3);
+  $("nmiPearson").textContent = pearson(pts).toFixed(3);
 }
-
-
 
 function initNMI() {
   $("nmiSlider").oninput = drawNMI;
@@ -348,6 +442,12 @@ function initNMI() {
     b.onclick = () => {
       nmiMode = b.dataset.nmi;
       document.querySelectorAll("[data-nmi]").forEach((x) => x.classList.toggle("primary", x === b));
+      const notes = {
+        linear: "Linear dependence: the points follow a line, so both Pearson r and NMI rise together.",
+        quadratic: "Symmetric nonlinear dependence: Pearson r collapses toward zero while NMI stays high. This is why MODNet does not use correlation.",
+        independent: "The variables are independent. The slider changes the spread of Y, so the cloud moves — but NMI stays near zero. A rescaled cloud is still unrelated.",
+      };
+      $("nmiModeNote").textContent = notes[nmiMode];
       drawNMI();
     };
   });
@@ -630,68 +730,59 @@ function drawJoint() {
   label(660, 230, "one network, shared representation", "#6e5f6e", 10);
 }
 
-/* ---------- 5b. joint vs single, real run ---------- */
+/* ---------- 5b. joint learning synthetic demo ---------- */
 async function initJointChart() {
   const svg = $("jointChart");
   if (!svg) return;
   let d;
   try {
-    d = await (await fetch("data/joint_learning.json")).json();
+    d = await (await fetch("data/joint_synthetic.json")).json();
   } catch (e) {
     svg.parentNode.style.display = "none";
     return;
   }
-  if (!d.rows || !d.rows.length) throw new Error("no joint data");
-  const sizes = [...new Set(d.rows.map((r) => r.n_train))].sort((a, b) => a - b);
-  const avg = (rows, key) => sizes.map((n) => {
-    const vals = rows.filter((r) => r.n_train === n).map((r) => r[key]);
-    return vals.reduce((a, v) => a + v, 0) / vals.length;
-  });
-  const W = 900, H = 320, P = { t: 20, r: 20, b: 44, l: 56 };
+  const rows = d.rows;
+  const W = 900, H = 320, P = { t: 20, r: 20, b: 44, l: 60 };
   const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
-  const allVals = d.rows.flatMap((r) => [r.joint.eform, r.joint.egap, r.single.eform, r.single.egap]);
-  const ymin = 0, ymax = Math.max(...allVals) * 1.15;
-  const sx = (n) => x0 + (n - sizes[0]) / (sizes[sizes.length - 1] - sizes[0]) * (x1 - x0);
-  const sy = (v) => y0 - (v - ymin) / (ymax - ymin) * (y0 - y1);
+  const xs = rows.map((r) => r.n_train);
+  const ymax = Math.max(...rows.flatMap((r) => [r.joint + r.joint_std, r.single + r.single_std])) * 1.1;
+  const sx = (n) => x0 + (Math.log10(n) - Math.log10(xs[0])) / (Math.log10(xs[xs.length - 1]) - Math.log10(xs[0])) * (x1 - x0);
+  const sy = (v) => y0 - (v / ymax) * (y0 - y1);
   svg.innerHTML = "";
 
   const ax = el("g", { class: "axis" });
-  sizes.forEach((n) => {
-    const t = el("text", { x: sx(n), y: H - 20, "text-anchor": "middle" });
-    t.textContent = n; ax.appendChild(t);
+  xs.forEach((n) => {
+    const t = el("text", { x: sx(n), y: H - 20, "text-anchor": "middle" }); t.textContent = n; ax.appendChild(t);
   });
   for (let i = 0; i <= 4; i++) {
-    const v = ymin + (ymax - ymin) * i / 4;
-    const t = el("text", { x: x0 - 8, y: sy(v) + 4, "text-anchor": "end" });
-    t.textContent = v.toFixed(2); ax.appendChild(t);
+    const v = ymax * i / 4;
+    const t = el("text", { x: x0 - 8, y: sy(v) + 4, "text-anchor": "end" }); t.textContent = v.toFixed(2); ax.appendChild(t);
     ax.appendChild(el("line", { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: "gridline" }));
   }
   const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
-  xl.textContent = "training samples"; ax.appendChild(xl);
+  xl.textContent = "training samples (log scale)"; ax.appendChild(xl);
+  const yl = el("text", { transform: `translate(12,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle" });
+  yl.textContent = "test MAE (lower is better)"; ax.appendChild(yl);
   svg.appendChild(ax);
 
   const series = [
-    { name: "eform · joint", color: "#ff3d5a", dash: "", vals: d.rows.filter((r) => true), y: "eform", joint: true },
-    { name: "eform · single", color: "#ff3d5a", dash: "5 4", y: "eform", joint: false },
-    { name: "egap · joint", color: "#45d6ff", dash: "", y: "egap", joint: true },
-    { name: "egap · single", color: "#45d6ff", dash: "5 4", y: "egap", joint: false },
+    { key: "joint", color: "#ff3d5a", label: "joint (shared trunk, two heads)" },
+    { key: "single", color: "#5a6cff", label: "single-task (one network per target)" },
   ];
-  for (const s of series) {
-    const pts = sizes.map((n) => {
-      const rows = d.rows.filter((r) => r.n_train === n);
-      const vals = rows.map((r) => s.joint ? r.joint[s.y] : r.single[s.y]);
-      return [sx(n), sy(vals.reduce((a, v) => a + v, 0) / vals.length)];
-    });
-    svg.appendChild(el("path", {
-      class: "series", stroke: s.color,
-      "stroke-dasharray": s.dash,
-      d: pts.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" "),
-    }));
-  }
+  series.forEach((sr) => {
+    const lo = rows.map((r) => sy(Math.max(0, r[sr.key] - r[sr.key + "_std"])));
+    const hi = rows.map((r) => sy(r[sr.key] + r[sr.key + "_std"]));
+    const band = rows.map((r, i) => `${i ? "L" : "M"}${sx(r.n_train)} ${lo[i]}`)
+      .concat([...rows].reverse().map((r, j) => `L${sx(r.n_train)} ${hi[rows.length - 1 - j]}`))
+      .join(" ") + " Z";
+    svg.appendChild(el("path", { d: band, fill: sr.color, opacity: 0.12, stroke: "none" }));
+    const line = rows.map((r, i) => `${i ? "L" : "M"}${sx(r.n_train)} ${sy(r[sr.key])}`).join(" ");
+    svg.appendChild(el("path", { class: "series", stroke: sr.color, d: line }));
+    rows.forEach((r) => svg.appendChild(el("circle", { cx: sx(r.n_train), cy: sy(r[sr.key]), r: 4, fill: sr.color, class: "dot" })));
+  });
 
-  const lg = $("jointLegend");
-  lg.innerHTML = series.map((s) =>
-    `<span><i class="swatch" style="background:${s.color};height:2px;border-top:${s.dash ? "2px dashed " + s.color : "none"};background:transparent"></i>${s.name}</span>`).join("");
+  $("jointLegend").innerHTML = series.map((sr) =>
+    `<span><i class="swatch" style="background:${sr.color}"></i>${sr.label}</span>`).join("");
 }
 
 /* ---------- 5c. real ensemble uncertainty ---------- */
@@ -741,7 +832,8 @@ async function initGA() {
   const svg = $("gaChart");
   if (!svg) return;
   try {
-    gaData = await (await fetch("data/ga_run.json")).json();
+    const r = await fetch("data/ga_run_events.json");
+    gaData = r.ok ? await r.json() : await (await fetch("data/ga_run.json")).json();
   } catch (e) {
     svg.parentNode.style.display = "none";
     return;
@@ -800,9 +892,30 @@ function drawGA() {
 
   const pop = [...gens[gaIdx]].sort((a, b) => a.val_loss - b.val_loss).slice(0, 6);
   const cols = ["n_feat", "n_neurons_first_layer", "lr", "batch_size", "xscale", "loss"];
-  $("gaTable").innerHTML = `<table><thead><tr><th>#</th>${cols.map((c) => `<th>${c}</th>`).join("")}<th>val MAE</th></tr></thead><tbody>` +
+  const best = pop[0];
+  const g = best.genes;
+  const widths = [g.n_neurons_first_layer, g.n_neurons_first_layer * g.fraction1,
+    g.n_neurons_first_layer * g.fraction1 * g.fraction2,
+    g.n_neurons_first_layer * g.fraction1 * g.fraction2 * g.fraction3].map((v) => Math.round(v));
+  $("gaTable").innerHTML =
+    `<p class="note" style="margin:0 0 8px">Winner's four blocks: <strong>${widths.join(" → ")}</strong> neurons (first-layer width × the three fraction genes)</p>` +
+    `<table><thead><tr><th>#</th>${cols.map((c) => `<th>${c}</th>`).join("")}<th>val MAE</th></tr></thead><tbody>` +
     pop.map((ind, i) => `<tr><td>${i + 1}</td>${cols.map((c) => `<td>${ind.genes[c]}</td>`).join("")}<td>${ind.val_loss.toFixed(3)}</td></tr>`).join("") +
     "</tbody></table>";
+
+  const events = (gaData.events || []).filter((e) => e.gen === gaIdx);
+  const cross = events.filter((e) => e.type === "crossover").length;
+  const muts = events.filter((e) => e.type === "mutation");
+  let html = `<p style="margin:10px 0 4px">Generation ${gaIdx + 1} operators: <strong>${cross}</strong> crossovers, <strong>${muts.length}</strong> mutations.</p>`;
+  if (muts.length) {
+    html += "<p style=\"margin:4px 0\">Example mutations:</p><ul style=\"margin:4px 0 0;padding-left:16px\">";
+    muts.slice(0, 3).forEach((m) => {
+      const parts = Object.entries(m.changes).slice(0, 2).map(([k, [a, b]]) => `${k}: ${a} → ${b}`);
+      html += `<li>individual ${m.individual}: ${parts.join("; ")}</li>`;
+    });
+    html += "</ul>";
+  }
+  $("gaEvents").innerHTML = html;
 }
 
 /* ---------- boot ---------- */

@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "script": "stage6_joint_synth.py",
+    "date": "2026-11-03T10:27:52.799881+00:00",
+    "note": "Synthetic teaching example: two targets are independent noisy views of the same latent function. Joint training shares the hidden layer and averages the noise. Not a MODNet result.",
+    "n_seeds": 8,
+    "noise_sigma": 0.35,
+    "model": "sklearn MLPRegressor, hidden=(16,), tanh, lbfgs"
+  },
+  "sizes": [
+    20,
+    40,
+    80,
+    160,
+    320
+  ],
+  "rows": [
+    {
+      "n_train": 20,
+      "joint": 0.9644129275047555,
+      "single": 0.8932567128745389,
+      "joint_std": 0.46972782235625654,
+      "single_std": 0.2760648688645458
+    },
+    {
+      "n_train": 40,
+      "joint": 0.9349800543756798,
+      "single": 1.3291003982023994,
+      "joint_std": 0.32346934989019455,
+      "single_std": 0.4193410889025934
+    },
+    {
+      "n_train": 80,
+      "joint": 0.5360376735252849,
+      "single": 0.635952779448147,
+      "joint_std": 0.14531352474420176,
+      "single_std": 0.10689715993493565
+    },
+    {
+      "n_train": 160,
+      "joint": 0.3506066318231251,
+      "single": 0.3898455827984372,
+      "joint_std": 0.017238502437883146,
+      "single_std": 0.01826235703099668
+    },
+    {
+      "n_train": 320,
+      "joint": 0.3073989710068522,
+      "single": 0.3194264116359368,
+      "joint_std": 0.0069394540379715325,
+      "single_std": 0.007637824203775269
+    }
+  ]
+}
