@@ -867,6 +867,7 @@ function updateSH3D(l, m) {
 
 /* ---------------- integration animation ---------------- */
 let integ = null;
+let sampleMode = "grid";
 const COEFF_ORDER = (() => {
   const out = [];
   for (let n = 0; n < 4; n++)
@@ -878,26 +879,96 @@ const COEFF_ORDER = (() => {
 function integKey(n, l, m) { return `${n},${l},${m}`; }
 
 function buildIntegPoints() {
-  const N = 18;
   const R = cutoff;
+  const atoms = DATA.presets[preset].atoms.slice(1);
   const pts = [];
-  for (let i = 0; i < N; i++) {
-    const x = -R + 2 * R * i / (N - 1);
-    for (let j = 0; j < N; j++) {
-      const y = -R + 2 * R * j / (N - 1);
-      for (let k = 0; k < N; k++) {
-        const z = -R + 2 * R * k / (N - 1);
-        const rho = densityAt(x, y, z);
-        if (rho > 1e-6) pts.push({ x, y, z, rho });
+  const SCALE = 1e6;
+  if (sampleMode === "grid") {
+    const N = 18;
+    const dV = Math.pow(2 * R / (N - 1), 3);
+    for (let i = 0; i < N; i++) {
+      const x = -R + 2 * R * i / (N - 1);
+      for (let j = 0; j < N; j++) {
+        const y = -R + 2 * R * j / (N - 1);
+        for (let k = 0; k < N; k++) {
+          const z = -R + 2 * R * k / (N - 1);
+          const rho = densityAt(x, y, z);
+          if (rho > 1e-6) pts.push({ x, y, z, rho, w: dV * SCALE });
+        }
       }
     }
+    return { pts };
   }
-  return { pts, dV: Math.pow(2 * R / (N - 1), 3) };
+  const N = 3500;
+  if (sampleMode === "random") {
+    const w = (4 / 3 * Math.PI * R * R * R) / N * SCALE;
+    for (let i = 0; i < N; i++) {
+      let x, y, z, d;
+      do {
+        x = (Math.random() * 2 - 1) * R; y = (Math.random() * 2 - 1) * R; z = (Math.random() * 2 - 1) * R;
+        d = Math.hypot(x, y, z);
+      } while (d > R);
+      pts.push({ x, y, z, rho: densityAt(x, y, z), w });
+    }
+    return { pts };
+  }
+  // atom cloud: sample a neighbour, then a Gaussian around it; correct by the mixture density
+  const sig = 0.55;
+  const norm = Math.pow(2 * Math.PI * sig * sig, 1.5);
+  for (let i = 0; i < N; i++) {
+    const a = atoms[Math.floor(Math.random() * atoms.length)];
+    const x = a.position[0] + (Math.random() + Math.random() + Math.random() - 1.5) * sig * 2;
+    const y = a.position[1] + (Math.random() + Math.random() + Math.random() - 1.5) * sig * 2;
+    const z = a.position[2] + (Math.random() + Math.random() + Math.random() - 1.5) * sig * 2;
+    let q = 0;
+    atoms.forEach((b) => {
+      const d2 = (x - b.position[0]) ** 2 + (y - b.position[1]) ** 2 + (z - b.position[2]) ** 2;
+      q += Math.exp(-d2 / (2 * sig * sig)) / norm;
+    });
+    q /= atoms.length;
+    q = Math.max(q, 1e-8);
+    pts.push({ x, y, z, rho: densityAt(x, y, z), w: (1 / (N * q)) * SCALE });
+  }
+  return { pts };
 }
 
 function integradial(n, r) {
   const rn = 0.8 + 0.55 * n;
   return Math.exp(-Math.pow(r - rn, 2) / (2 * 0.45 * 0.45));
+}
+
+function makeLobeMesh(l, m, R) {
+  const geo = new THREE.SphereGeometry(1, 64, 44);
+  const pos = geo.attributes.position;
+  const colors = [];
+  let max = 0;
+  const vals = [];
+  for (let i = 0; i < pos.count; i++) {
+    const v = realSH(l, m, pos.getX(i), pos.getY(i), pos.getZ(i));
+    vals.push(v); max = Math.max(max, Math.abs(v));
+  }
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const v = vals[i] / (max || 1);
+    const r = 0.22 + 0.78 * Math.abs(v);
+    pos.setXYZ(i, x * r * R * 0.9, y * r * R * 0.9, z * r * R * 0.9);
+    if (v >= 0) colors.push(1.0, 0.28, 0.38); else colors.push(0.32, 0.58, 1.0);
+  }
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+    vertexColors: true, transparent: true, opacity: 0.32,
+    roughness: 0.4, metalness: 0.1, side: THREE.DoubleSide, depthWrite: false,
+  }));
+}
+
+function removeLobe() {
+  if (integ && integ.lobe) {
+    integ.scene.remove(integ.lobe);
+    integ.lobe.geometry.dispose();
+    integ.lobe.material.dispose();
+    integ.lobe = null;
+  }
 }
 
 function initIntegration() {
@@ -919,7 +990,7 @@ function initIntegration() {
   let colors = null;
 
   const build = () => {
-    const { pts, dV } = buildIntegPoints();
+    const { pts } = buildIntegPoints();
     const pos = new Float32Array(pts.length * 3);
     const col = new Float32Array(pts.length * 3);
     pts.forEach((p, i) => { pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z; });
@@ -933,7 +1004,7 @@ function initIntegration() {
       depthWrite: false, blending: THREE.AdditiveBlending,
     }));
     scene.add(points);
-    integ = { renderer, scene, camera, controls, points, geometry, colors, pts, dV,
+    integ = { renderer, scene, camera, controls, points, geometry, colors, pts,
       idx: 0, batch: 0, sum: 0, current: COEFF_ORDER[0], coeffs: {}, playing: false, timer: null };
     resetIntegration();
   };
@@ -977,6 +1048,7 @@ function buildCGrid() {
 function resetIntegration() {
   if (!integ) return;
   clearTimeout(integ.timer); integ.playing = false;
+  removeLobe();
   integ.idx = 0; integ.batch = 0; integ.sum = 0; integ.coeffs = {};
   integ.current = COEFF_ORDER[0];
   const col = integ.colors.array;
@@ -1002,6 +1074,10 @@ function startCoeff() {
   $("intSum").textContent = "0.000";
   $("intProgress").textContent = "0%";
   $("intBar").style.width = "0%";
+  removeLobe();
+  integ.lobe = makeLobeMesh(c.l, c.m, cutoff);
+  integ.scene.add(integ.lobe);
+  integ.flashUntil = performance.now() + 650;
 }
 
 function stepIntegration() {
@@ -1019,7 +1095,7 @@ function stepIntegration() {
     const r = Math.hypot(p.x, p.y, p.z) || 1e-9;
     const ylm = realSH(c.l, c.m, p.x, p.y, p.z);
     const val = p.rho * integradial(c.n, r) * ylm;
-    integ.sum += val * integ.dV * 1e6;
+    integ.sum += val * p.w;
     scale = Math.max(scale, Math.abs(val));
   }
   scale = scale || 1;
@@ -1067,6 +1143,11 @@ function updateIntegUI(pct) {
 function playTick() {
   if (!integ || !integ.playing) return;
   integ.timer = null;
+  if (integ.lobe && performance.now() < integ.flashUntil) {
+    integ.timer = setTimeout(playTick, 60);
+    return;
+  }
+  removeLobe();
   stepIntegration();
   if (integ.playing && integ.idx < COEFF_ORDER.length && !integ.timer) {
     integ.timer = setTimeout(playTick, 45);
@@ -1082,6 +1163,7 @@ function pauseInteg() { stopInteg(); }
 function stepOneCoeff() {
   pauseInteg();
   if (!integ) return;
+  removeLobe();
   const startIdx = integ.idx;
   while (integ && integ.idx === startIdx && integ.idx < COEFF_ORDER.length) {
     stepIntegration();
@@ -1090,6 +1172,13 @@ function stepOneCoeff() {
 
 function initIntegControls() {
   buildCGrid();
+  document.querySelectorAll("[data-sample]").forEach((b) => {
+    b.onclick = () => {
+      sampleMode = b.dataset.sample;
+      document.querySelectorAll("[data-sample]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+      if (integ && integ._rebuild) integ._rebuild();
+    };
+  });
   $("intPlay").onclick = () => { if (integ.idx >= COEFF_ORDER.length) resetIntegration(); startInteg(); };
   $("intPause").onclick = pauseInteg;
   $("intReset").onclick = () => { pauseInteg(); resetIntegration(); };

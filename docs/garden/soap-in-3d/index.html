@@ -145,7 +145,16 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
             <div><b id="intProgress">0%</b><small>samples</small></div>
           </div>
           <div class="progress"><i id="intBar"></i></div>
-          <div class="controls" style="margin-top:12px">
+          <div class="controls" style="margin-top:12px" id="sampleModes">
+            <button class="pill" data-sample="grid" aria-pressed="true">uniform grid</button>
+            <button class="pill" data-sample="random" aria-pressed="false">random sphere</button>
+            <button class="pill" data-sample="cloud" aria-pressed="false">atom cloud</button>
+          </div>
+          <p class="note" style="margin:6px 0 4px"><strong>Try the sampling modes:</strong>
+            a uniform grid is symmetric, so for <code>l&gt;0</code> positive and negative
+            lobes cancel to almost zero. Random-sphere and atom-cloud samples break
+            that symmetry and give a non-trivial coefficient.</p>
+          <div class="controls" style="margin-top:4px">
             <button class="pill primary" id="intPlay">play all</button>
             <button class="pill" id="intPause">pause</button>
             <button class="pill" id="intReset">reset</button>
