@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOAP in 3D — preview</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="../../index.html">rogeriog<span>.</span></a>
+  <a class="back" href="../index.html">← garden</a>
+</header>
+
+<main>
+  <div class="wip">Draft preview · 3D explainer</div>
+  <h1>SOAP in <em>3D</em></h1>
+  <p class="lede">
+    Smooth Overlap of Atomic Positions turns a local atomic environment into a
+    fixed-length vector that does not care about rotation or atom ordering.
+    This page builds the idea in the order the maths does: density → basis →
+    power spectrum → compression.
+  </p>
+
+  <section id="scene">
+    <h2>1 · The neighbor density</h2>
+    <p class="sub">
+      Put the central atom at the origin. Every neighbor contributes a smooth
+      Gaussian. The sum is a density field: no atom labels, no orientation,
+      just “how much stuff is where”. Drag to rotate; scroll to zoom.
+    </p>
+    <div class="card scene-card">
+      <div id="threeWrap"><canvas id="three"></canvas><div class="hint">drag to rotate · scroll to zoom</div></div>
+      <div class="scene-controls">
+        <div class="controls" id="presetControls"></div>
+        <div class="controls" id="cutoffControls"></div>
+        <label class="slider">Gaussian width σ <input id="sigma" type="range" min="0.20" max="0.80" step="0.01" value="0.45"><span id="sigmaVal">0.45</span></label>
+        <div class="controls">
+          <button class="pill" id="toggleDensity" aria-pressed="true">density cloud</button>
+          <button class="pill" id="toggleCutoff" aria-pressed="true">cutoff sphere</button>
+          <button class="pill" id="toggleSpin" aria-pressed="false">auto-rotate</button>
+        </div>
+      </div>
+      <div class="legend" id="atomLegend"></div>
+      <p class="note" id="presetNote"></p>
+    </div>
+  </section>
+
+  <section id="formalism">
+    <h2>2 · Expand the density</h2>
+    <p class="sub">
+      SOAP expands the density in a basis: a radial function for “how far” and a
+      spherical harmonic for “which direction”. That gives coefficients
+      <code>c<sub>nlm</sub></code>. The basis is truncated at <code>n_max</code>
+      radial functions and <code>l_max</code> angular channels — here 4 and 4.
+    </p>
+    <div class="card formula-card">
+      <div class="formula">ρ<sub>i</sub>(<b>r</b>) = Σ<sub>j</sub> exp(−|<b>r</b> − <b>r</b><sub>ij</sub>|² / 2σ²)</div>
+      <div class="formula">ρ<sub>i</sub>(<b>r</b>) = Σ<sub>nlm</sub> c<sub>nlm</sub><sup>(i)</sup> g<sub>n</sub>(r) Y<sub>lm</sub>(<b>r̂</b>)</div>
+      <div class="formula accent">p<sub>nn′l</sub><sup>(i)</sup> = Σ<sub>m</sub> c<sub>nlm</sub><sup>(i)</sup> c<sub>n′lm</sub><sup>(i)*</sup></div>
+      <p class="note">The power spectrum removes the <code>m</code> index, and with it the
+        orientation. What is left is invariant under rotation, translation and
+        permutation of identical atoms.</p>
+    </div>
+  </section>
+
+  <section id="spectrum">
+    <h2>3 · The power spectrum is the fingerprint</h2>
+    <p class="sub">
+      Each cell is one <code>(n, n′, l)</code> channel, summed over species pairs.
+      Change the geometry or the cutoff and watch the fingerprint change. The
+      values are real dscribe SOAP outputs for the central atom.
+    </p>
+    <div class="card">
+      <div class="controls">
+        <button class="pill" data-mode="off" aria-pressed="true">uncompressed</button>
+        <button class="pill" data-mode="mu1nu1" aria-pressed="false">mu1nu1 compression</button>
+      </div>
+      <div class="kv">
+        <div><b id="descLen">–</b><small>descriptor length</small></div>
+        <div><b id="descMode">–</b><small>mode</small></div>
+        <div><b id="descCut">–</b><small>cutoff (Å)</small></div>
+      </div>
+      <canvas id="heatmap" width="900" height="360"></canvas>
+      <p class="note" id="heatNote"></p>
+    </div>
+  </section>
+
+  <section id="compression">
+    <h2>4 · Compression: from hundreds of numbers to a map</h2>
+    <p class="sub">
+      SOAP vectors are high-dimensional and grow with the number of species.
+      The <strong>mu1nu1</strong> scheme from Darby et al. compresses the
+      species dimension: for 3 species it cuts 390 numbers to 240, and the
+      length then scales linearly rather than quadratically with the number of
+      elements.
+    </p>
+    <div class="card">
+      <div class="controls">
+        <button class="pill" data-pca="off" aria-pressed="true">PCA on uncompressed</button>
+        <button class="pill" data-pca="mu1nu1" aria-pressed="false">PCA on mu1nu1</button>
+      </div>
+      <div class="grid2">
+        <canvas id="pca" width="520" height="420"></canvas>
+        <div>
+          <div class="kv"><div><b id="pcaVar">–</b><small>variance in 2D</small></div></div>
+          <p class="note">80 random clusters (dimer / tetrahedral / octahedral
+            templates with jitter), featurized at <code>r_cut=4 Å</code>, then
+            projected to two principal components. The cluster structure survives
+            the compression — that is what makes SOAP useful for clustering and
+            for appending compact codes to a model.</p>
+        </div>
+      </div>
+      <p class="note"><strong>Why compress at all?</strong> The uncompressed power
+        spectrum scales as <code>(n_species·n_max)(n_species·n_max+1)/2·(l_max+1)</code>.
+        mu1nu1 keeps species identity but removes the explicit species-pair
+        cross terms; mu2 goes further and drops species labels entirely.</p>
+    </div>
+  </section>
+
+  <section id="limits">
+    <h2>5 · What to remember</h2>
+    <div class="card">
+      <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
+        invariant, fixed-length, and interpretable through its radial/angular
+        channels. But it depends on <code>r_cut</code>, <code>n_max</code>,
+        <code>l_max</code>, and on how species are weighted. Change the cutoff and
+        you are describing a different environment.</p>
+      <p class="note" style="margin-bottom:0">Next in the garden: using SOAP vectors
+        to cluster environments, appending cluster one-hot codes to a graph model,
+        and comparing cutoffs at 2/4/6 Å.</p>
+    </div>
+  </section>
+</main>
+
+<footer>Preview build · Rogério Gouvêa · not indexed</footer>
+
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
