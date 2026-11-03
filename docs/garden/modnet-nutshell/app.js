@@ -115,30 +115,52 @@ function initCross() {
 }
 
 /* ---------- 0b. real learning curves ---------- */
+const lcHidden = { main: new Set(), base: new Set() };
+
 async function initLearningCurves() {
-  const svg = $("lcChart");
-  if (!svg) return;
-  let d;
+  let modnet, models;
   try {
-    d = await (await fetch("data/learning_curves.json")).json();
+    [modnet, models] = await Promise.all([
+      (await fetch("data/learning_curves.json")).json(),
+      (await fetch("data/learning_curves_models.json")).json(),
+    ]);
   } catch (e) {
-    svg.parentNode.style.display = "none";
+    $("lcChart").parentNode.style.display = "none";
     return;
   }
-  const colors = { modnet: "#ff3d5a", allnet: "#5a6cff", ridge: "#45d6ff", dummy: "#63e6a4" };
-  const names = { modnet: "MODNet", allnet: "all features", ridge: "ridge", dummy: "mean baseline" };
-  const sizes = d.sizes;
-  const rows = {};
-  for (const [m, obj] of Object.entries(d.models)) {
-    rows[m] = sizes.map((n) => {
-      const vals = obj.mae.filter((x) => x[0] === n).map((x) => x[2]);
+  const main = [
+    { key: "modnet", label: "MODNet", color: "#ff3d5a", data: modnet.models.modnet.mae },
+    { key: "random_forest", label: "Random forest", color: "#5a6cff", data: models.models.random_forest.mae },
+    { key: "extra_trees", label: "Extra trees", color: "#63e6a4", data: models.models.extra_trees.mae },
+    { key: "hist_gb", label: "Hist gradient boosting", color: "#e8a05a", data: models.models.hist_gb.mae },
+    { key: "megnet", label: "MEGNet (MatBench ref.)", color: "#a79ba6", dash: "5 4", constant: 0.478 },
+  ];
+  const base = [
+    { key: "allnet", label: "All features", color: "#5a6cff", data: modnet.models.allnet.mae },
+    { key: "ridge", label: "Ridge", color: "#45d6ff", data: modnet.models.ridge.mae },
+    { key: "dummy", label: "Mean baseline", color: "#63e6a4", data: modnet.models.dummy.mae },
+  ];
+  drawLC("lcChart", "lcLegend", "main", main, modnet.sizes);
+  drawLC("lcBaselineChart", "lcBaselineLegend", "base", base, modnet.sizes);
+}
+
+function drawLC(svgId, legendId, group, series, sizes) {
+  const svg = $(svgId);
+  if (!svg) return;
+  const stats = {};
+  series.forEach((sr) => {
+    if (sr.constant != null) return;
+    stats[sr.key] = sizes.map((n) => {
+      const vals = sr.data.filter((x) => x[0] === n).map((x) => x[2]);
       if (!vals.length) return null;
       return { mean: vals.reduce((a, v) => a + v, 0) / vals.length, lo: Math.min(...vals), hi: Math.max(...vals) };
     });
-  }
-  const all = Object.values(rows).flat().filter(Boolean).flatMap((r) => [r.lo, r.hi]);
-  const ymax = Math.max(...all) * 1.1;
-  const W = 900, H = 360, P = { t: 18, r: 18, b: 46, l: 60 };
+  });
+  const valsAll = [];
+  Object.values(stats).forEach((arr) => arr.forEach((p) => p && valsAll.push(p.lo, p.hi)));
+  if (series.some((s) => s.constant != null)) valsAll.push(0.478);
+  const ymax = Math.max(...valsAll) * 1.1;
+  const W = 900, H = 340, P = { t: 30, r: 20, b: 44, l: 60 };
   const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
   const sx = (i) => x0 + (i / (sizes.length - 1)) * (x1 - x0);
   const sy = (v) => y0 - (v / ymax) * (y0 - y1);
@@ -154,190 +176,213 @@ async function initLearningCurves() {
   }
   const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
   xl.textContent = "training samples"; ax.appendChild(xl);
+  const yl = el("text", { transform: `translate(12,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle" });
+  yl.textContent = "test MAE (lower is better)"; ax.appendChild(yl);
   svg.appendChild(ax);
 
-  for (const [m, pts] of Object.entries(rows)) {
+  // shade sizes where MODNet beats every shown non-reference model
+  if (group === "main" && !lcHidden.main.has("modnet")) {
+    sizes.forEach((n, i) => {
+      const m = stats.modnet[i];
+      if (!m) return;
+      const rivals = ["random_forest", "extra_trees", "hist_gb"].filter((k) => !lcHidden.main.has(k) && stats[k] && stats[k][i]);
+      if (!rivals.length) return;
+      if (rivals.every((k) => m.mean < stats[k][i].mean - 0.001)) {
+        const half = i === 0 ? (sx(1) - sx(0)) / 2 : (sx(i) - sx(i - 1)) / 2;
+        svg.appendChild(el("rect", { x: sx(i) - half, y: y1, width: 2 * half, height: y0 - y1,
+          fill: "rgba(255,61,90,.14)", stroke: "rgba(255,61,90,.35)", "stroke-width": 1 }));
+        const t = el("text", { x: sx(i), y: y1 - 6, "text-anchor": "middle", fill: "#ff3d5a", "font-size": 10 });
+        t.textContent = "MODNet wins"; svg.appendChild(t);
+      }
+    });
+  }
+
+  series.forEach((sr) => {
+    if (lcHidden[group].has(sr.key)) return;
+    if (sr.constant != null) {
+      svg.appendChild(el("line", { x1: x0, x2: x1, y1: sy(sr.constant), y2: sy(sr.constant),
+        stroke: sr.color, "stroke-width": 1.5, "stroke-dasharray": sr.dash || "5 4", opacity: 0.8 }));
+      return;
+    }
+    const pts = stats[sr.key];
     pts.forEach((p, i) => {
       if (!p) return;
-      svg.appendChild(el("line", { x1: sx(i), x2: sx(i), y1: sy(p.lo), y2: sy(p.hi), stroke: colors[m], opacity: 0.35 }));
+      svg.appendChild(el("line", { x1: sx(i), x2: sx(i), y1: sy(p.lo), y2: sy(p.hi), stroke: sr.color, opacity: 0.3 }));
     });
-    const path = pts.map((p, i) => p ? `${i ? "L" : "M"}${sx(i)} ${sy(p.mean)}` : "").join(" ");
-    svg.appendChild(el("path", { class: "series", stroke: colors[m], d: path }));
-    pts.forEach((p, i) => p && svg.appendChild(el("circle", { cx: sx(i), cy: sy(p.mean), r: 4, fill: colors[m], class: "dot" })));
-  }
-  // highlight sizes where MODNet beats the all-features net
-  const wins = sizes.map((_, i) => rows.modnet[i] && rows.allnet[i] && rows.modnet[i].mean < rows.allnet[i].mean - 0.001);
-  wins.forEach((w, i) => {
-    if (!w) return;
-    const half = i === 0 ? (sx(1) - sx(0)) / 2 : (sx(i) - sx(i - 1)) / 2;
-    svg.appendChild(el("rect", {
-      x: sx(i) - half, y: y1, width: 2 * half, height: y0 - y1,
-      fill: "rgba(255,61,90,.14)", stroke: "rgba(255,61,90,.35)", "stroke-width": 1,
-    }));
-    const t = el("text", { x: sx(i), y: y1 - 4, "text-anchor": "middle", fill: "#ff3d5a", "font-size": 10 });
-    t.textContent = "MODNet wins";
-    svg.appendChild(t);
+    svg.appendChild(el("path", { class: "series", stroke: sr.color, "stroke-dasharray": sr.dash || "",
+      d: pts.map((p, i) => p ? `${i ? "L" : "M"}${sx(i)} ${sy(p.mean)}` : "").join(" ") }));
+    pts.forEach((p, i) => p && svg.appendChild(el("circle", { cx: sx(i), cy: sy(p.mean), r: 4, fill: sr.color, class: "dot" })));
   });
-  $("lcLegend").innerHTML = Object.keys(rows).map((m) =>
-    `<span><i class="swatch" style="background:${colors[m]}"></i>${names[m]}</span>`).join("") +
-    '<span style="color:#ff3d5a">shaded: MODNet lower MAE than all-features</span>';
+
+  const lg = $(legendId);
+  lg.innerHTML = "";
+  series.forEach((sr) => {
+    const span = document.createElement("span");
+    span.style.cursor = "pointer";
+    span.style.opacity = lcHidden[group].has(sr.key) ? 0.35 : 1;
+    span.innerHTML = `<i class="swatch" style="background:${sr.color};${sr.dash ? "height:0;border-top:2px dashed " + sr.color : ""}"></i>${sr.label}`;
+    span.onclick = () => {
+      if (lcHidden[group].has(sr.key)) lcHidden[group].delete(sr.key); else lcHidden[group].add(sr.key);
+      drawLC(svgId, legendId, group, series, sizes);
+    };
+    lg.appendChild(span);
+  });
 }
 
 /* ---------- 1. featurizer explorer ---------- */
 let featData = null;
-let featCurrent = "NaCl";
-let includeStructure = false;
+let featMatrix = null;
+let featSelected = 0;
+let featFilter = "all";
 
 async function initFeaturizer() {
   try {
     featData = await (await fetch("data/featurizer.json")).json();
   } catch (e) {
-    $("groupBars").innerHTML = '<p class="note">Could not load featurizer data.</p>';
+    $("featValues").innerHTML = '<p class="note">Could not load featurizer data.</p>';
   }
-  if (!featData || !featData.compounds) return;
-  const box = $("compoundControls");
-  featCurrent = featData.compounds[0].name;
-  featData.compounds.forEach((c) => {
-    const b = document.createElement("button");
-    b.className = "pill";
-    b.textContent = c.name;
-    b.setAttribute("aria-pressed", c.name === featCurrent);
-    b.onclick = () => {
-      featCurrent = c.name;
-      includeStructure = false;
-      [...box.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
-      renderFeaturizer();
-    };
-    box.appendChild(b);
-  });
-  const filters = [["all", "all"], ["oxide", "oxides"], ["nonoxide", "non-oxides"], ["binary", "binary"], ["ternary", "ternary"], ["multi", "multi-element"]];
+  if (featData && featData.preset_summary) {
+    $("featComp").textContent = featData.preset_summary.composition_only.n_features;
+    $("featStruct").textContent = featData.preset_summary.with_structure.n_features;
+    $("featTotal").textContent = featData.preset_summary.composition_only.n_features +
+      featData.preset_summary.with_structure.n_features;
+  }
+  try {
+    const txt = await (await fetch("data/feature_matrix.csv")).text();
+    const lines = txt.trim().split("\n");
+    const header = lines[0].split(",");
+    const rows = lines.slice(1).map((line) => {
+      const parts = line.split(",");
+      return { material: parts[0], values: parts.slice(1).map(Number) };
+    });
+    featMatrix = { cols: header.slice(1), rows };
+  } catch (e) {
+    $("featCanvas").parentNode.innerHTML = '<p class="note">Feature matrix not available.</p>';
+    return;
+  }
+
+  const filters = [["all", "all"], ["oxide", "oxides"], ["nonoxide", "non-oxides"],
+    ["binary", "binary"], ["ternary", "ternary"], ["multi", "multi-element"]];
   const fbox = $("chemFilters");
   filters.forEach(([k, label]) => {
     const b = document.createElement("button");
     b.className = "pill";
     b.textContent = label;
     b.setAttribute("aria-pressed", k === featFilter);
-    b.onclick = () => { featFilter = k; renderFeaturizer(); [...fbox.children].forEach((x) => x.setAttribute("aria-pressed", x === b)); };
+    b.onclick = () => {
+      featFilter = k;
+      [...fbox.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
+      drawFeatMatrix();
+    };
     fbox.appendChild(b);
   });
-  $("structToggle").onclick = () => {
-    const c = featData.compounds.find((x) => x.name === featCurrent);
-    const has = c.structure_features && Object.keys(c.structure_features).length > 0;
-    if (!has) return;
-    includeStructure = !includeStructure;
-    renderFeaturizer();
-  };
-  renderFeaturizer();
+
+  $("featCanvas").addEventListener("click", (ev) => {
+    const rect = ev.target.getBoundingClientRect();
+    const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+    const top = 150, cell = 10, left = 120;
+    if (y < top || x < left) return;
+    const row = Math.floor((y - top) / cell);
+    if (row >= 0 && row < Math.min(300, featMatrix.rows.length)) {
+      featSelected = row;
+      drawFeatMatrix();
+    }
+  });
+  drawFeatMatrix();
 }
 
-let featFilter = "all";
+function formulaStats(formula) {
+  const oxide = formula.includes("O");
+  const nElem = (formula.match(/[A-Z]/g) || []).length;
+  return { oxide, nElem };
+}
 
-function renderFeaturizer() {
-  const c = featData.compounds.find((x) => x.name === featCurrent);
-  const hasStruct = c.structure_features && Object.keys(c.structure_features).length > 0;
-  const comp = featData.preset_summary.composition_only.n_features;
-  const struct = hasStruct ? Object.keys(c.structure_features).length : 0;
-  const total = includeStructure && hasStruct ? comp + struct : comp;
-  $("featComp").textContent = comp;
-  $("featStruct").textContent = hasStruct ? struct : "n/a";
-  $("featTotal").textContent = total;
-  const toggle = $("structToggle");
-  toggle.disabled = !hasStruct;
-  toggle.setAttribute("aria-pressed", includeStructure && hasStruct);
-  $("structNote").textContent = hasStruct ? "" : "no structure featurization for this sample";
+function matchesFeatFilter(material, f) {
+  if (f === "all") return true;
+  const { oxide, nElem } = formulaStats(material);
+  if (f === "oxide") return oxide;
+  if (f === "nonoxide") return !oxide;
+  if (f === "binary") return nElem === 2;
+  if (f === "ternary") return nElem === 3;
+  if (f === "multi") return nElem >= 4;
+  return true;
+}
 
-  const useStruct = includeStructure && hasStruct;
-  const key = useStruct ? "structure_features" : "composition_features";
-  const dicts = featData.compounds.map((x) => x[key] || {});
-  const cols = Object.keys(dicts[0] || {});
-  const varOf = (col) => {
-    const vals = dicts.map((dd) => Number(dd[col])).filter((v) => Number.isFinite(v));
-    if (vals.length < 2) return -1;
-    const m = vals.reduce((a, v) => a + v, 0) / vals.length;
-    return vals.reduce((a, v) => a + (v - m) ** 2, 0) / vals.length;
-  };
-  const familyOrder = ["ElementProperty", "Stoichiometry", "OxidationStates", "IonProperty",
-    "AtomicOrbitals", "ValenceOrbital", "Miedema", "YangSolidSolution", "TMetalFraction",
-    "AtomicPackingEfficiency", "BandCenter", "ElementFraction"];
-  const byFamily = {};
-  cols.forEach((col) => {
-    const fam = col.split("|")[0];
-    (byFamily[fam] = byFamily[fam] || []).push([col, varOf(col)]);
-  });
-  const chosen = [];
-  familyOrder.forEach((fam) => {
-    (byFamily[fam] || []).sort((a, b) => b[1] - a[1]).slice(0, 3).forEach((x) => chosen.push(x));
-  });
-  Object.keys(byFamily).sort().forEach((fam) => {
-    if (chosen.length >= 24 || familyOrder.includes(fam)) return;
-    byFamily[fam].sort((a, b) => b[1] - a[1]).slice(0, 2).forEach((x) => chosen.push(x));
-  });
-  const feats = chosen.slice(0, 24).map((x) => x[0]);
+function drawFeatMatrix() {
+  if (!featMatrix) return;
+  const rowsAll = featMatrix.rows;
+  const nRows = Math.min(300, rowsAll.length);
+  const rows = rowsAll.slice(0, nRows);
+  const cols = featMatrix.cols;
+  const nCols = cols.length;
+  const left = 120, top = 150, cell = 10;
+  const canvas = $("featCanvas");
+  canvas.width = left + nCols * cell;
+  canvas.height = top + nRows * cell;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.fillStyle = "#0d090d";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const stats = {};
-  feats.forEach((col) => {
-    const vals = dicts.map((dd) => Number(dd[col])).filter((v) => Number.isFinite(v));
+  const stats = cols.map((_, j) => {
+    const vals = rows.map((r) => r.values[j]).filter((v) => Number.isFinite(v));
     const m = vals.reduce((a, v) => a + v, 0) / vals.length;
     const sd = Math.sqrt(vals.reduce((a, v) => a + (v - m) ** 2, 0) / vals.length) || 1;
-    stats[col] = { m, sd };
-  });
-  const color = (z) => {
-    const a = Math.min(0.85, Math.abs(z) / 2.5 * 0.85);
-    return z >= 0 ? `rgba(255,61,90,${a})` : `rgba(90,108,255,${a})`;
-  };
-
-  const rows = featData.compounds;
-  const grid = $("featMatrix");
-  grid.style.gridTemplateColumns = `160px repeat(${feats.length}, minmax(14px, 1fr))`;
-  grid.innerHTML = "";
-  grid.appendChild(document.createElement("div"));
-  feats.forEach((col) => {
-    const d = document.createElement("div");
-    d.className = "collabel";
-    d.title = col;
-    d.textContent = col.split("|").slice(0, 2).join(" ");
-    grid.appendChild(d);
-  });
-  rows.forEach((r) => {
-    const isSelected = r.name === featCurrent;
-    const dim = !matchesFilter(r, featFilter);
-    const lab = document.createElement("div");
-    lab.className = "rowlabel" + (isSelected ? " active" : "") + (dim ? " dim" : "");
-    lab.textContent = `${r.name} · ${r.prototype}`;
-    lab.onclick = () => { featCurrent = r.name; renderFeaturizer(); };
-    grid.appendChild(lab);
-    const dict = r[key] || {};
-    feats.forEach((col) => {
-      const v = Number(dict[col]);
-      const z = Number.isFinite(v) ? (v - stats[col].m) / stats[col].sd : 0;
-      const cell = document.createElement("div");
-      cell.className = "cell" + (dim ? " dim" : "");
-      cell.style.background = Number.isFinite(v) ? color(z) : "rgba(255,255,255,.04)";
-      cell.title = `${r.name} · ${col}\nvalue ${Number.isFinite(v) ? v.toPrecision(3) : "null"} · z ${z.toFixed(2)}`;
-      grid.appendChild(cell);
-    });
+    return { m, sd };
   });
 
-  $("featScale").innerHTML = '<span><i class="swatch" style="background:#5a6cff"></i>below mean</span><span><i class="swatch" style="background:#ff3d5a"></i>above mean</span><span>color = z-score across the six materials (clamped ±2.5)</span>';
+  // diagonal column labels
+  ctx.save();
+  ctx.font = "8px Inter, sans-serif";
+  ctx.fillStyle = "#a79ba6";
+  cols.forEach((c, j) => {
+    ctx.save();
+    ctx.translate(left + j * cell + cell / 2, top - 6);
+    ctx.rotate(-Math.PI / 4);
+    ctx.textAlign = "left";
+    ctx.fillText(c.split("|").slice(0, 2).join(" ").slice(0, 34), 0, 0);
+    ctx.restore();
+  });
+  ctx.restore();
 
-  const selDict = c[key] || {};
-  const scored = feats.map((col) => {
-    const v = Number(selDict[col]);
-    return { col, v, z: Number.isFinite(v) ? (v - stats[col].m) / stats[col].sd : 0 };
-  }).filter((x) => Number.isFinite(x.v)).sort((a, b) => Math.abs(b.z) - Math.abs(a.z)).slice(0, 8);
-  $("featValues").innerHTML = `<table><thead><tr><th>descriptor</th><th>${c.name}</th><th>z</th></tr></thead><tbody>` +
+  rows.forEach((r, i) => {
+    const dim = !matchesFeatFilter(r.material, featFilter);
+    if (i === featSelected) {
+      ctx.fillStyle = "rgba(255,61,90,.18)";
+      ctx.fillRect(0, top + i * cell, canvas.width, cell);
+    }
+    ctx.font = "9px Inter, sans-serif";
+    ctx.fillStyle = dim ? "rgba(167,155,166,.25)" : (i === featSelected ? "#ff3d5a" : "#a79ba6");
+    ctx.textAlign = "right";
+    ctx.fillText(r.material.slice(0, 18), left - 6, top + i * cell + 8);
+    for (let j = 0; j < nCols; j++) {
+      const v = r.values[j];
+      let alpha = 0.06;
+      let col = "rgba(255,255,255,.04)";
+      if (Number.isFinite(v)) {
+        const z = (v - stats[j].m) / stats[j].sd;
+        alpha = Math.min(0.9, Math.abs(z) / 2.5 * 0.9);
+        col = z >= 0 ? `rgba(255,61,90,${alpha})` : `rgba(90,108,255,${alpha})`;
+      }
+      ctx.fillStyle = col;
+      ctx.fillRect(left + j * cell, top + i * cell, cell - 1, cell - 1);
+    }
+  });
+
+  $("featScale").innerHTML = '<span><i class="swatch" style="background:#5a6cff"></i>below mean</span>' +
+    '<span><i class="swatch" style="background:#ff3d5a"></i>above mean</span>' +
+    `<span>color = per-descriptor z-score, clamped ±2.5 · showing ${nRows} of ${rowsAll.length} sampled materials, all ${nCols} descriptors</span>`;
+
+  const sel = rows[featSelected];
+  if (!sel) return;
+  const scored = cols.map((c, j) => ({
+    col: c, v: sel.values[j],
+    z: Number.isFinite(sel.values[j]) ? (sel.values[j] - stats[j].m) / stats[j].sd : 0,
+  })).filter((x) => Number.isFinite(x.v))
+    .sort((a, b) => Math.abs(b.z) - Math.abs(a.z)).slice(0, 8);
+  $("featValues").innerHTML = `<table><thead><tr><th>descriptor</th><th>${sel.material}</th><th>z</th></tr></thead><tbody>` +
     scored.map((x) => `<tr><td title="${x.col}">${x.col.length > 46 ? x.col.slice(0, 46) + "…" : x.col}</td><td>${x.v.toPrecision(4)}</td><td>${x.z.toFixed(2)}</td></tr>`).join("") +
     "</tbody></table>";
-}
-
-function matchesFilter(r, f) {
-  if (f === "all") return true;
-  if (f === "oxide") return r.prototype.includes("oxide");
-  if (f === "nonoxide") return !r.prototype.includes("oxide");
-  if (f === "binary") return r.prototype.includes("binary");
-  if (f === "ternary") return r.prototype.includes("ternary");
-  if (f === "multi") return r.prototype.includes("many-element");
-  return true;
 }
 
 /* ---------- 2. NMI playground ---------- */
@@ -364,8 +409,13 @@ function nmiPoints() {
     const x = gauss(r);
     let y;
     if (nmiMode === "independent") {
-      // no dependence: the slider only changes the spread of Y
-      y = (0.3 + 1.7 * dep) * gauss(r);
+      // rotate an independent cloud: the picture moves, the dependence does not
+      const x0 = gauss(r), y0 = gauss(r);
+      const a = dep * Math.PI;
+      const xr = x0 * Math.cos(a) - y0 * Math.sin(a);
+      const yr = x0 * Math.sin(a) + y0 * Math.cos(a);
+      pts.push([xr, yr]);
+      continue;
     } else if (nmiMode === "quadratic") {
       y = dep * (x * x - 1) + (1 - dep) * 1.5 * gauss(r);
     } else {
@@ -583,6 +633,33 @@ function drawFRRReal() {
   $("frrScore").textContent = frr.last && frr.last.score != null ? Number(frr.last.score).toFixed(2) : "–";
   $("frrList").innerHTML = frr.selected.slice(-8).reverse().map((s) =>
     `<li>${s.split("|").slice(0, 2).join(" · ")} — NMI ${(frrNmi[s] || 0).toFixed(3)}</li>`).join("");
+  drawFRRScores();
+}
+
+function drawFRRScores() {
+  const svg = $("frrScores");
+  if (!svg) return;
+  const n = frr.selected.length;
+  const p = frr.last && frr.last.p != null ? Number(frr.last.p) : Math.max(0.1, 4.5 - Math.pow(n, 0.4));
+  const c = frr.last && frr.last.c != null ? Number(frr.last.c) : 1e-6 * Math.pow(n, 3);
+  const selected = new Set(frr.selected);
+  const rows = frrReal.cands.filter((f) => !selected.has(f)).map((f) => {
+    let maxRed = 0;
+    frr.selected.forEach((s) => { maxRed = Math.max(maxRed, frrReal.M[frrReal.cands.indexOf(f)][frrReal.cands.indexOf(s)]); });
+    return { f, score: (frrNmi[f] || 0) / (Math.pow(maxRed, p) + c) };
+  }).sort((a, b) => b.score - a.score).slice(0, 10);
+  const W = 440, H = 220, left = 120, top = 16, rowH = 18;
+  const max = Math.max(...rows.map((r) => r.score), 1e-9);
+  svg.innerHTML = "";
+  rows.forEach((r, i) => {
+    const y = top + i * rowH;
+    const w = (r.score / max) * (W - left - 70);
+    svg.appendChild(el("rect", { x: left, y, width: Math.max(1, w), height: 12, rx: 2, fill: "#ff3d5a", opacity: 0.75 }));
+    const t = el("text", { x: left - 6, y: y + 10, "text-anchor": "end", fill: "#a79ba6", "font-size": 8 });
+    t.textContent = r.f.split("|").slice(0, 2).join(" ").slice(0, 26); svg.appendChild(t);
+    const v = el("text", { x: left + w + 6, y: y + 10, fill: "#eee9ee", "font-size": 8 });
+    v.textContent = r.score.toFixed(2); svg.appendChild(v);
+  });
 }
 
 function drawFRR() {

@@ -68,11 +68,22 @@
         <li><strong>mean baseline</strong> — always predicts the training-set mean. Any useful model must beat this.</li>
       </ul>
       <p class="note">
-        <strong>Real run:</strong> MODNet, all-features, ridge and mean baselines on
-        <code>matbench_dielectric</code>, six training sizes × 3 seeds, fixed 800-sample
-        test set. Feature selection is redone inside every training fold.
+        <strong>Real run:</strong> MODNet versus random forest, extra trees and
+        histogram gradient boosting on the same splits; six training sizes
+        (200–4 000) × 3 seeds, fixed 800-sample test set. MODNet uses selected
+        features and 1 000 epochs; the tree models use all features. The dashed
+        line is MEGNet's MatBench value (0.478) as a literature reference — its
+        split is not identical, so treat it as context, not a head-to-head.
       </p>
     </div>
+    <details class="compact">
+      <summary>More baselines: all features, ridge, mean (collapsed by default)</summary>
+      <svg id="lcBaselineChart" viewBox="0 0 900 340" role="img" aria-label="Additional baselines"></svg>
+      <div class="legend" id="lcBaselineLegend"></div>
+      <p class="note">These isolate the value of feature selection and a linear model:
+        all features (same network, no selection), ridge on selected features, and the
+        training-set mean.</p>
+    </details>
   </section>
 
   <section id="featurization">
@@ -85,19 +96,17 @@
     </p>
     <div class="card">
       <div class="controls" id="compoundControls"></div>
-      <p class="note" style="margin-top:0">
-        <strong>Feature space:</strong> every material gets the same
-        <b id="featComp">–</b> composition descriptors; adding the structure block
-        makes <b id="featStruct">–</b> more, <b id="featTotal">–</b> in total.
-        The count is identical for every material — the interesting part is which
-        descriptors <em>deviate</em>.
-      </p>
-      <label class="controls" style="align-items:center">
-        <button class="pill" id="structToggle" aria-pressed="false">include structure features</button>
-        <span class="note" id="structNote" style="margin:0"></span>
-      </label>
+      <details class="compact">
+        <summary>Feature counts (collapsed by default)</summary>
+        <p class="note">
+          Every material gets the same <b id="featComp">–</b> composition descriptors.
+          Adding the structure block gives <b id="featStruct">–</b> more, for
+          <b id="featTotal">–</b> in total. The schema is identical for all materials;
+          the interesting part is which descriptors deviate.
+        </p>
+      </details>
       <div class="controls" id="chemFilters"></div>
-      <div id="featMatrix" class="matrix"></div>
+      <div class="scrollwrap"><canvas id="featCanvas"></canvas></div>
       <div class="legend" id="featScale"></div>
       <h3>Selected material</h3>
       <div id="featValues"></div>
@@ -105,11 +114,9 @@
         <strong>What to look for.</strong> Oxides separate from non-oxides on
         electronegativity and ion-property descriptors; multi-element samples sit
         apart on stoichiometry and element-fraction features; an extreme cell means
-        that descriptor is far from the six-material mean. This is the same matrix
-        the selector sees — before any target is involved.
+        that descriptor is far from the mean of the shown materials. This is the same
+        composition matrix the selector sees — before any target is involved.
       </div>
-      </p>
-    </div>
     <details class="code-panel">
       <summary>in the codebase · featurizers</summary>
       <pre><a href="https://github.com/matgenix/modnet/blob/128197701adfe6407551a5af9441fc820908449d/modnet/featurizers/featurizers.py#L78" target="_blank">MODFeaturizer.featurize(df)</a>
@@ -252,6 +259,8 @@
             <button class="pill primary" id="frrNext">next feature</button>
             <button class="pill" id="frrReset">reset</button>
           </div>
+          <h3 style="margin-top:14px">RR scores of the remaining features</h3>
+          <svg id="frrScores" viewBox="0 0 440 220" role="img" aria-label="RR scores of remaining features"></svg>
           <ol id="frrList" style="font-size:.76rem;color:var(--muted);padding-left:18px;line-height:1.8"></ol>
         </div>
       </div>

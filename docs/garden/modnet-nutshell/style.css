@@ -92,3 +92,9 @@ footer{max-width:1040px;margin:0 auto;padding:26px 24px;border-top:1px solid var
 .matrix .rowlabel.dim{opacity:.35}
 .matrix .collabel{writing-mode:vertical-rl;transform:rotate(180deg);height:110px;font-size:.62rem}
 .matrix .cell.dim{opacity:.18}
+
+.scrollwrap{max-height:540px;overflow:auto;border:1px solid var(--border);border-radius:10px;margin-top:10px;background:#0d090d}
+.scrollwrap canvas{display:block}
+.compact{margin:8px 0 12px;border:1px solid var(--border);border-radius:10px;background:rgba(22,14,22,.5);padding:0 12px}
+.compact summary{cursor:pointer;padding:9px 0;font-size:.8rem;color:var(--muted)}
+.compact[open] summary{color:var(--text)}
