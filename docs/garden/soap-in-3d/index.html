@@ -618,12 +618,38 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       the Gaussian width σ controls <strong>smoothness</strong> (larger σ → less sensitive to tiny atomic displacements),
       and the cutoff radius r<sub>cut</sub> controls <strong>which atoms matter</strong>.
     </p>
+
     <div class="card">
+      <h3 style="margin-top:0;font-size:1rem">Jitter sensitivity — |Δp|/|p| and |Δc|/|c|</h3>
+
+      <!-- Formula explanation -->
+      <div class="callout" style="margin-bottom:14px">
+        <strong>What are |Δp|/|p| and |Δc|/|c|?</strong><br>
+        <p class="note" style="margin:6px 0 0">
+          The <strong>power spectrum</strong> p is the SOAP descriptor vector — one number per (n,n′,l) channel.
+          When you jitter the atomic positions by δ, the descriptor changes from p to p + Δp.
+          The ratio <strong>|Δp|/|p|</strong> (in %) is the <em>relative change in the full descriptor vector</em>:
+          small means the descriptor barely notices the displacement.
+        </p>
+        <div class="formula accent" style="margin:8px 0;font-size:0.95rem">
+          |Δp|/|p| = √(Σ<sub>nn′l</sub> (Δp<sub>nn′l</sub>)²) / √(Σ<sub>nn′l</sub> p<sub>nn′l</sub>²)
+        </div>
+        <p class="note" style="margin:0">
+          The <strong>coefficient vector</strong> c<sub>nlm</sub> is the intermediate step before squaring:
+          p<sub>nn′l</sub> = Σ<sub>m</sub> c<sub>nlm</sub> · c<sub>n′lm</sub>*.
+          The ratio <strong>|Δc|/|c|</strong> measures the same relative change but <em>before</em> the
+          angular averaging step — it is typically larger than |Δp|/|p| because the m-summation in p
+          partially cancels out correlated changes in opposite m values.
+          A smaller σ makes both metrics grow faster with δ — a sharp Gaussian density gets
+          displaced more significantly by the same atomic jitter.
+        </p>
+      </div>
+
       <div class="grid2" style="align-items:start">
         <div>
-          <h3 style="margin-top:0;font-size:1rem">Jitter sensitivity</h3>
-          <p class="note">Displace all neighbours by a random vector of magnitude δ.
-            Watch how much the power spectrum changes relative to its norm.</p>
+          <p class="note" style="margin-top:0">Move the δ slider to jitter all neighbours
+            simultaneously and watch how the descriptor responds. The 3D scene below
+            shows the Gaussian density cloud before and after jitter (blue = reference, red = jittered).</p>
           <label class="slider">δ displacement (Å)
             <input id="jitterSlider" type="range" min="0" max="0.5" step="0.01" value="0">
             <span id="jitterVal">0.00</span>
@@ -637,21 +663,50 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
             <div><b id="jitterDeltaC">–</b><small>|Δc|/|c| (%)</small></div>
           </div>
         </div>
+        <canvas id="jitterCloud" width="400" height="320"
+          style="max-width:100%;height:auto;display:block;border-radius:10px;background:#0d090d"></canvas>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3 style="margin-top:0;font-size:1rem">Cutoff effect — which atoms does the descriptor see?</h3>
+      <p class="note">
+        The cutoff r<sub>cut</sub> draws a hard boundary around the central atom.
+        Below, the <strong>same cluster</strong> is described at r<sub>cut</sub> = 3 Å (left) and
+        r<sub>cut</sub> = 5 Å (right). Atoms outside the cutoff sphere (grey, faded) are completely
+        invisible — they contribute nothing to the descriptor. When an atom crosses the boundary
+        (even by a tiny δ), the descriptor changes discontinuously if no smooth envelope is used.
+        SOAP applies a cosine-decay envelope near r<sub>cut</sub> to soften this, but it cannot
+        fully avoid the step if an atom moves from just inside to just outside.
+      </p>
+      <div class="grid2" style="gap:12px">
         <div>
-          <h3 style="margin-top:0;font-size:1rem">Cutoff effect</h3>
-          <p class="note">The same environment described with r<sub>cut</sub> = 3, 4, 5 Å
-            gives different descriptors because outer neighbors enter or leave.
-            Below: cosine similarity between the descriptor at each cutoff and at r<sub>cut</sub>=5 Å.</p>
-          <canvas id="cutoffCanvas" width="400" height="220" style="max-width:100%;height:auto;display:block;border-radius:10px;background:#0d090d"></canvas>
-          <div id="cutoffInfo" class="note" style="margin-top:4px;min-height:1.2em"></div>
+          <div class="canvas-label" style="margin-bottom:4px">r<sub>cut</sub> = 3 Å — few neighbours visible</div>
+          <canvas id="cutoff3D_3A" width="400" height="300"
+            style="max-width:100%;height:auto;display:block;border-radius:10px;background:#0d090d"></canvas>
+        </div>
+        <div>
+          <div class="canvas-label" style="margin-bottom:4px">r<sub>cut</sub> = 5 Å — more neighbours visible</div>
+          <canvas id="cutoff3D_5A" width="400" height="300"
+            style="max-width:100%;height:auto;display:block;border-radius:10px;background:#0d090d"></canvas>
         </div>
       </div>
+      <p class="note" style="margin-top:10px">
+        <strong>Bar chart — similarity vs reference (r<sub>cut</sub> = 5 Å):</strong>
+        How much does the cosine similarity drop when you shrink the cutoff?
+        Select a preset below to compare environments.
+      </p>
+      <div id="cutoffPresetBtns" class="controls" style="margin-bottom:6px"></div>
+      <canvas id="cutoffCanvas" width="400" height="220"
+        style="max-width:100%;height:auto;display:block;border-radius:10px;background:#0d090d"></canvas>
+      <div id="cutoffInfo" class="note" style="margin-top:4px;min-height:1.2em"></div>
       <div class="callout amber" style="margin-top:14px">
         <strong>Key insight:</strong> σ smooths over small perturbations — a large σ gives a
         more robust descriptor at the cost of angular resolution. The cutoff is a hard design
-        choice: atoms just outside r<sub>cut</sub> are completely invisible to the descriptor.
-        SOAP uses a smooth decay envelope near the cutoff to avoid discontinuities, but moving
-        an atom from just inside to just outside still causes a finite change.
+        choice: atoms just outside r<sub>cut</sub> are completely invisible.
+        The two 3D images above make this concrete: the descriptor at r<sub>cut</sub>=3 Å
+        "lives in a smaller world" than the one at 5 Å — they describe genuinely different
+        effective environments even for the same cluster.
       </div>
     </div>
   </section>
@@ -659,45 +714,67 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   <section id="mlpotential">
     <h2>14 · Toy ML: learning a dimer potential</h2>
     <p class="sub">
-      A minimal end-to-end example: fit a Kernel Ridge Regression model to the
-      Lennard-Jones potential of a C–C dimer using SOAP descriptors.
+      A minimal end-to-end example: fit a Kernel Ridge Regression model to a
+      dimer potential using SOAP descriptors.
       The model never sees the interatomic distance — it only sees the descriptor.
+      Choose a potential and drag the training-set size to see when the fit breaks down.
     </p>
     <div class="card">
       <div class="flow" style="margin-bottom:16px">
         <div class="flow-step"><b>r</b><span>bond length</span></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step"><b>SOAP(r)</b><span>147-dim vector</span></div>
+        <div class="flow-step"><b>SOAP(r)</b><span>descriptor</span></div>
         <div class="flow-arrow">→</div>
         <div class="flow-step"><b>K(r,r′)</b><span>cosine<sup>4</sup> kernel</span></div>
         <div class="flow-arrow">→</div>
         <div class="flow-step out"><b>Ê(r)</b><span>predicted energy</span></div>
       </div>
-      <div class="kv">
-        <div><b id="mlRmse">–</b><small>RMSE (eV)</small></div>
-        <div><b id="mlTrain">60</b><small>train points</small></div>
+
+      <div class="controls" style="margin-bottom:10px">
+        <button class="pill" data-pot="lj"           aria-pressed="true" >Lennard-Jones</button>
+        <button class="pill" data-pot="morse"         aria-pressed="false">Morse</button>
+        <button class="pill" data-pot="double_well"   aria-pressed="false">Double-well</button>
+      </div>
+      <div id="potFormula" class="formula accent" style="margin-bottom:10px;font-size:0.9rem">
+        E(r) = 4[(2/r)<sup>12</sup>−(2/r)<sup>6</sup>] eV
+      </div>
+
+      <label class="slider" style="max-width:420px">N<sub>train</sub> (training points)
+        <input id="nTrainSlider" type="range" min="0" max="7" step="1" value="7">
+        <span id="nTrainVal">80</span>
+      </label>
+
+      <div class="kv" style="margin:8px 0">
+        <div><b id="mlRmse">–</b><small>RMSE (eV, train range)</small></div>
+        <div><b id="mlTrain">80</b><small>train points</small></div>
         <div><b id="mlZeta">4</b><small>kernel ζ</small></div>
         <div><b id="mlLambda">1e-6</b><small>regularisation λ</small></div>
       </div>
-      <div class="canvas-label" style="margin:8px 0 2px">Lennard-Jones true vs KRR predicted</div>
+      <div class="canvas-label" style="margin:4px 0 2px">True vs KRR predicted potential</div>
       <canvas id="mlCanvas" width="740" height="380" style="max-width:100%;height:auto;display:block;border-radius:10px;background:#0d090d"></canvas>
       <label class="slider" style="margin-top:10px;max-width:400px">inspect r
         <input id="mlRSlider" type="range" min="0" max="199" step="1" value="100">
         <span id="mlRVal">–</span>
       </label>
       <div id="mlPointInfo" class="note" style="min-height:1.6em"></div>
+
       <p class="note">
-        <strong>What this shows:</strong> SOAP + KRR recovers a smooth potential
-        from 60 noisy observations across r ∈ [1.5, 5.5] Å. The kernel function
-        measures structural similarity: atoms at similar separations produce similar
-        SOAP vectors, so the model interpolates smoothly. Near r=σ=2 Å the LJ
-        potential changes steeply — there the descriptor changes fast too, giving the
-        model the information it needs to track the repulsive wall.
+        <strong>Reading it:</strong> grey dots are training points; orange line is the model's
+        prediction; white/teal line is the true potential. With few training points (N ≤ 10)
+        the model underfits — it cannot recover the repulsive wall or the second minimum.
+        With N = 80 the kernel interpolates smoothly across the entire range.
+        The <strong>Lennard-Jones</strong> potential has a sharp repulsive wall that needs dense
+        sampling near r = 2 Å. <strong>Morse</strong> is smoother and needs fewer points.
+        The <strong>double-well</strong> has two minima — it fails badly with few points
+        because the model cannot "see" the second minimum from the first training region.
       </p>
       <div class="callout">
-        <strong>Setup:</strong> species=["C"], r_cut=5.0 Å, n_max=6, l_max=6, σ=0.3 Å →
-        147-dim descriptor. KRR with K(A,B)=(p_A·p_B/|p_A||p_B|)<sup>4</sup>, λ=10<sup>−6</sup>.
-        Target: E(r) = 4[(2/r)<sup>12</sup>−(2/r)<sup>6</sup>] eV (ε=1, σ=2 Å).
+        <strong>Setup:</strong> GTO-approximated SOAP kernel K(r,r′) = exp(−(r−r′)²/0.18)⁴,
+        λ=10<sup>−6</sup>. Training range r ∈ [1.8, 5.5] Å; test range [1.5, 6.5] Å.
+        Potentials — LJ: 4[(2/r)<sup>12</sup>−(2/r)<sup>6</sup>] eV;
+        Morse: D<sub>e</sub>(1−e<sup>−a(r−r<sub>e</sub>)</sup>)² − D<sub>e</sub>,
+        D<sub>e</sub>=2.5 eV, a=2 Å<sup>−1</sup>, r<sub>e</sub>=2.3 Å;
+        Double-well: 1.5(r−2.2)²(r−4.2)²/4 − 3 eV.
       </div>
     </div>
   </section>

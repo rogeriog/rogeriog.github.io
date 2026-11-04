@@ -1896,286 +1896,488 @@ function initSimilarity() {
 }
 
 /* ======== Section 13: smoothness & cutoff sensitivity ======== */
+
 function initSmoothness() {
   const jitterSlider = $("jitterSlider");
-  const jitterVal = $("jitterVal");
+  const jitterVal    = $("jitterVal");
   const sigmaSliderEl = $("sigmaSlider");
-  const sigmaValEl = $("sigmaVal");
+  const sigmaValEl   = $("sigmaVal");
   const jitterDeltaP = $("jitterDeltaP");
   const jitterDeltaC = $("jitterDeltaC");
-  const cv = $("cutoffCanvas");
+  const cloudCv      = $("jitterCloud");
   if (!jitterSlider) return;
 
-  // Toy atoms for the asymmetric cluster
+  // --- Atom cluster (tetrahedral-like) ---
   const BASE_ATOMS = [
     [1.35, 0.05, 0.0],
     [-0.55, 1.15, 0.15],
-    [-0.55, -1.00, 0.35],
-    [0.10, 0.15, 1.50],
+    [-0.55,-1.00, 0.35],
+    [ 0.10, 0.15, 1.50],
   ];
-
   let rng = 42;
-  function rand() { rng = (rng * 1664525 + 1013904223) & 0xffffffff; return (rng >>> 0) / 4294967296; }
-  function seededRandVec() { return [rand()*2-1, rand()*2-1, rand()*2-1]; }
+  function rand() { rng = (rng*1664525+1013904223)&0xffffffff; return (rng>>>0)/4294967296; }
+  function seededRandVec() { return [rand()*2-1,rand()*2-1,rand()*2-1]; }
 
-  function densityAtoms2(atoms, x, y, z, sig) {
-    let rho = 0;
-    const s2 = 2 * sig * sig;
-    atoms.forEach(a => {
-      const dx = x - a[0], dy = y - a[1], dz = z - a[2];
-      rho += Math.exp(-(dx*dx + dy*dy + dz*dz) / s2);
-    });
-    return rho;
+  function densityAt(atoms, x, y, z, sig) {
+    const s2 = 2*sig*sig;
+    return atoms.reduce((s,a)=>{
+      const dx=x-a[0],dy=y-a[1],dz=z-a[2];
+      return s+Math.exp(-(dx*dx+dy*dy+dz*dz)/s2);
+    },0);
   }
 
   function computeC(atoms, l, m, sig) {
-    const N = 10, R = 3;
-    const dV = Math.pow(2 * R / (N - 1), 3);
-    let sum = 0;
-    for (let i = 0; i < N; i++) {
-      const x = -R + 2*R*i/(N-1);
-      for (let j = 0; j < N; j++) {
-        const y = -R + 2*R*j/(N-1);
-        for (let k = 0; k < N; k++) {
-          const z = -R + 2*R*k/(N-1);
-          const rho = densityAtoms2(atoms, x, y, z, sig);
-          if (rho < 1e-6) continue;
-          const r = Math.hypot(x, y, z) || 1e-9;
-          sum += rho * realSH(l, m, x, y, z) * dV;
+    const N=10, R=3, dV=(2*R/(N-1))**3;
+    let sum=0;
+    for(let i=0;i<N;i++){
+      const x=-R+2*R*i/(N-1);
+      for(let j=0;j<N;j++){
+        const y=-R+2*R*j/(N-1);
+        for(let k=0;k<N;k++){
+          const z=-R+2*R*k/(N-1);
+          const rho=densityAt(atoms,x,y,z,sig);
+          if(rho<1e-6) continue;
+          sum+=rho*realSH(l,m,x,y,z)*dV;
         }
       }
     }
     return sum;
   }
 
-  function computeP(atoms, sig) {
-    let p = 0;
-    for (let l = 0; l <= 2; l++) {
-      for (let m = -l; m <= l; m++) {
-        const c = computeC(atoms, l, m, sig);
-        p += c * c;
-      }
-    }
-    return p;
+  function computeAllC(atoms,sig){
+    const cs=[];
+    for(let l=0;l<=2;l++) for(let m=-l;m<=l;m++) cs.push(computeC(atoms,l,m,sig));
+    return cs;
   }
 
-  function computeAllC(atoms, sig) {
-    const cs = [];
-    for (let l = 0; l <= 2; l++)
-      for (let m = -l; m <= l; m++)
-        cs.push(computeC(atoms, l, m, sig));
-    return cs;
+  function computeP(atoms,sig){
+    return computeAllC(atoms,sig).reduce((a,v)=>a+v*v,0);
+  }
+
+  // --- Jitter density cloud 2D canvas ---
+  function drawJitterCloud(baseAtoms, jAtoms, sig) {
+    if (!cloudCv) return;
+    const ctx = cloudCv.getContext("2d");
+    const W = cloudCv.width, H = cloudCv.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle="#0d090d"; ctx.fillRect(0,0,W,H);
+
+    // Simple isometric projection: (x,y,z)->(x+z*0.5, y+z*0.3)
+    const scale = 70, cx=W/2, cy=H/2;
+    function proj(a){
+      return [cx + (a[0] + a[2]*0.45)*scale, cy - (a[1] + a[2]*0.28)*scale];
+    }
+
+    // Draw Gaussian density blobs as filled circles with radial gradient
+    function drawBlob(a, color) {
+      const [px,py] = proj(a);
+      const r = sig * scale * 1.4;
+      const g = ctx.createRadialGradient(px,py,0,px,py,r);
+      g.addColorStop(0, color.replace(')',', 0.55)').replace('rgb','rgba'));
+      g.addColorStop(1, color.replace(')',', 0.0)').replace('rgb','rgba'));
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2); ctx.fill();
+      // Atom center dot
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(px,py,3.5,0,Math.PI*2); ctx.fill();
+    }
+
+    // Base atoms (blue/teal)
+    baseAtoms.forEach(a => drawBlob(a, 'rgb(69,214,255)'));
+    // Jittered atoms (red/orange)
+    if (jAtoms !== baseAtoms) jAtoms.forEach(a => drawBlob(a, 'rgb(255,100,80)'));
+
+    // Connection lines between base and jittered
+    if (jAtoms !== baseAtoms) {
+      ctx.strokeStyle = "rgba(255,220,80,0.4)"; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+      baseAtoms.forEach((a,i)=>{
+        const [px1,py1]=proj(a), [px2,py2]=proj(jAtoms[i]);
+        ctx.beginPath(); ctx.moveTo(px1,py1); ctx.lineTo(px2,py2); ctx.stroke();
+      });
+      ctx.setLineDash([]);
+    }
+
+    // Legend
+    ctx.font="10px Inter, sans-serif"; ctx.textBaseline="middle";
+    ctx.fillStyle="#45d6ff"; ctx.beginPath(); ctx.arc(14,14,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#aaa"; ctx.fillText("reference", 22, 14);
+    if (jAtoms !== baseAtoms) {
+      ctx.fillStyle="#ff6450"; ctx.beginPath(); ctx.arc(14,30,4,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="#aaa"; ctx.fillText("jittered δ", 22, 30);
+    }
+
+    // σ circle indicator
+    ctx.strokeStyle="rgba(255,220,80,0.3)"; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.arc(cx,cy, sig*scale,0,Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle="rgba(255,220,80,0.5)"; ctx.font="9px Inter,sans-serif";
+    ctx.textAlign="center"; ctx.fillText(`σ=${sig.toFixed(2)}Å`, cx+sig*scale+18, cy);
+    ctx.textAlign="left";
   }
 
   function update() {
     const delta = Number(jitterSlider.value);
-    const sig = Number(sigmaSliderEl.value);
-    jitterVal.textContent = delta.toFixed(2);
+    const sig   = Number(sigmaSliderEl.value);
+    jitterVal.textContent  = delta.toFixed(2);
     sigmaValEl.textContent = sig.toFixed(2);
 
-    // Reset rng each call for reproducibility
     rng = 42;
-    const jAtoms = BASE_ATOMS.map(a => {
-      const v = seededRandVec();
-      const len = Math.hypot(...v) || 1;
-      return [a[0] + delta*v[0]/len, a[1] + delta*v[1]/len, a[2] + delta*v[2]/len];
+    const jAtoms = BASE_ATOMS.map(a=>{
+      const v=seededRandVec(), len=Math.hypot(...v)||1;
+      return [a[0]+delta*v[0]/len, a[1]+delta*v[1]/len, a[2]+delta*v[2]/len];
     });
 
     const c0 = computeAllC(BASE_ATOMS, sig);
     const c1 = computeAllC(jAtoms, sig);
-    const sumC0 = c0.reduce((a,v) => a + Math.abs(v), 0);
-    const sumDeltaC = c0.reduce((acc, v, i) => acc + Math.abs(c1[i] - v), 0);
-    const pctC = (100 * sumDeltaC / (sumC0 || 1)).toFixed(1);
-
-    const p0 = computeP(BASE_ATOMS, sig);
-    const p1 = computeP(jAtoms, sig);
-    const pctP = (100 * Math.abs(p1 - p0) / (p0 || 1)).toFixed(1);
+    const sumC0 = c0.reduce((a,v)=>a+Math.abs(v),0);
+    const sumDC = c0.reduce((a,v,i)=>a+Math.abs(c1[i]-v),0);
+    const pctC = (100*sumDC/(sumC0||1)).toFixed(1);
+    const p0 = computeP(BASE_ATOMS,sig), p1 = computeP(jAtoms,sig);
+    const pctP = (100*Math.abs(p1-p0)/(p0||1)).toFixed(1);
 
     jitterDeltaC.textContent = pctC + "%";
     jitterDeltaP.textContent = pctP + "%";
+    drawJitterCloud(BASE_ATOMS, delta > 0 ? jAtoms : BASE_ATOMS, sig);
   }
 
   jitterSlider.oninput = update;
   sigmaSliderEl.oninput = update;
+  drawJitterCloud(BASE_ATOMS, BASE_ATOMS, 0.5);
+  update();
 
-  // Cutoff chart
-  if (cv && DATA.cutoff_sensitivity) {
+  // --- Cutoff 3D sphere visualizations ---
+  function drawCutoffSphere(canvasId, rcut, atoms) {
+    const cv = $(canvasId);
+    if (!cv) return;
     const ctx = cv.getContext("2d");
-    const presetsArr = DATA.cutoff_sensitivity.presets;
-    const sims = DATA.cutoff_sensitivity.sims;
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0,0,W,H); ctx.fillStyle="#0d090d"; ctx.fillRect(0,0,W,H);
 
-    function drawCutoff() {
-      const W = cv.width, H = cv.height;
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = "#0d090d";
-      ctx.fillRect(0, 0, W, H);
-
-      const curPreset = preset; // global preset
-      const info = $("cutoffInfo");
-      const s = sims[curPreset] || sims["tetra"];
-      const sim3 = s.sim3, sim4 = s.sim4;
-      if (info) info.textContent = `${curPreset}: cosine(r_cut=3, r_cut=5) = ${sim3.toFixed(3)}, cosine(r_cut=4, r_cut=5) = ${sim4.toFixed(3)}`;
-
-      const pad = 36, barW = 60, gap = 24;
-      const vals = [sim3, sim4, 1.0];
-      const labels = ["r_cut=3Å", "r_cut=4Å", "r_cut=5Å"];
-      const colors = ["#ff3d5a", "#e8a05a", "#63e6a4"];
-      const maxH = H - pad * 2;
-
-      vals.forEach((v, i) => {
-        const x = pad + i * (barW + gap);
-        const bh = v * maxH;
-        const y = H - pad - bh;
-        ctx.fillStyle = colors[i] + "33";
-        ctx.fillRect(x, y, barW, bh);
-        ctx.strokeStyle = colors[i];
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(x, y, barW, bh);
-
-        ctx.fillStyle = colors[i];
-        ctx.font = "bold 11px Inter, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(v.toFixed(3), x + barW/2, y - 4);
-
-        ctx.fillStyle = "#6e5f6e";
-        ctx.font = "9px Inter, sans-serif";
-        ctx.fillText(labels[i], x + barW/2, H - pad + 14);
-      });
-
-      ctx.fillStyle = "#6e5f6e";
-      ctx.font = "9px Inter, sans-serif";
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
-      ctx.fillText("cosine similarity\nvs r_cut=5Å ref", pad - 4, pad + maxH/2);
+    const scale = Math.min(W,H)*0.14;
+    const cx=W/2, cy=H/2;
+    function proj(a){
+      return [cx+(a[0]+a[2]*0.45)*scale, cy-(a[1]+a[2]*0.28)*scale];
     }
-    drawCutoff();
-    // Re-draw when preset changes
-    const origBuildScene = window.__origBuildScene;
-    // Hook into preset changes by polling
-    let lastPreset = preset;
-    setInterval(() => {
-      if (preset !== lastPreset) { lastPreset = preset; drawCutoff(); }
-    }, 500);
+
+    // Draw cutoff circle (sphere cross-section)
+    const r_px = rcut * scale;
+    ctx.strokeStyle = "rgba(99,230,164,0.35)"; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.arc(cx,cy,r_px,0,Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle="rgba(99,230,164,0.04)"; ctx.beginPath(); ctx.arc(cx,cy,r_px,0,Math.PI*2); ctx.fill();
+
+    // Label
+    ctx.fillStyle="rgba(99,230,164,0.7)"; ctx.font="10px Inter,sans-serif";
+    ctx.textAlign="center"; ctx.fillText(`r_cut = ${rcut}Å`, cx+r_px*0.7, cy-r_px*0.7);
+
+    // Atoms
+    atoms.forEach(a=>{
+      const dist=Math.hypot(...a);
+      const inside=dist<rcut;
+      const [px,py]=proj(a);
+      ctx.globalAlpha = inside ? 1.0 : 0.22;
+      const blob_r = 0.35*scale;
+      const g = ctx.createRadialGradient(px,py,0,px,py,blob_r);
+      g.addColorStop(0, inside?'rgba(100,200,255,0.7)':'rgba(120,120,120,0.5)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,py,blob_r,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = inside?"#45d6ff":"#555";
+      ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fill();
+      // Distance label
+      ctx.font="8px Inter,sans-serif"; ctx.textAlign="center"; ctx.globalAlpha=inside?0.9:0.3;
+      ctx.fillStyle=inside?"#45d6ff":"#666";
+      ctx.fillText(dist.toFixed(1)+"Å",px,py-7);
+    });
+    ctx.globalAlpha=1;
+
+    // Central atom
+    ctx.fillStyle="#ff3d5a"; ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#aaa"; ctx.font="9px Inter,sans-serif"; ctx.textAlign="center";
+    ctx.fillText("central atom",cx,cy+16);
+
+    // Count
+    const inside_count = atoms.filter(a=>Math.hypot(...a)<rcut).length;
+    ctx.fillStyle="#aaa"; ctx.font="bold 10px Inter,sans-serif";
+    ctx.textAlign="left"; ctx.globalAlpha=1;
+    ctx.fillText(`${inside_count}/${atoms.length} neighbours inside`,10,H-10);
+    ctx.textAlign="left";
   }
 
-  update();
+  // Create a cluster with neighbours at various distances
+  const CLUSTER = [
+    [1.2, 0.3, 0.1],
+    [-0.8, 1.1, 0.0],
+    [0.1, -1.3, 0.2],
+    [-0.1, 0.2, 1.4],
+    [2.5, -0.4, 0.3],
+    [-2.0, 0.5, 1.0],
+    [0.3, 2.8, -0.2],
+    [-0.5, -0.3, 2.9],
+    [3.5, 0.5,-0.5],
+    [-3.0, 1.0, 0.5],
+    [0.4,-3.3, 0.6],
+    [1.2, 1.5, 3.0],
+    [4.2,-0.3, 0.4],
+    [-3.8, 0.8,-0.5],
+  ];
+  drawCutoffSphere("cutoff3D_3A", 3.0, CLUSTER);
+  drawCutoffSphere("cutoff3D_5A", 5.0, CLUSTER);
+
+  // --- Preset buttons for cutoff bar chart ---
+  const presetBtns = $("cutoffPresetBtns");
+  if (presetBtns && DATA.cutoff_sensitivity) {
+    const presetsArr = DATA.cutoff_sensitivity.presets || Object.keys(DATA.cutoff_sensitivity.sims);
+    const topPresets = presetsArr.slice(0,8);
+    topPresets.forEach(p=>{
+      const b=document.createElement("button");
+      b.className="pill"; b.textContent=p;
+      b.setAttribute("aria-pressed", p==="tetra");
+      b.onclick=()=>{
+        topPresets.forEach((pp,i)=>presetBtns.children[i].setAttribute("aria-pressed",pp===p));
+        drawCutoffBar(p);
+      };
+      presetBtns.appendChild(b);
+    });
+  }
+
+  // --- Cutoff bar chart ---
+  function drawCutoffBar(curPreset) {
+    const cv = $("cutoffCanvas");
+    if (!cv || !DATA.cutoff_sensitivity) return;
+    const ctx = cv.getContext("2d");
+    const W=cv.width, H=cv.height;
+    ctx.clearRect(0,0,W,H); ctx.fillStyle="#0d090d"; ctx.fillRect(0,0,W,H);
+
+    const info = $("cutoffInfo");
+    const s = DATA.cutoff_sensitivity.sims[curPreset] || DATA.cutoff_sensitivity.sims["tetra"];
+    if (!s) return;
+    const sim3=s.sim3, sim4=s.sim4;
+    if (info) info.textContent = `${curPreset}: cosine(r_cut=3Å vs 5Å) = ${sim3.toFixed(3)}, cosine(r_cut=4Å vs 5Å) = ${sim4.toFixed(3)}`;
+
+    const pad=42, barW=70, gap=28;
+    const vals=[sim3,sim4,1.0];
+    const labels=["r_cut=3Å","r_cut=4Å","r_cut=5Å (ref)"];
+    const colors=["#ff3d5a","#e8a05a","#63e6a4"];
+    const maxH=H-pad*2;
+
+    // Y axis label
+    ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
+    ctx.fillStyle="#6e5f6e"; ctx.font="9px Inter,sans-serif"; ctx.textAlign="center";
+    ctx.fillText("cosine similarity vs r_cut=5Å",0,0); ctx.restore();
+
+    // Y grid
+    for(let v=0;v<=1;v+=0.2){
+      const y=H-pad-v*maxH;
+      ctx.strokeStyle="rgba(214,160,180,.08)"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-10,y); ctx.stroke();
+      ctx.fillStyle="#6e5f6e"; ctx.font="9px Inter,sans-serif"; ctx.textAlign="right";
+      ctx.fillText(v.toFixed(1),pad-4,y+3);
+    }
+
+    vals.forEach((v,i)=>{
+      const x=pad+i*(barW+gap);
+      const bh=v*maxH;
+      const y=H-pad-bh;
+      ctx.fillStyle=colors[i]+"33"; ctx.fillRect(x,y,barW,bh);
+      ctx.strokeStyle=colors[i]; ctx.lineWidth=1.5; ctx.strokeRect(x,y,barW,bh);
+      ctx.fillStyle=colors[i]; ctx.font="bold 11px Inter,sans-serif"; ctx.textAlign="center";
+      ctx.fillText(v.toFixed(3),x+barW/2,y-4);
+      ctx.fillStyle="#6e5f6e"; ctx.font="9px Inter,sans-serif";
+      ctx.fillText(labels[i],x+barW/2,H-pad+14);
+    });
+  }
+  drawCutoffBar("tetra");
+  // Hook to preset buttons above
+  if ($("cutoffPresetBtns")) {
+    const checkPresetChange = ()=>{
+      const active = document.querySelector("#cutoffPresetBtns .pill[aria-pressed='true']");
+      if (active) drawCutoffBar(active.textContent);
+    };
+    document.querySelectorAll("#cutoffPresetBtns .pill").forEach(b=>{
+      b.addEventListener("click", ()=>setTimeout(checkPresetChange,0));
+    });
+  }
 }
 
-/* ======== Section 14: Toy ML dimer prediction ======== */
+/* ======== Section 14: Toy ML — multi-potential, N_train slider ======== */
 function initMLDimer() {
   const cv = $("mlCanvas");
-  if (!cv || !DATA.ml_dimer) return;
+  if (!cv) return;
   const ctx = cv.getContext("2d");
-  const ml = DATA.ml_dimer;
-  const slider = $("mlRSlider");
-  const rValEl = $("mlRVal");
-  const infoEl = $("mlPointInfo");
-  const rmseEl = $("mlRmse");
+  const ml_pot = DATA.ml_potential;
+  const ml_old  = DATA.ml_dimer;  // fallback if new data missing
 
-  if (rmseEl) rmseEl.textContent = ml.rmse.toFixed(4);
+  if (!ml_pot && !ml_old) return;
 
-  const rArr = ml.r_test;
-  const eTrue = ml.E_true;
-  const ePred = ml.E_pred;
-  const rTrain = ml.r_train;
-  const eTrain = ml.E_train;
+  const rSlider   = $("mlRSlider");
+  const rValEl    = $("mlRVal");
+  const infoEl    = $("mlPointInfo");
+  const rmseEl    = $("mlRmse");
+  const trainEl   = $("mlTrain");
+  const potFormEl = $("potFormula");
 
-  // Clip for display (LJ diverges)
-  const EMIN = -1.5, EMAX = 8;
+  const N_TRAIN_VALS = [5,10,15,20,30,40,60,80];
+  let curPot = "lj";
+  let curNidx = 7;  // default N=80
+
+  const POT_FORMULAS = {
+    lj: "E(r) = 4[(2/r)<sup>12</sup>−(2/r)<sup>6</sup>] eV",
+    morse: "E(r) = D<sub>e</sub>(1−e<sup>−a(r−r<sub>e</sub>)</sup>)² − D<sub>e</sub>&emsp;D<sub>e</sub>=2.5 eV, a=2 Å<sup>−1</sup>, r<sub>e</sub>=2.3 Å",
+    double_well: "E(r) = 1.5·(r−2.2)²·(r−4.2)² − 3 eV&emsp;(two minima)"
+  };
+
+  // Potential button wiring
+  document.querySelectorAll("[data-pot]").forEach(b=>{
+    b.onclick=()=>{
+      curPot = b.dataset.pot;
+      document.querySelectorAll("[data-pot]").forEach(x=>x.setAttribute("aria-pressed",x===b));
+      if(potFormEl) potFormEl.innerHTML = POT_FORMULAS[curPot]||"";
+      draw(Number(rSlider.value));
+    };
+  });
+
+  // N_train slider
+  const nSlider = $("nTrainSlider");
+  const nValEl  = $("nTrainVal");
+  if (nSlider) {
+    nSlider.max = N_TRAIN_VALS.length-1;
+    nSlider.value = N_TRAIN_VALS.length-1;
+    nSlider.oninput = ()=>{
+      curNidx = Number(nSlider.value);
+      if(nValEl) nValEl.textContent = N_TRAIN_VALS[curNidx];
+      draw(Number(rSlider.value));
+    };
+  }
+
+  function getData() {
+    if (!ml_pot) {
+      // fallback to old ml_dimer
+      return {r_test: ml_old.r_test, E_true: ml_old.E_true,
+              E_pred: ml_old.E_pred, E_train: ml_old.E_train,
+              r_train: ml_old.r_train, rmse: ml_old.rmse};
+    }
+    const pot = ml_pot[curPot];
+    const n   = String(N_TRAIN_VALS[curNidx]);
+    return {
+      r_test:  ml_pot.r_test,
+      E_true:  pot.E_true,
+      E_pred:  pot[n].E_pred,
+      r_train: pot[n].r_train,
+      E_train: pot[n].E_train,
+      rmse:    pot[n].rmse
+    };
+  }
 
   function draw(idx) {
-    const W = cv.width, H = cv.height;
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = "#0d090d";
-    ctx.fillRect(0, 0, W, H);
+    const d = getData();
+    const rArr=d.r_test, eTrue=d.E_true, ePred=d.E_pred;
+    const rTrain=d.r_train, eTrain=d.E_train;
 
-    const padL = 54, padR = 20, padT = 20, padB = 36;
-    const plotW = W - padL - padR;
-    const plotH = H - padT - padB;
+    if(rmseEl) rmseEl.textContent = d.rmse.toFixed(4);
+    if(trainEl) trainEl.textContent = rTrain.length;
 
-    const rMin = Math.min(...rArr), rMax = Math.max(...rArr);
-    const sx = (r) => padL + (r - rMin) / (rMax - rMin) * plotW;
-    const sy = (e) => padT + (1 - (Math.min(EMAX, Math.max(EMIN, e)) - EMIN) / (EMAX - EMIN)) * plotH;
+    const W=cv.width, H=cv.height;
+    ctx.clearRect(0,0,W,H); ctx.fillStyle="#0d090d"; ctx.fillRect(0,0,W,H);
+
+    const padL=54, padR=20, padT=24, padB=36;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+
+    // Dynamic E range
+    const allE = [...eTrue, ...ePred].filter(isFinite);
+    const EMIN = Math.max(Math.min(...allE)-0.5, -4);
+    const EMAX = Math.min(Math.max(...allE)+0.5, 20);
+    const eSpan = EMAX-EMIN||1;
+
+    const sx = r => padL + (r-rArr[0])/(rArr[rArr.length-1]-rArr[0])*plotW;
+    const sy = e => padT + (1-(Math.min(EMAX,Math.max(EMIN,e))-EMIN)/eSpan)*plotH;
 
     // Grid
-    ctx.strokeStyle = "rgba(214,160,180,.08)"; ctx.lineWidth = 1;
-    for (let v = -1; v <= 8; v++) {
-      const y = sy(v);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.strokeStyle="rgba(214,160,180,.07)"; ctx.lineWidth=1;
+    for(let v=Math.ceil(EMIN);v<=EMAX;v++){
+      ctx.beginPath(); ctx.moveTo(padL,sy(v)); ctx.lineTo(W-padR,sy(v)); ctx.stroke();
     }
     // Zero line
-    ctx.strokeStyle = "rgba(214,160,180,.2)"; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(padL, sy(0)); ctx.lineTo(W - padR, sy(0)); ctx.stroke();
+    if(EMIN<0 && EMAX>0){
+      ctx.strokeStyle="rgba(214,160,180,.2)"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(padL,sy(0)); ctx.lineTo(W-padR,sy(0)); ctx.stroke();
+    }
 
     // Axes labels
-    ctx.fillStyle = "#6e5f6e"; ctx.font = "9px Inter, sans-serif"; ctx.textAlign = "right";
-    for (let v of [-1, 0, 1, 2, 4, 6]) {
-      ctx.fillText(v, padL - 4, sy(v) + 3);
+    ctx.fillStyle="#6e5f6e"; ctx.font="9px Inter,sans-serif"; ctx.textAlign="right";
+    for(let v=Math.ceil(EMIN);v<=EMAX;v+=Math.ceil((EMAX-EMIN)/6)){
+      ctx.fillText(v, padL-4, sy(v)+3);
     }
-    ctx.textAlign = "center";
-    for (let r = 2; r <= 5; r++) {
-      ctx.fillText(r + "Å", sx(r), H - padB + 14);
+    ctx.textAlign="center";
+    for(let r=2;r<=6;r++){
+      ctx.fillText(r+"Å", sx(r), H-padB+14);
     }
 
-    // Training points
-    rTrain.forEach((r, i) => {
-      const e = eTrain[i];
-      if (e < EMIN || e > EMAX) return;
-      ctx.fillStyle = "rgba(99,230,164,.35)";
-      ctx.beginPath(); ctx.arc(sx(r), sy(e), 3, 0, Math.PI*2); ctx.fill();
+    // Training points (dots)
+    rTrain.forEach((r,i)=>{
+      const e=eTrain[i];
+      if(e<EMIN||e>EMAX) return;
+      ctx.fillStyle="rgba(160,200,100,.6)";
+      ctx.beginPath(); ctx.arc(sx(r),sy(e),3.5,0,Math.PI*2); ctx.fill();
     });
 
     // True curve
-    ctx.strokeStyle = "#45d6ff"; ctx.lineWidth = 2; ctx.setLineDash([]);
-    ctx.beginPath();
-    rArr.forEach((r, i) => {
-      const e = eTrue[i];
-      if (e < EMIN || e > EMAX) { ctx.moveTo(sx(r), sy(Math.min(EMAX, Math.max(EMIN, e)))); return; }
-      i === 0 ? ctx.moveTo(sx(r), sy(e)) : ctx.lineTo(sx(r), sy(e));
+    ctx.strokeStyle="#45d6ff"; ctx.lineWidth=2; ctx.setLineDash([]);
+    ctx.beginPath(); let first=true;
+    rArr.forEach((r,i)=>{
+      const e=eTrue[i], clamped=Math.min(EMAX,Math.max(EMIN,e));
+      if(e>EMAX||e<EMIN){ctx.moveTo(sx(r),sy(clamped)); first=true; return;}
+      first ? ctx.moveTo(sx(r),sy(e)) : ctx.lineTo(sx(r),sy(e));
+      first=false;
     });
     ctx.stroke();
 
     // Predicted curve
-    ctx.strokeStyle = "#ff3d5a"; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
-    ctx.beginPath();
-    rArr.forEach((r, i) => {
-      const e = ePred[i];
-      const ec = Math.min(EMAX, Math.max(EMIN, e));
-      i === 0 ? ctx.moveTo(sx(r), sy(ec)) : ctx.lineTo(sx(r), sy(ec));
+    ctx.strokeStyle="#ff7a5a"; ctx.lineWidth=2; ctx.setLineDash([4,3]);
+    ctx.beginPath(); first=true;
+    rArr.forEach((r,i)=>{
+      const e=ePred[i], clamped=Math.min(EMAX,Math.max(EMIN,e));
+      first ? ctx.moveTo(sx(r),sy(clamped)) : ctx.lineTo(sx(r),sy(clamped));
+      first=false;
     });
-    ctx.stroke();
+    ctx.stroke(); ctx.setLineDash([]);
+
+    // Training range shading
+    ctx.fillStyle="rgba(99,230,164,0.04)";
+    ctx.fillRect(sx(1.8),padT,sx(5.5)-sx(1.8),plotH);
+    ctx.strokeStyle="rgba(99,230,164,0.15)"; ctx.lineWidth=1; ctx.setLineDash([2,4]);
+    ctx.beginPath(); ctx.moveTo(sx(1.8),padT); ctx.lineTo(sx(1.8),H-padB); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx(5.5),padT); ctx.lineTo(sx(5.5),H-padB); ctx.stroke();
     ctx.setLineDash([]);
+    ctx.fillStyle="rgba(99,230,164,0.5)"; ctx.font="8px Inter,sans-serif";
+    ctx.textAlign="center"; ctx.fillText("train range",sx(3.65),padT+9);
 
     // Cursor
-    if (idx >= 0) {
-      const r = rArr[idx], et = eTrue[idx], ep = ePred[idx];
-      ctx.strokeStyle = "rgba(255,255,255,.25)"; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
-      ctx.beginPath(); ctx.moveTo(sx(r), padT); ctx.lineTo(sx(r), H - padB); ctx.stroke();
+    if(idx>=0 && idx<rArr.length){
+      const r=rArr[idx], et=eTrue[idx], ep=ePred[idx];
+      ctx.strokeStyle="rgba(255,255,255,.2)"; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(sx(r),padT); ctx.lineTo(sx(r),H-padB); ctx.stroke();
       ctx.setLineDash([]);
-
-      ctx.fillStyle = "#45d6ff"; ctx.beginPath(); ctx.arc(sx(r), sy(et), 5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = "#ff3d5a"; ctx.beginPath(); ctx.arc(sx(r), sy(ep), 5, 0, Math.PI*2); ctx.fill();
-
-      rValEl.textContent = r.toFixed(2) + " Å";
-      if (infoEl) infoEl.innerHTML = `r = ${r.toFixed(2)} Å &nbsp;|&nbsp; E<sub>true</sub> = ${et.toFixed(3)} eV &nbsp;|&nbsp; Ê = ${ep.toFixed(3)} eV &nbsp;|&nbsp; error = ${(ep - et).toFixed(3)} eV`;
+      ctx.fillStyle="#45d6ff"; ctx.beginPath(); ctx.arc(sx(r),sy(et),5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="#ff7a5a"; ctx.beginPath(); ctx.arc(sx(r),sy(ep),5,0,Math.PI*2); ctx.fill();
+      if(rValEl) rValEl.textContent=r.toFixed(2)+" Å";
+      if(infoEl) infoEl.innerHTML=`r = ${r.toFixed(2)} Å &nbsp;|&nbsp; E<sub>true</sub> = ${et.toFixed(3)} eV &nbsp;|&nbsp; Ê = ${ep.toFixed(3)} eV &nbsp;|&nbsp; error = ${(ep-et).toFixed(3)} eV`;
     }
 
     // Legend
-    ctx.fillStyle = "#45d6ff"; ctx.font = "11px Inter, sans-serif"; ctx.textAlign = "left";
-    ctx.fillText("── LJ true", padL + 6, padT + 14);
-    ctx.fillStyle = "#ff3d5a";
-    ctx.fillText("- - KRR predicted", padL + 6, padT + 28);
-    ctx.fillStyle = "rgba(99,230,164,.8)";
-    ctx.fillText("● train points", padL + 6, padT + 42);
+    ctx.font="11px Inter,sans-serif"; ctx.textAlign="left"; ctx.textBaseline="top";
+    ctx.fillStyle="#45d6ff"; ctx.fillText("── true",padL+6,padT+4);
+    ctx.fillStyle="#ff7a5a"; ctx.fillText("- - predicted",padL+6,padT+18);
+    ctx.fillStyle="rgba(160,200,100,.8)"; ctx.fillText("● train pts",padL+6,padT+32);
+    ctx.textBaseline="alphabetic";
 
     // Axis titles
-    ctx.fillStyle = "#6e5f6e"; ctx.font = "10px Inter, sans-serif"; ctx.textAlign = "center";
-    ctx.fillText("interatomic distance (Å)", padL + plotW/2, H - 2);
-    ctx.save(); ctx.translate(12, padT + plotH/2); ctx.rotate(-Math.PI/2);
-    ctx.fillText("energy (eV)", 0, 0); ctx.restore();
+    ctx.fillStyle="#6e5f6e"; ctx.font="10px Inter,sans-serif"; ctx.textAlign="center";
+    ctx.fillText("interatomic distance (Å)",padL+plotW/2,H-2);
+    ctx.save(); ctx.translate(12,padT+plotH/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText("energy (eV)",0,0); ctx.restore();
   }
 
-  slider.oninput = () => { draw(Number(slider.value)); };
+  if(rSlider) rSlider.oninput = () => draw(Number(rSlider.value));
   draw(100);
 }
 
