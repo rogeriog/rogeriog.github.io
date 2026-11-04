@@ -122,12 +122,27 @@ select{font:inherit}
 .cgrid .cell.cur{border-color:var(--ice);box-shadow:0 0 0 1px rgba(69,214,255,.4)}
 .cgrid .rowlabel{font-size:.58rem;color:var(--dim);display:flex;align-items:center;justify-content:flex-end;padding-right:4px}
 
+/* callout boxes */
+.callout{background:rgba(69,214,255,.07);border:1px solid rgba(69,214,255,.22);
+  border-left:3px solid var(--ice);border-radius:10px;padding:12px 16px;
+  margin:14px 0;font-size:.86rem;color:var(--muted)}
+.callout strong{color:var(--text)}
+.callout.amber{background:rgba(232,160,90,.07);border-color:rgba(232,160,90,.22);border-left-color:var(--amber)}
+.callout.amber strong{color:var(--amber)}
+
+/* collapsible code panels */
+details.code-panel summary{font-size:.76rem;color:var(--dim);cursor:pointer;
+  padding:6px 2px;user-select:none;list-style:none}
+details.code-panel summary::-webkit-details-marker{display:none}
+details.code-panel pre{background:#0d090d;border:1px solid var(--border);border-radius:8px;
+  padding:12px 14px;font-size:.74rem;color:var(--muted);overflow-x:auto;margin:6px 0 0}
+
 /* ---- mobile overflow fixes ---- */
 /* harmonics gallery: let the grid fit any viewport instead of fixed column counts */
 .sh-grid{grid-template-columns:repeat(auto-fill,minmax(64px,1fr))!important}
 @media(min-width:900px){.sh-grid{grid-template-columns:repeat(9,1fr)!important}}
 /* all fixed-width canvases must shrink to their container */
-#shDetail,#sh3d,#spectrumBars,#dimChart,#heatmap,#pca,#integrand3d,#compBlocksCanvas{width:100%;height:auto;display:block}
+#shDetail,#sh3d,#spectrumBars,#dimChart,#heatmap,#pca,#integrand3d,#compBlocksCanvas,#rbasisCanvas,#speciesCanvas{width:100%;height:auto;display:block}
 /* formulas and code panels scroll instead of pushing the page wide */
 .formula,.code-panel pre,.kv{overflow-x:auto;max-width:100%}
 .grid2{min-width:0}

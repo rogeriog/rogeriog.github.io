@@ -411,6 +411,8 @@ async function init() {
   initCompressionExplorer();
   initIntegration();
   initIntegControls();
+  initRadialBasis();
+  initSpeciesResolution();
   window.addEventListener("resize", resize);
   animate();
 
@@ -1483,4 +1485,265 @@ function initCompressionExplorer() {
     drawCompBlocks();
   };
   drawCompBlocks();
+}
+
+/* ============================================================
+   RADIAL BASIS VISUALISER
+   ============================================================ */
+function initRadialBasis() {
+  const canvas = $("rbasisCanvas");
+  if (!canvas) return;
+  const sliderCut = $("rbCutoff");
+  const sliderN   = $("rbNmax");
+  if (!sliderCut || !sliderN) return;
+
+  const PALETTE = ["#ff3d5a","#5a6cff","#45d6ff","#63e6a4","#e8a05a","#d45aff","#ffdd55","#a0e060"];
+
+  function draw() {
+    const rc   = parseFloat(sliderCut.value);
+    const nmax = parseInt(sliderN.value);
+    $("rbCutoffVal").textContent = rc.toFixed(1) + " Å";
+    $("rbNmaxVal").textContent   = nmax;
+
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    const pad = { l: 48, r: 20, t: 20, b: 36 };
+    const pW = W - pad.l - pad.r, pH = H - pad.t - pad.b;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#0d090d";
+    ctx.fillRect(0, 0, W, H);
+
+    // axes
+    ctx.strokeStyle = "rgba(214,160,180,.2)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + pH);
+    ctx.lineTo(pad.l + pW, pad.t + pH);
+    ctx.stroke();
+
+    ctx.fillStyle = "#6e5f6e";
+    ctx.font = "11px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("r (Å)", pad.l + pW / 2, H - 4);
+    ctx.save(); ctx.translate(12, pad.t + pH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText("g_n(r)", 0, 0); ctx.restore();
+
+    // tick marks on r axis
+    for (let r = 0; r <= rc; r += (rc <= 4 ? 1 : 2)) {
+      const x = pad.l + (r / rc) * pW;
+      ctx.fillStyle = "#6e5f6e";
+      ctx.textAlign = "center";
+      ctx.fillText(r.toFixed(0), x, pad.t + pH + 14);
+      ctx.strokeStyle = "rgba(214,160,180,.1)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + pH);
+      ctx.stroke();
+    }
+
+    // cutoff line
+    ctx.strokeStyle = "rgba(255,61,90,.35)";
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.l + pW, pad.t); ctx.lineTo(pad.l + pW, pad.t + pH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#ff3d5a"; ctx.font = "10px Inter,sans-serif"; ctx.textAlign = "right";
+    ctx.fillText("r_c = " + rc.toFixed(1) + " Å", pad.l + pW - 4, pad.t + 14);
+
+    // draw basis functions
+    const steps = 320;
+    const sig = rc / (nmax + 1) * 0.75;
+
+    for (let n = 0; n < nmax; n++) {
+      const rn = rc * (n + 1) / (nmax + 1);
+      const col = PALETTE[n % PALETTE.length];
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let first = true;
+      for (let s = 0; s <= steps; s++) {
+        const r = (s / steps) * rc;
+        const val = Math.exp(-Math.pow(r - rn, 2) / (2 * sig * sig));
+        const x = pad.l + (r / rc) * pW;
+        const y = pad.t + pH - val * pH * 0.88;
+        if (first) { ctx.moveTo(x, y); first = false; }
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // label at peak
+      const px = pad.l + (rn / rc) * pW;
+      const py = pad.t + pH - 0.88 * pH - 10;
+      ctx.fillStyle = col;
+      ctx.font = "bold 11px 'Space Grotesk', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("g" + n, px, Math.max(py, pad.t + 14));
+    }
+  }
+
+  sliderCut.oninput = draw;
+  sliderN.oninput   = draw;
+  draw();
+}
+
+/* ============================================================
+   SPECIES RESOLUTION VISUALISER
+   ============================================================ */
+function initSpeciesResolution() {
+  const canvas = $("speciesCanvas");
+  if (!canvas) return;
+  const slider = $("speciesDemo");
+  if (!slider) return;
+
+  const SP_COLORS = ["#ff3d5a","#5a6cff","#45d6ff","#63e6a4","#e8a05a"];
+  const SP_LABELS = ["A","B","C","D","E"];
+
+  function draw() {
+    const S   = parseInt(slider.value);
+    $("speciesDemoVal").textContent = S;
+    const nblocks = S * (S + 1) / 2;
+    if ($("spNdensity")) $("spNdensity").textContent = S;
+    if ($("spNblocks"))  $("spNblocks").textContent  = nblocks;
+
+    const ctx  = canvas.getContext("2d");
+    const W    = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#0d090d";
+    ctx.fillRect(0, 0, W, H);
+
+    // --- TOP HALF: density fields ---
+    const topH = H * 0.42;
+    const pad  = 20;
+    const nmax = 4;
+
+    // label
+    ctx.fillStyle = "#6e5f6e";
+    ctx.font = "10px Inter, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("ρ_Z(r) — one density field per species", pad, 16);
+
+    const slotW = (W - 2 * pad) / S;
+    for (let s = 0; s < S; s++) {
+      const col  = SP_COLORS[s % SP_COLORS.length];
+      const lbl  = SP_LABELS[s % SP_LABELS.length];
+      const cx   = pad + slotW * s + slotW / 2;
+      const cy   = topH / 2 + 10;
+
+      // Gaussian blob
+      const steps = 60, r0 = slotW * 0.28;
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const th = (i / steps) * Math.PI * 2;
+        const rr = r0 * (0.7 + 0.3 * Math.abs(Math.sin(th * 2)));
+        const x = cx + rr * Math.cos(th);
+        const y = cy + rr * Math.sin(th) * 0.65;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = col.replace(")", ", 0.18)").replace("rgb", "rgba").replace("#", "");
+      // simpler: just fill with low-alpha colour
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = col;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // atom dot
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.fillStyle = col;
+      ctx.fill();
+
+      // label
+      ctx.fillStyle = col;
+      ctx.font = "bold 13px 'Space Grotesk', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("ρ_" + lbl, cx, topH - 10);
+
+      // channel count
+      ctx.fillStyle = "#6e5f6e";
+      ctx.font = "10px Inter, sans-serif";
+      ctx.fillText(nmax + " channels", cx, topH - 1);
+    }
+
+    // separator
+    ctx.strokeStyle = "rgba(214,160,180,.15)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad, topH + 6); ctx.lineTo(W - pad, topH + 6);
+    ctx.stroke();
+
+    // --- BOTTOM HALF: block grid ---
+    const botY   = topH + 20;
+    const botH   = H - botY - 24;
+
+    ctx.fillStyle = "#6e5f6e";
+    ctx.font = "10px Inter, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Power-spectrum blocks p^{Z1,Z2}_{nn'l} (" + nblocks + " blocks · " + nblocks + "×n_max²×(l_max+1) values)", pad, botY - 4);
+
+    // block grid — upper triangle only
+    const maxCells  = S;
+    const cellPad   = 4;
+    const availW    = W - 2 * pad;
+    const cellSize  = Math.min(Math.floor((availW - cellPad * (S - 1)) / S), Math.floor((botH - cellPad * (S - 1)) / S));
+    const gridW     = S * cellSize + (S - 1) * cellPad;
+    const gridH     = S * cellSize + (S - 1) * cellPad;
+    const gx0       = pad + (availW - gridW) / 2;
+    const gy0       = botY + (botH - gridH) / 2;
+
+    for (let r = 0; r < S; r++) {
+      for (let c = 0; c < S; c++) {
+        const x = gx0 + c * (cellSize + cellPad);
+        const y = gy0 + r * (cellSize + cellPad);
+        if (c < r) {
+          // below diagonal — empty
+          ctx.strokeStyle = "rgba(214,160,180,.07)";
+          ctx.lineWidth = 1;
+          roundRect(ctx, x, y, cellSize, cellSize, 4);
+          ctx.stroke();
+          continue;
+        }
+        // upper triangle — filled block
+        const c1 = SP_COLORS[r % SP_COLORS.length];
+        const c2 = SP_COLORS[c % SP_COLORS.length];
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle   = c === r ? c1 : "#a79ba6";
+        roundRect(ctx, x, y, cellSize, cellSize, 5);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = c === r ? c1 : "rgba(167,155,166,.4)";
+        ctx.lineWidth   = 1.5;
+        roundRect(ctx, x, y, cellSize, cellSize, 5);
+        ctx.stroke();
+
+        // pair label
+        const lA = SP_LABELS[r % SP_LABELS.length];
+        const lB = SP_LABELS[c % SP_LABELS.length];
+        ctx.fillStyle = "#a79ba6";
+        ctx.font = cellSize > 36 ? "bold 11px 'Space Grotesk',sans-serif" : "bold 9px 'Space Grotesk',sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(lA + lB, x + cellSize / 2, y + cellSize / 2 + 4);
+      }
+    }
+
+    // axis labels
+    ctx.fillStyle = "#6e5f6e";
+    ctx.font = "10px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Z₂ (second species)", gx0 + gridW / 2, gy0 + gridH + 16);
+    ctx.save();
+    ctx.translate(gx0 - 14, gy0 + gridH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText("Z₁ (first species)", 0, 0);
+    ctx.restore();
+  }
+
+  slider.oninput = draw;
+  draw();
 }

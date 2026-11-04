@@ -72,6 +72,58 @@
     </div>
   </section>
 
+  <section id="radialbasis">
+    <h2>2b · Radial basis functions g<sub>n</sub>(r)</h2>
+    <p class="sub">
+      The density is spread across all distances. SOAP asks: "how much density is
+      near radius <code>r₁</code>? near <code>r₂</code>? near <code>r₃</code>?"
+      Each radial channel <code>g<sub>n</sub>(r)</code> is a probe function peaked
+      at a different distance. The projection of the density onto one probe gives
+      a number; together they discretise the radial profile.
+    </p>
+    <div class="card">
+      <div class="grid2" style="align-items:start">
+        <div>
+          <div class="scene-controls" style="padding:0 0 10px">
+            <label class="slider">cutoff r<sub>c</sub>
+              <input id="rbCutoff" type="range" min="2" max="8" step="0.5" value="4">
+              <span id="rbCutoffVal">4.0 Å</span>
+            </label>
+            <label class="slider">n_max
+              <input id="rbNmax" type="range" min="2" max="8" step="1" value="4">
+              <span id="rbNmaxVal">4</span>
+            </label>
+          </div>
+          <canvas id="rbasisCanvas" width="540" height="320"></canvas>
+        </div>
+        <div>
+          <p class="note" style="margin-top:0"><strong>How to read the plot:</strong>
+            each coloured curve is one <code>g<sub>n</sub>(r)</code>. They tile the
+            radial axis so that every distance within the cutoff is covered by at
+            least one probe. A neighbor at distance <em>r</em> contributes
+            to whichever <code>g<sub>n</sub></code> peaks nearest to it.</p>
+          <div class="callout">
+            <strong>Why Gaussians here?</strong> This page uses simple Gaussians
+            evenly spaced between 0 and r<sub>c</sub> to make the idea visual.
+            dscribe's real basis is a set of <em>Gaussian Type Orbitals</em> (GTOs),
+            orthonormal under the SOAP inner product — but the intuition is the same:
+            each basis function probes a different radial shell, and the coefficient
+            <code>c<sub>nlm</sub></code> tells you how much density in that shell
+            has the angular shape <code>Y<sub>lm</sub></code>.
+          </div>
+          <div class="callout amber">
+            <strong>Key insight:</strong> two environments with the same radial
+            distribution but different angular arrangements give identical
+            <code>g<sub>n</sub></code>-projections but different
+            <code>c<sub>nlm</sub></code> for <code>l &gt; 0</code>. That is why
+            SOAP needs <em>both</em> radial <em>and</em> angular basis functions to
+            distinguish environments.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="harmonics">
     <h2>3 · Spherical harmonics and where c<sub>nlm</sub> comes from</h2>
     <p class="sub">
@@ -114,10 +166,33 @@
       <code>m</code>:
     </p>
     <div class="formula accent">p<sub>nn′l</sub> = Σ<sub>m=-l..l</sub> c<sub>nlm</sub> c<sub>n′lm</sub><sup>*</sup></div>
+    <div class="callout amber">
+      <strong>What c<sub>nlm</sub> physically means:</strong>
+      think of it as a measurement result, not just a number.
+      <code>g<sub>n</sub>(r)</code> selects a radial shell;
+      <code>Y<sub>lm</sub>(θ,φ)</code> selects an angular shape (a lobe pattern).
+      Multiplying them and integrating against the density asks:
+      <em>"how much density lives in shell n, arranged with angular shape (l,m)?"</em>
+      A large positive <code>c<sub>nlm</sub></code> means the neighbor density is
+      concentrated right where <code>Y<sub>lm</sub></code> is large and positive;
+      near zero means the density is symmetric with respect to that lobe pattern.
+      The index <code>m</code> picks the <em>orientation</em> of the lobe within
+      its family <code>l</code> — that is why a rotation changes <code>m</code>
+      but cannot change <code>l</code>.
+    </div>
     <div class="callout">
-      <strong>Why this removes orientation:</strong> rotating the environment mixes
-      the <code>m</code> components among themselves but leaves the sum over
-      <code>m</code> unchanged. That is the invariance SOAP is built on.
+      <strong>Why summing over m removes orientation:</strong>
+      a rotation does not create or destroy lobes — it just relabels which
+      <code>m</code> each lobe gets. Formally, rotating by angle <code>α</code>
+      acts on the <code>m</code>-components of fixed <code>l</code> via a unitary
+      Wigner D-matrix <code>D<sup>l</sup>(α)</code>:
+      <code>c'<sub>nlm</sub> = Σ<sub>m'</sub> D<sup>l</sup><sub>mm'</sub>(α) c<sub>nlm'</sub></code>.
+      The power spectrum is the dot product of two such vectors over <code>m</code>:
+      <code>p<sub>nn'l</sub> = c<sub>nl</sub>· c<sub>n'l</sub></code>.
+      Because <code>D<sup>l</sup></code> is unitary, the dot product is unchanged —
+      exactly the way a rotation of a 3D vector does not change its length.
+      Summing over <code>m</code> effectively takes a "squared length" in orientation
+      space, and lengths are rotation-invariant.
     </div>
     <details class="code-panel">
       <summary>what the code computes</summary>
@@ -254,6 +329,60 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     </div>
   </section>
 
+  <section id="species">
+    <h2>6b · Multi-element SOAP: one density field per species</h2>
+    <p class="sub">
+      With a single element you get one density field. With <code>S</code> elements
+      SOAP builds <strong>one density field per element</strong>:
+      <code>ρ<sup>Z</sup>(<b>r</b>)</code> sums only over neighbors of species <code>Z</code>.
+      Each field is expanded independently, giving a block of coefficients per species.
+      The power spectrum then stores all <em>pairs</em> of blocks — that is what makes
+      the descriptor grow quadratically with the number of elements.
+    </p>
+    <div class="card">
+      <div class="grid2" style="align-items:start">
+        <div>
+          <label class="slider">number of species
+            <input id="speciesDemo" type="range" min="1" max="5" step="1" value="3">
+            <span id="speciesDemoVal">3</span>
+          </label>
+          <canvas id="speciesCanvas" width="540" height="360"></canvas>
+        </div>
+        <div>
+          <div class="kv">
+            <div><b id="spNdensity">–</b><small>density fields (= species)</small></div>
+            <div><b id="spNblocks">–</b><small>power-spectrum blocks</small></div>
+            <div><b id="spGrowth">quadratic</b><small>scaling with S</small></div>
+          </div>
+          <p class="note" style="margin-top:4px">
+            <strong>Top half:</strong> the neighbor density split by element. Each
+            colored blob is the Gaussian density for one species; atoms of different
+            elements contribute only to their own field.<br><br>
+            <strong>Bottom half:</strong> the power-spectrum block grid. Every cell
+            is one <code>(Z₁, Z₂)</code> pair that the descriptor must store. With
+            <code>S</code> species there are <code>S(S+1)/2</code> upper-triangle
+            blocks; each block has <code>n_max²·(l_max+1)</code> entries.
+          </p>
+          <div class="callout">
+            <strong>Why pairs?</strong> The power spectrum
+            <code>p<sup>Z₁Z₂</sup><sub>nn′l</sub></code> cross-correlates the
+            density of species <code>Z₁</code> in radial channel <code>n</code>
+            with the density of species <code>Z₂</code> in channel <code>n′</code>.
+            This captures whether atoms of type A and type B tend to co-occur in
+            the same angular shell — information that a single mixed density would
+            lose.
+          </div>
+          <div class="callout amber">
+            <strong>The cost:</strong> going from 3 to 20 species (a typical alloy
+            dataset) multiplies the number of species-pair blocks by
+            <code>(20·21/2)/(3·4/2) = 70</code>. That is the quadratic scaling
+            that the mu1nu1 and mu2 compression schemes in section 7 address.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="compression">
     <h2>7 · Compression: from hundreds of numbers to a map</h2>
     <p class="sub">
@@ -337,50 +466,6 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
         mu2 = <code>n_max(n_max+1)/2 · (l_max+1)</code>, independent of S.
         At S=20, uncompressed is <strong>16 200</strong> numbers, mu1nu1 is
         <strong>1 600</strong>, mu2 is <strong>50</strong>.</p>
-    </div>
-  </section>
-
-  <section id="localglobal">
-    <h2>9 · Local fingerprint vs global fingerprint</h2>
-    <p class="sub">
-      Everything in the 3D scene is a <strong>local</strong> SOAP vector: one
-      descriptor for one central atom and its neighbours. A materials property
-      model usually needs one vector per crystal, so the local vectors are combined
-      into a <strong>global</strong> fingerprint.
-    </p>
-    <div class="card">
-      <div class="flow">
-        <div class="flow-step"><b>p<sub>site 1</sub></b><span>local</span></div>
-        <div class="flow-step"><b>p<sub>site 2</sub></b><span>local</span></div>
-        <div class="flow-step"><b>…</b><span>all sites</span></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step out"><b>p<sub>global</sub></b><span>one vector per structure</span></div>
-      </div>
-      <p class="sub" style="margin-top:18px">
-        The usual global descriptor is the average over sites:
-      </p>
-      <div class="formula accent">p<sub>global</sub> = (1/N<sub>sites</sub>) Σ<sub>i</sub> p<sub>site i</sub></div>
-      <p class="sub">
-        Sometimes it is species-weighted, or concatenated with composition
-        features. The invariance arguments are unchanged: each local vector is
-        rotation-invariant, and so is the average.
-      </p>
-      <div class="grid2" style="margin-top:16px">
-        <div>
-          <h3 style="margin-top:0">Use local when…</h3>
-          <p class="note">you care about environments: clustering sites, detecting
-            motifs, comparing coordination, or explaining which local geometry
-            drives a prediction. It is also what you use for a single adsorbed
-            molecule or surface site.</p>
-        </div>
-        <div>
-          <h3 style="margin-top:0">Use global when…</h3>
-          <p class="note">you train a structure-level property model (band gap,
-            formation energy, refractive index). One vector per crystal is what
-            scikit-learn/MODNet-style regressors expect; the cost is that site-level
-            information is averaged away.</p>
-        </div>
-      </div>
     </div>
   </section>
 
