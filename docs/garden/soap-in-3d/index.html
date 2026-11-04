@@ -284,11 +284,10 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
         <div>
           <div class="canvas-label">asymmetric test cluster</div>
           <canvas id="rotScene" width="540" height="340" style="width:100%;height:auto;display:block;border-radius:10px;background:radial-gradient(circle at 50% 45%, #1a1020, #08060a 70%);cursor:grab"></canvas>
-          <p class="note" style="margin-top:6px"><strong>The test cluster:</strong>
-            a central atom (grey) with four asymmetric neighbors. The asymmetry
-            is deliberate: a symmetric cluster would give
-            nearly zero <code>l&gt;0</code> coefficients and show little change on
-            rotation. Drag the slider — the atoms rotate around z.</p>
+          <p class="note" style="margin-top:6px"><strong>Molecule:</strong></p>
+          <div class="controls" id="rotPresetButtons"></div>
+          <p class="note" style="margin-top:6px">The central atom (atom 0, shown dark) stays fixed
+            at the origin; all other atoms rotate around z. Drag the slider to rotate.</p>
         </div>
         <div>
           <div class="kv">
@@ -385,6 +384,8 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       water and CO₂.
     </p>
     <div class="card">
+      <p class="note" style="margin-top:0"><strong>Molecule:</strong></p>
+      <div class="controls" id="specPresetButtons" style="margin:0 0 14px"></div>
       <div class="grid2" style="align-items:start;margin-bottom:14px">
         <div>
           <div class="callout" style="margin:0 0 10px">
@@ -446,57 +447,6 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       the uncompressed descriptor has 390 values; mu1nu1 keeps 240, crossover 150,
       and mu2 just 50 — all without retraining the basis.
     </p>
-    <h3>Inside the compression schemes</h3>
-
-    <div class="callout">
-      <strong>Uncompressed (off):</strong> the full power spectrum stores every
-      species-pair block <code>p<sup>Z₁Z₂</sup><sub>nn′l</sub></code>. With
-      <code>S</code> species and <code>n<sub>max</sub></code> radial functions,
-      there are <code>S·n<sub>max</sub></code> species-resolved channels. The
-      descriptor stores upper-triangle pairs of all of them:
-      length = <code>S·n<sub>max</sub>·(S·n<sub>max</sub>+1)/2 · (l<sub>max</sub>+1)</code>.
-      This grows <strong>quadratically</strong> with S.
-    </div>
-
-    <div class="callout">
-      <strong>mu1nu1 (Darby et al.):</strong> replaces the second species factor
-      with a sum over all species:
-      <code>p<sup>Z₁</sup><sub>nn′l</sub> = Σ<sub>m</sub> c<sup>Z₁</sup><sub>nlm</sub> · (Σ<sub>z</sub> c<sup>z</sup><sub>n′lm</sub>)</code>.
-      One species index survives, the pair structure collapses, and the length
-      scales <strong>linearly</strong> with S:
-      length = <code>n<sub>max</sub>² · S · (l<sub>max</sub>+1)</code>.
-      This is the default compression in dscribe (<code>compression=&#123;"mode":"mu1nu1"&#125;</code>).
-    </div>
-
-    <div class="callout">
-      <strong>Crossover:</strong> keeps only same-species diagonal blocks
-      <code>p<sup>ZZ</sup><sub>nn′l</sub></code> and drops all cross-species
-      terms (Z₁ ≠ Z₂). Loses inter-species correlations but stays <strong>linear</strong>
-      in S: length = <code>n<sub>max</sub>·(n<sub>max</sub>+1)/2 · S · (l<sub>max</sub>+1)</code>.
-    </div>
-
-    <div class="callout">
-      <strong>mu2:</strong> both species indices are summed away:
-      <code>p<sub>nn′l</sub> = Σ<sub>m</sub> (Σ<sub>z</sub> c<sup>z</sup><sub>nlm</sub>) · (Σ<sub>z′</sub> c<sup>z′</sup><sub>n′lm</sub>)</code>.
-      The result is completely species-agnostic: one upper-triangle block of
-      length = <code>n<sub>max</sub>·(n<sub>max</sub>+1)/2 · (l<sub>max</sub>+1)</code>,
-      <strong>constant</strong> regardless of how many elements are present.
-    </div>
-
-    <div class="callout amber">
-      <strong>When to use which:</strong>
-      Use <strong>uncompressed</strong> when you have few species (≤ 3–4) and want
-      the richest possible descriptor — it captures every species-pair correlation.
-      Use <strong>mu1nu1</strong> as the go-to default for multi-element systems:
-      it keeps species identity while scaling linearly, and empirically preserves
-      most of the discriminative power.
-      Use <strong>crossover</strong> when inter-species correlations are not
-      important for your property (e.g. single-element systems with dilute dopants).
-      Use <strong>mu2</strong> for very high element counts (alloys with 20+ elements)
-      where even linear scaling is too expensive, or when species identity is irrelevant
-      to the target property.
-    </div>
-
     <div class="card">
       <p class="note" style="margin-top:0">The matrix below shows how each scheme
         restructures the species-pair block grid. Switch modes and drag the species
@@ -510,6 +460,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       </div>
       <canvas id="compBlocksCanvas" width="900" height="480"></canvas>
       <div id="compNote" class="note"></div>
+      <div id="compModeDesc" class="callout" style="margin-top:16px"></div>
     </div>
 
     <div class="card">

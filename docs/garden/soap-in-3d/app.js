@@ -179,6 +179,10 @@ function initSceneControls() {
     b.onclick = () => {
       preset = key;
       [...pc.children].forEach((c) => c.setAttribute("aria-pressed", c === b));
+      // sync section-7 preset buttons
+      document.querySelectorAll("#specPresetButtons button").forEach((x) => {
+        x.setAttribute("aria-pressed", x.textContent === p.label);
+      });
       buildScene();
       buildSpecAtoms();
       renderHeatmap();
@@ -358,7 +362,7 @@ function renderPCA() {
   ctx.fillText("PC1", W - 46, sy(0) - 8);
   ctx.fillText("PC2", sx(0) + 8, pad + 12);
   const ev = DATA.compression.explained_variance[pcaMode];
-  $("pcaVar").textContent = ((ev[0] + ev[1]) * 100).toFixed(1) + "%";
+  $("pcaVar").textContent = (ev * 100).toFixed(1) + "%";
 }
 
 function initSpectrumControls() {
@@ -410,6 +414,7 @@ async function init() {
   initSH();
   initRotation();
   initSpectrumScene();
+  initSpectrumPresets();
   initCompressionExplorer();
   initIntegration();
   initIntegControls();
@@ -874,7 +879,7 @@ function updateSH3D(l, m) {
 /* ---------------- integration animation (geometry-aware) ---------------- */
 let integ = null;
 let sampleMode = "grid";
-let integGeom = "tetra";
+let integGeom = "perovskite";
 let integCutoff = 4;
 let integRot = 0;
 let rebuildIntegral = () => {};
@@ -1285,13 +1290,24 @@ function initIntegControls() {
 }
 
 /* ---------------- rotation invariance ---------------- */
-const ROT_ATOMS = [
+// fallback asymmetric cluster used when DATA not yet loaded
+const ROT_ATOMS_DEFAULT = [
   { x: 0, y: 0, z: 0 },
   { x: 1.35, y: 0.05, z: 0.0 },
   { x: -0.55, y: 1.15, z: 0.15 },
   { x: -0.55, y: -1.00, z: 0.35 },
   { x: 0.10, y: 0.15, z: 1.50 },
 ];
+let rotPreset = "tetra"; // molecule used in the rotation demo
+
+function getRotAtoms() {
+  if (DATA && DATA.presets[rotPreset]) {
+    return DATA.presets[rotPreset].atoms.map((a) => ({
+      x: a.position[0], y: a.position[1], z: a.position[2],
+    }));
+  }
+  return ROT_ATOMS_DEFAULT;
+}
 
 function densityAtoms(atoms, x, y, z, sig = sigma) {
   let rho = 0;
@@ -1305,7 +1321,7 @@ function densityAtoms(atoms, x, y, z, sig = sigma) {
 
 function rotatedAtoms(deg) {
   const t = deg * Math.PI / 180;
-  return ROT_ATOMS.map((a) => ({
+  return getRotAtoms().map((a) => ({
     x: a.x * Math.cos(t) - a.y * Math.sin(t),
     y: a.x * Math.sin(t) + a.y * Math.cos(t),
     z: a.z,
@@ -1440,6 +1456,25 @@ function buildRotAtoms(deg) {
 
 function initRotation() {
   initRotScene();
+
+  // build preset buttons for the rotation demo
+  const rotPB = $("rotPresetButtons");
+  if (rotPB && DATA) {
+    Object.entries(DATA.presets).forEach(([key, p]) => {
+      const b = document.createElement("button");
+      b.className = "pill";
+      b.textContent = p.label;
+      b.setAttribute("aria-pressed", key === rotPreset);
+      b.onclick = () => {
+        rotPreset = key;
+        [...rotPB.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
+        buildRotAtoms(Number($("rotAngle").value));
+        drawRotation();
+      };
+      rotPB.appendChild(b);
+    });
+  }
+
   $("rotAngle").oninput = () => {
     buildRotAtoms(Number($("rotAngle").value));
     drawRotation();
@@ -1449,6 +1484,30 @@ function initRotation() {
 
 /* ---------------- spectrum 3D scene (shows current preset geometry) ---- */
 let specScene3d = null;
+
+function initSpectrumPresets() {
+  const spPB = $("specPresetButtons");
+  if (!spPB || !DATA) return;
+  spPB.innerHTML = "";
+  Object.entries(DATA.presets).forEach(([key, p]) => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.textContent = p.label;
+    b.setAttribute("aria-pressed", key === preset);
+    b.onclick = () => {
+      preset = key;
+      // sync global section-1 preset buttons too
+      document.querySelectorAll("#presetControls button").forEach((x) => {
+        x.setAttribute("aria-pressed", x.textContent === p.label);
+      });
+      [...spPB.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
+      buildScene();
+      buildSpecAtoms();
+      renderHeatmap();
+    };
+    spPB.appendChild(b);
+  });
+}
 
 function initSpectrumScene() {
   const canvas = $("spectrumScene");
@@ -1813,6 +1872,48 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+const COMP_MODE_DESCRIPTIONS = {
+  off: `<strong>Uncompressed (off):</strong> the full power spectrum stores every
+    species-pair block p<sup>Z₁Z₂</sup><sub>nn′l</sub>. With S species and
+    n<sub>max</sub> radial functions, there are S·n<sub>max</sub> species-resolved
+    channels. The descriptor stores upper-triangle pairs of all of them:
+    length = S·n<sub>max</sub>·(S·n<sub>max</sub>+1)/2 · (l<sub>max</sub>+1).
+    This grows <strong>quadratically</strong> with S.
+    For 3 species (C, H, O) this gives <strong>390 values</strong>.`,
+
+  mu1nu1: `<strong>mu1nu1 (Darby et al.):</strong> replaces the second species
+    factor with a sum over all species:
+    p<sup>Z₁</sup><sub>nn′l</sub> = Σ<sub>m</sub> c<sup>Z₁</sup><sub>nlm</sub> ·
+    (Σ<sub>z</sub> c<sup>z</sup><sub>n′lm</sub>).
+    One species index survives, the pair structure collapses, and the length scales
+    <strong>linearly</strong> with S: length = n<sub>max</sub>² · S · (l<sub>max</sub>+1).
+    For 3 species this gives <strong>240 values</strong>. This is the default
+    compression in dscribe (<code>compression={"mode":"mu1nu1"}</code>).`,
+
+  crossover: `<strong>Crossover:</strong> keeps only same-species diagonal blocks
+    p<sup>ZZ</sup><sub>nn′l</sub> and drops all cross-species terms (Z₁ ≠ Z₂).
+    Loses inter-species correlations but stays <strong>linear</strong> in S:
+    length = n<sub>max</sub>·(n<sub>max</sub>+1)/2 · S · (l<sub>max</sub>+1).
+    For 3 species this gives <strong>150 values</strong>.`,
+
+  mu2: `<strong>mu2:</strong> both species indices are summed away:
+    p<sub>nn′l</sub> = Σ<sub>m</sub> (Σ<sub>z</sub> c<sup>z</sup><sub>nlm</sub>) ·
+    (Σ<sub>z′</sub> c<sup>z′</sup><sub>n′lm</sub>).
+    The result is completely species-agnostic: one upper-triangle block of
+    length = n<sub>max</sub>·(n<sub>max</sub>+1)/2 · (l<sub>max</sub>+1),
+    <strong>constant</strong> regardless of how many elements are present.
+    For any number of species this gives just <strong>50 values</strong>.`,
+};
+
+function updateCompModeDesc() {
+  const el = $("compModeDesc");
+  if (!el) return;
+  const html = COMP_MODE_DESCRIPTIONS[compMode] || "";
+  el.innerHTML = html;
+  // style amber for "when to use" note if mu2
+  el.className = "callout";
+}
+
 function initCompressionExplorer() {
   const slider = $("compSpecies");
   if (!slider) return;
@@ -1826,6 +1927,7 @@ function initCompressionExplorer() {
       compMode = k;
       [...modes.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
       drawCompBlocks();
+      updateCompModeDesc();
     };
     modes.appendChild(b);
   });
@@ -1834,6 +1936,7 @@ function initCompressionExplorer() {
     drawCompBlocks();
   };
   drawCompBlocks();
+  updateCompModeDesc();
 }
 
 /* ============================================================
