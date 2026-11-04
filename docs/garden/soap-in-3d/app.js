@@ -337,27 +337,44 @@ function renderPCA() {
   const W = c.width, H = c.height;
   ctx.clearRect(0, 0, W, H);
   const pts = DATA.compression.points[pcaMode];
+  if (!pts || !pts.length) return;
+  // Auto-scale from actual data range
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const xmin = Math.min(...xs), xmax = Math.max(...xs);
+  const ymin = Math.min(...ys), ymax = Math.max(...ys);
   const pad = 40;
-  const sx = (x) => pad + (x + 1) / 2 * (W - 2 * pad);
-  const sy = (y) => H - pad - (y + 1) / 2 * (H - 2 * pad);
+  const xspan = xmax - xmin || 1, yspan = ymax - ymin || 1;
+  const xpad = xspan * 0.15, ypad = yspan * 0.15;
+  const dataW = W - 2 * pad, dataH = H - 2 * pad;
+  const sx = (x) => pad + ((x - (xmin - xpad)) / (xspan + 2 * xpad)) * dataW;
+  const sy = (y) => H - pad - ((y - (ymin - ypad)) / (yspan + 2 * ypad)) * dataH;
+  // Axis lines (at data mean)
+  const xmid = (xmin + xmax) / 2, ymid = (ymin + ymax) / 2;
   ctx.strokeStyle = "rgba(214,160,180,.18)";
-  ctx.beginPath(); ctx.moveTo(sx(0), pad); ctx.lineTo(sx(0), H - pad);
-  ctx.moveTo(pad, sy(0)); ctx.lineTo(W - pad, sy(0)); ctx.stroke();
-  const colors = { tetra: "#ff3d5a", octa: "#5a6cff", dimer: "#63e6a4" };
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(sx(xmid), pad); ctx.lineTo(sx(xmid), H - pad);
+  ctx.moveTo(pad, sy(ymid)); ctx.lineTo(W - pad, sy(ymid)); ctx.stroke();
+  const PRESET_COLORS = {
+    dimer: "#63e6a4", tetra: "#ff3d5a", octa: "#5a6cff",
+    fcc: "#45d6ff", perovskite: "#e8a05a", layered: "#d45aff",
+    distorted: "#ffdd55", water: "#7fb0ff", co2: "#ff7a7a",
+    methanol: "#a0e060", formaldehyde: "#f0a0d0"
+  };
   pts.forEach((p) => {
     ctx.beginPath();
     ctx.arc(sx(p.x), sy(p.y), 3.6, 0, Math.PI * 2);
-    ctx.fillStyle = colors[p.base] || "#a79ba6";
+    ctx.fillStyle = PRESET_COLORS[p.preset] || "#a79ba6";
     ctx.globalAlpha = 0.8;
     ctx.fill();
   });
   ctx.globalAlpha = 1;
   ctx.font = "11px Inter, sans-serif";
   ctx.fillStyle = "#6e5f6e";
-  ctx.fillText("PC1", W - 46, sy(0) - 8);
-  ctx.fillText("PC2", sx(0) + 8, pad + 12);
+  ctx.fillText("PC1", W - 46, sy(ymid) - 8);
+  ctx.fillText("PC2", sx(xmid) + 8, pad + 12);
+  // ev is a plain scalar (e.g. 0.9013)
   const ev = DATA.compression.explained_variance[pcaMode];
-  $("pcaVar").textContent = ((ev[0] + ev[1]) * 100).toFixed(1) + "%";
+  $("pcaVar").textContent = (ev * 100).toFixed(1) + "%";
 }
 
 function initSpectrumControls() {

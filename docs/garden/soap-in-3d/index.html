@@ -471,6 +471,8 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       <div class="controls">
         <button class="pill" data-pca="off" aria-pressed="true">PCA on uncompressed</button>
         <button class="pill" data-pca="mu1nu1" aria-pressed="false">PCA on mu1nu1</button>
+        <button class="pill" data-pca="crossover" aria-pressed="false">PCA on crossover</button>
+        <button class="pill" data-pca="mu2" aria-pressed="false">PCA on mu2</button>
       </div>
       <div class="grid2">
         <canvas id="pca" width="520" height="420"></canvas>
@@ -521,8 +523,22 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     </div>
   </section>
 
+  <section id="limits">
+    <h2>10 · What to remember</h2>
+    <div class="card">
+      <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
+        invariant, fixed-length, and interpretable through its radial/angular
+        channels. But it depends on <code>r_cut</code>, <code>n_max</code>,
+        <code>l_max</code>, and on how species are weighted. Change the cutoff and
+        you are describing a different environment.</p>
+      <p class="note" style="margin-bottom:0">Sections below explore more: the SOAP kernel matrix, smoothness &amp; cutoff sensitivity, and a toy ML example. Next in the garden: using SOAP vectors
+        to cluster environments, appending cluster one-hot codes to a graph model,
+        and comparing cutoffs at 2/4/6 Å.</p>
+    </div>
+  </section>
+
   <section id="localglobal">
-    <h2>10 · Local fingerprint vs global fingerprint</h2>
+    <h2>11 · Local fingerprint vs global fingerprint</h2>
     <p class="sub">
       Everything in the 3D scene is a <strong>local</strong> SOAP vector: one
       descriptor for one central atom and its neighbours. A materials property
@@ -562,20 +578,6 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
             information is averaged away.</p>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section id="limits">
-    <h2>11 · What to remember</h2>
-    <div class="card">
-      <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
-        invariant, fixed-length, and interpretable through its radial/angular
-        channels. But it depends on <code>r_cut</code>, <code>n_max</code>,
-        <code>l_max</code>, and on how species are weighted. Change the cutoff and
-        you are describing a different environment.</p>
-      <p class="note" style="margin-bottom:0">Sections below explore more: the SOAP kernel matrix, smoothness &amp; cutoff sensitivity, and a toy ML example. Next in the garden: using SOAP vectors
-        to cluster environments, appending cluster one-hot codes to a graph model,
-        and comparing cutoffs at 2/4/6 Å.</p>
     </div>
   </section>
 
