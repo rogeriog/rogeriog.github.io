@@ -312,6 +312,19 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
           <p class="note">The <code>c</code> values swing with the angle; the power
             spectrum stays put (up to grid integration error). Drag the slider
             to see the effect.</p>
+          <div class="callout" style="margin-top:12px">
+            <strong>Equivariant vs invariant:</strong> c<sub>nlm</sub> is
+            <em>equivariant</em> — rotating by R replaces each coefficient with a
+            linear combination of the same-<code>l</code> coefficients via the
+            Wigner D-matrix:
+            <code>c<sub>nlm</sub> → Σ<sub>m′</sub> D<sup>l</sup><sub>mm′</sub>(R) c<sub>nlm′</sub></code>.
+            Rotations mix the <code>m</code> values within each <code>l</code>
+            channel, but never move energy between channels.
+            The power spectrum p<sub>nn′l</sub> = Σ<sub>m</sub> c<sub>nlm</sub> c<sub>n′lm</sub>*
+            contracts over <code>m</code>, so all m-dependence cancels out and
+            p is <em>invariant</em> — the numbers on the left of this table don't
+            change no matter how you rotate the cluster.
+          </div>
         </div>
       </div>
     </div>
@@ -560,9 +573,130 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
         channels. But it depends on <code>r_cut</code>, <code>n_max</code>,
         <code>l_max</code>, and on how species are weighted. Change the cutoff and
         you are describing a different environment.</p>
-      <p class="note" style="margin-bottom:0">Next in the garden: using SOAP vectors
+      <p class="note" style="margin-bottom:0">Sections below explore more: the SOAP kernel matrix, smoothness &amp; cutoff sensitivity, and a toy ML example. Next in the garden: using SOAP vectors
         to cluster environments, appending cluster one-hot codes to a graph model,
         and comparing cutoffs at 2/4/6 Å.</p>
+    </div>
+  </section>
+
+  <section id="similarity">
+    <h2>12 · SOAP similarity: comparing environments</h2>
+    <p class="sub">
+      Two environments <strong>A</strong> and <strong>B</strong> are similar if their power
+      spectra point in the same direction. The SOAP kernel raises that cosine similarity
+      to a power ζ, amplifying contrasts between nearly-identical and clearly-different environments.
+    </p>
+    <div class="card">
+      <div class="formula accent" style="margin-bottom:8px">
+        K(A,B) = ( p_A · p_B / |p_A| |p_B| )<sup>ζ</sup>
+      </div>
+      <div class="controls">
+        <label class="slider" style="max-width:340px">ζ (kernel power)
+          <input id="zetaSlider" type="range" min="1" max="8" step="1" value="1">
+          <span id="zetaVal">1</span>
+        </label>
+      </div>
+      <div class="canvas-label" style="margin:8px 0 2px">K matrix — 11 preset environments</div>
+      <canvas id="simMatrix" width="660" height="660" style="max-width:100%;height:auto;display:block;border-radius:10px;background:#0d090d"></canvas>
+      <div class="colorbar" style="margin-top:6px"><span>0</span><i></i><span>1</span></div>
+      <div id="simInfo" class="note" style="min-height:1.4em;margin-top:4px"></div>
+      <p class="note">
+        <strong>Reading it:</strong> diagonal is always 1 (self-similarity). Off-diagonal entries
+        tell you how structurally similar two environments are according to SOAP. High ζ
+        sharpens the kernel — slight angular differences get penalised more heavily, so
+        only near-identical environments remain bright.
+      </p>
+    </div>
+  </section>
+
+  <section id="smoothness">
+    <h2>13 · Smoothness &amp; cutoff sensitivity</h2>
+    <p class="sub">
+      Two key design choices affect how the descriptor responds to perturbations:
+      the Gaussian width σ controls <strong>smoothness</strong> (larger σ → less sensitive to tiny atomic displacements),
+      and the cutoff radius r<sub>cut</sub> controls <strong>which atoms matter</strong>.
+    </p>
+    <div class="card">
+      <div class="grid2" style="align-items:start">
+        <div>
+          <h3 style="margin-top:0;font-size:1rem">Jitter sensitivity</h3>
+          <p class="note">Displace all neighbours by a random vector of magnitude δ.
+            Watch how much the power spectrum changes relative to its norm.</p>
+          <label class="slider">δ displacement (Å)
+            <input id="jitterSlider" type="range" min="0" max="0.5" step="0.01" value="0">
+            <span id="jitterVal">0.00</span>
+          </label>
+          <label class="slider">σ (Gaussian width, Å)
+            <input id="sigmaSlider" type="range" min="0.1" max="1.0" step="0.05" value="0.5">
+            <span id="sigmaVal">0.50</span>
+          </label>
+          <div class="kv" style="margin-top:8px">
+            <div><b id="jitterDeltaP">–</b><small>|Δp|/|p| (%)</small></div>
+            <div><b id="jitterDeltaC">–</b><small>|Δc|/|c| (%)</small></div>
+          </div>
+        </div>
+        <div>
+          <h3 style="margin-top:0;font-size:1rem">Cutoff effect</h3>
+          <p class="note">The same environment described with r<sub>cut</sub> = 3, 4, 5 Å
+            gives different descriptors because outer neighbors enter or leave.
+            Below: cosine similarity between the descriptor at each cutoff and at r<sub>cut</sub>=5 Å.</p>
+          <canvas id="cutoffCanvas" width="400" height="220" style="max-width:100%;height:auto;display:block;border-radius:10px;background:#0d090d"></canvas>
+          <div id="cutoffInfo" class="note" style="margin-top:4px;min-height:1.2em"></div>
+        </div>
+      </div>
+      <div class="callout amber" style="margin-top:14px">
+        <strong>Key insight:</strong> σ smooths over small perturbations — a large σ gives a
+        more robust descriptor at the cost of angular resolution. The cutoff is a hard design
+        choice: atoms just outside r<sub>cut</sub> are completely invisible to the descriptor.
+        SOAP uses a smooth decay envelope near the cutoff to avoid discontinuities, but moving
+        an atom from just inside to just outside still causes a finite change.
+      </div>
+    </div>
+  </section>
+
+  <section id="mlpotential">
+    <h2>14 · Toy ML: learning a dimer potential</h2>
+    <p class="sub">
+      A minimal end-to-end example: fit a Kernel Ridge Regression model to the
+      Lennard-Jones potential of a C–C dimer using SOAP descriptors.
+      The model never sees the interatomic distance — it only sees the descriptor.
+    </p>
+    <div class="card">
+      <div class="flow" style="margin-bottom:16px">
+        <div class="flow-step"><b>r</b><span>bond length</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><b>SOAP(r)</b><span>147-dim vector</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><b>K(r,r′)</b><span>cosine<sup>4</sup> kernel</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step out"><b>Ê(r)</b><span>predicted energy</span></div>
+      </div>
+      <div class="kv">
+        <div><b id="mlRmse">–</b><small>RMSE (eV)</small></div>
+        <div><b id="mlTrain">60</b><small>train points</small></div>
+        <div><b id="mlZeta">4</b><small>kernel ζ</small></div>
+        <div><b id="mlLambda">1e-6</b><small>regularisation λ</small></div>
+      </div>
+      <div class="canvas-label" style="margin:8px 0 2px">Lennard-Jones true vs KRR predicted</div>
+      <canvas id="mlCanvas" width="740" height="380" style="max-width:100%;height:auto;display:block;border-radius:10px;background:#0d090d"></canvas>
+      <label class="slider" style="margin-top:10px;max-width:400px">inspect r
+        <input id="mlRSlider" type="range" min="0" max="199" step="1" value="100">
+        <span id="mlRVal">–</span>
+      </label>
+      <div id="mlPointInfo" class="note" style="min-height:1.6em"></div>
+      <p class="note">
+        <strong>What this shows:</strong> SOAP + KRR recovers a smooth potential
+        from 60 noisy observations across r ∈ [1.5, 5.5] Å. The kernel function
+        measures structural similarity: atoms at similar separations produce similar
+        SOAP vectors, so the model interpolates smoothly. Near r=σ=2 Å the LJ
+        potential changes steeply — there the descriptor changes fast too, giving the
+        model the information it needs to track the repulsive wall.
+      </p>
+      <div class="callout">
+        <strong>Setup:</strong> species=["C"], r_cut=5.0 Å, n_max=6, l_max=6, σ=0.3 Å →
+        147-dim descriptor. KRR with K(A,B)=(p_A·p_B/|p_A||p_B|)<sup>4</sup>, λ=10<sup>−6</sup>.
+        Target: E(r) = 4[(2/r)<sup>12</sup>−(2/r)<sup>6</sup>] eV (ε=1, σ=2 Å).
+      </div>
     </div>
   </section>
 </main>

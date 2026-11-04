@@ -156,7 +156,7 @@ details.code-panel pre{background:#0d090d;border:1px solid var(--border);border-
 .sh-grid{grid-template-columns:repeat(auto-fill,minmax(64px,1fr))!important}
 @media(min-width:900px){.sh-grid{grid-template-columns:repeat(9,1fr)!important}}
 /* all fixed-width canvases must shrink to their container */
-#shDetail,#sh3d,#spectrumBars,#dimChart,#dimChartLin,#heatmap,#pca,#integrand3d,#compBlocksCanvas,#rbasisCanvas,#speciesCanvas{width:100%;height:auto;display:block}
+#shDetail,#sh3d,#spectrumBars,#dimChart,#dimChartLin,#heatmap,#pca,#integrand3d,#compBlocksCanvas,#rbasisCanvas,#speciesCanvas,#simMatrix,#cutoffCanvas,#mlCanvas{width:100%;height:auto;display:block}
 /* formulas and code panels scroll instead of pushing the page wide */
 .formula,.code-panel pre,.kv{overflow-x:auto;max-width:100%}
 .grid2{min-width:0}

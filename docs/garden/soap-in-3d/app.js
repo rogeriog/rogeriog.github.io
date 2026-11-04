@@ -413,6 +413,9 @@ async function init() {
   initIntegControls();
   initRadialBasis();
   initSpeciesResolution();
+  initSimilarity();
+  initSmoothness();
+  initMLDimer();
   window.addEventListener("resize", resize);
   animate();
 
@@ -1756,3 +1759,406 @@ function initSpeciesResolution() {
   slider.oninput = draw;
   draw();
 }
+
+/* ======== Section 12: SOAP similarity matrix ======== */
+function initSimilarity() {
+  const cv = $("simMatrix");
+  if (!cv || !DATA.similarity) return;
+  const ctx = cv.getContext("2d");
+  const presets = DATA.similarity.presets;
+  const K1 = DATA.similarity.K_zeta1;
+  const N = presets.length;
+
+  const zetaSlider = $("zetaSlider");
+  const zetaVal = $("zetaVal");
+  const simInfo = $("simInfo");
+
+  function rainbow2(t) {
+    t = Math.max(0, Math.min(1, t));
+    const stops = [
+      [0.00, [15, 8, 30]],
+      [0.25, [36, 70, 180]],
+      [0.50, [24, 165, 165]],
+      [0.75, [139, 214, 70]],
+      [1.00, [255, 61, 90]],
+    ];
+    for (let i = 0; i < stops.length - 1; i++) {
+      if (t <= stops[i + 1][0]) {
+        const [a, ca] = stops[i], [b, cb] = stops[i + 1];
+        const k = (t - a) / (b - a);
+        return `rgb(${Math.round(ca[0] + (cb[0] - ca[0]) * k)},${Math.round(ca[1] + (cb[1] - ca[1]) * k)},${Math.round(ca[2] + (cb[2] - ca[2]) * k)})`;
+      }
+    }
+    return "rgb(255,61,90)";
+  }
+
+  let hovRow = -1, hovCol = -1;
+  let layout = null;
+
+  function draw() {
+    const zeta = Number(zetaSlider.value);
+    zetaVal.textContent = zeta;
+
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#0d090d";
+    ctx.fillRect(0, 0, W, H);
+
+    const pad = 70, gap = 2;
+    const cellW = (W - pad - 20 - (N - 1) * gap) / N;
+    const cellH = (H - pad - 20 - (N - 1) * gap) / N;
+    layout = { pad, gap, cellW, cellH };
+
+    // Draw cells
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const val = Math.pow(Math.max(0, K1[r][c]), zeta);
+        const x = pad + c * (cellW + gap);
+        const y = pad + r * (cellH + gap);
+        ctx.fillStyle = rainbow2(val);
+        ctx.beginPath();
+        ctx.roundRect(x, y, cellW, cellH, 3);
+        ctx.fill();
+        // hover highlight
+        if (r === hovRow && c === hovCol) {
+          ctx.strokeStyle = "rgba(255,255,255,.8)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // labels - x axis (top)
+    ctx.fillStyle = "#a79ba6";
+    ctx.font = "9px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    for (let c = 0; c < N; c++) {
+      const x = pad + c * (cellW + gap) + cellW / 2;
+      ctx.fillStyle = c === hovCol ? "#eee9ee" : "#a79ba6";
+      ctx.fillText(presets[c], x, pad - 3);
+    }
+
+    // labels - y axis (left)
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    for (let r = 0; r < N; r++) {
+      const y = pad + r * (cellH + gap) + cellH / 2;
+      ctx.fillStyle = r === hovRow ? "#eee9ee" : "#a79ba6";
+      ctx.fillText(presets[r], pad - 6, y);
+    }
+  }
+
+  cv.onmousemove = (e) => {
+    if (!layout) return;
+    const rect = cv.getBoundingClientRect();
+    const scaleX = cv.width / rect.width;
+    const scaleY = cv.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+    const { pad, gap, cellW, cellH } = layout;
+    const c = Math.floor((mx - pad) / (cellW + gap));
+    const r = Math.floor((my - pad) / (cellH + gap));
+    if (r >= 0 && r < N && c >= 0 && c < N) {
+      if (r !== hovRow || c !== hovCol) {
+        hovRow = r; hovCol = c;
+        const zeta = Number(zetaSlider.value);
+        const rawK = K1[r][c];
+        const kz = Math.pow(Math.max(0, rawK), zeta);
+        simInfo.textContent = `${presets[r]} ↔ ${presets[c]}: cosine similarity = ${rawK.toFixed(3)}, K^ζ = ${kz.toFixed(3)}`;
+        draw();
+      }
+    } else {
+      if (hovRow !== -1 || hovCol !== -1) { hovRow = -1; hovCol = -1; simInfo.textContent = ""; draw(); }
+    }
+  };
+  cv.onmouseleave = () => { hovRow = -1; hovCol = -1; simInfo.textContent = ""; draw(); };
+
+  zetaSlider.oninput = draw;
+  draw();
+}
+
+/* ======== Section 13: smoothness & cutoff sensitivity ======== */
+function initSmoothness() {
+  const jitterSlider = $("jitterSlider");
+  const jitterVal = $("jitterVal");
+  const sigmaSliderEl = $("sigmaSlider");
+  const sigmaValEl = $("sigmaVal");
+  const jitterDeltaP = $("jitterDeltaP");
+  const jitterDeltaC = $("jitterDeltaC");
+  const cv = $("cutoffCanvas");
+  if (!jitterSlider) return;
+
+  // Toy atoms for the asymmetric cluster
+  const BASE_ATOMS = [
+    [1.35, 0.05, 0.0],
+    [-0.55, 1.15, 0.15],
+    [-0.55, -1.00, 0.35],
+    [0.10, 0.15, 1.50],
+  ];
+
+  let rng = 42;
+  function rand() { rng = (rng * 1664525 + 1013904223) & 0xffffffff; return (rng >>> 0) / 4294967296; }
+  function seededRandVec() { return [rand()*2-1, rand()*2-1, rand()*2-1]; }
+
+  function densityAtoms2(atoms, x, y, z, sig) {
+    let rho = 0;
+    const s2 = 2 * sig * sig;
+    atoms.forEach(a => {
+      const dx = x - a[0], dy = y - a[1], dz = z - a[2];
+      rho += Math.exp(-(dx*dx + dy*dy + dz*dz) / s2);
+    });
+    return rho;
+  }
+
+  function computeC(atoms, l, m, sig) {
+    const N = 10, R = 3;
+    const dV = Math.pow(2 * R / (N - 1), 3);
+    let sum = 0;
+    for (let i = 0; i < N; i++) {
+      const x = -R + 2*R*i/(N-1);
+      for (let j = 0; j < N; j++) {
+        const y = -R + 2*R*j/(N-1);
+        for (let k = 0; k < N; k++) {
+          const z = -R + 2*R*k/(N-1);
+          const rho = densityAtoms2(atoms, x, y, z, sig);
+          if (rho < 1e-6) continue;
+          const r = Math.hypot(x, y, z) || 1e-9;
+          sum += rho * realSH(l, m, x, y, z) * dV;
+        }
+      }
+    }
+    return sum;
+  }
+
+  function computeP(atoms, sig) {
+    let p = 0;
+    for (let l = 0; l <= 2; l++) {
+      for (let m = -l; m <= l; m++) {
+        const c = computeC(atoms, l, m, sig);
+        p += c * c;
+      }
+    }
+    return p;
+  }
+
+  function computeAllC(atoms, sig) {
+    const cs = [];
+    for (let l = 0; l <= 2; l++)
+      for (let m = -l; m <= l; m++)
+        cs.push(computeC(atoms, l, m, sig));
+    return cs;
+  }
+
+  function update() {
+    const delta = Number(jitterSlider.value);
+    const sig = Number(sigmaSliderEl.value);
+    jitterVal.textContent = delta.toFixed(2);
+    sigmaValEl.textContent = sig.toFixed(2);
+
+    // Reset rng each call for reproducibility
+    rng = 42;
+    const jAtoms = BASE_ATOMS.map(a => {
+      const v = seededRandVec();
+      const len = Math.hypot(...v) || 1;
+      return [a[0] + delta*v[0]/len, a[1] + delta*v[1]/len, a[2] + delta*v[2]/len];
+    });
+
+    const c0 = computeAllC(BASE_ATOMS, sig);
+    const c1 = computeAllC(jAtoms, sig);
+    const sumC0 = c0.reduce((a,v) => a + Math.abs(v), 0);
+    const sumDeltaC = c0.reduce((acc, v, i) => acc + Math.abs(c1[i] - v), 0);
+    const pctC = (100 * sumDeltaC / (sumC0 || 1)).toFixed(1);
+
+    const p0 = computeP(BASE_ATOMS, sig);
+    const p1 = computeP(jAtoms, sig);
+    const pctP = (100 * Math.abs(p1 - p0) / (p0 || 1)).toFixed(1);
+
+    jitterDeltaC.textContent = pctC + "%";
+    jitterDeltaP.textContent = pctP + "%";
+  }
+
+  jitterSlider.oninput = update;
+  sigmaSliderEl.oninput = update;
+
+  // Cutoff chart
+  if (cv && DATA.cutoff_sensitivity) {
+    const ctx = cv.getContext("2d");
+    const presetsArr = DATA.cutoff_sensitivity.presets;
+    const sims = DATA.cutoff_sensitivity.sims;
+
+    function drawCutoff() {
+      const W = cv.width, H = cv.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = "#0d090d";
+      ctx.fillRect(0, 0, W, H);
+
+      const curPreset = preset; // global preset
+      const info = $("cutoffInfo");
+      const s = sims[curPreset] || sims["tetra"];
+      const sim3 = s.sim3, sim4 = s.sim4;
+      if (info) info.textContent = `${curPreset}: cosine(r_cut=3, r_cut=5) = ${sim3.toFixed(3)}, cosine(r_cut=4, r_cut=5) = ${sim4.toFixed(3)}`;
+
+      const pad = 36, barW = 60, gap = 24;
+      const vals = [sim3, sim4, 1.0];
+      const labels = ["r_cut=3Å", "r_cut=4Å", "r_cut=5Å"];
+      const colors = ["#ff3d5a", "#e8a05a", "#63e6a4"];
+      const maxH = H - pad * 2;
+
+      vals.forEach((v, i) => {
+        const x = pad + i * (barW + gap);
+        const bh = v * maxH;
+        const y = H - pad - bh;
+        ctx.fillStyle = colors[i] + "33";
+        ctx.fillRect(x, y, barW, bh);
+        ctx.strokeStyle = colors[i];
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x, y, barW, bh);
+
+        ctx.fillStyle = colors[i];
+        ctx.font = "bold 11px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(v.toFixed(3), x + barW/2, y - 4);
+
+        ctx.fillStyle = "#6e5f6e";
+        ctx.font = "9px Inter, sans-serif";
+        ctx.fillText(labels[i], x + barW/2, H - pad + 14);
+      });
+
+      ctx.fillStyle = "#6e5f6e";
+      ctx.font = "9px Inter, sans-serif";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillText("cosine similarity\nvs r_cut=5Å ref", pad - 4, pad + maxH/2);
+    }
+    drawCutoff();
+    // Re-draw when preset changes
+    const origBuildScene = window.__origBuildScene;
+    // Hook into preset changes by polling
+    let lastPreset = preset;
+    setInterval(() => {
+      if (preset !== lastPreset) { lastPreset = preset; drawCutoff(); }
+    }, 500);
+  }
+
+  update();
+}
+
+/* ======== Section 14: Toy ML dimer prediction ======== */
+function initMLDimer() {
+  const cv = $("mlCanvas");
+  if (!cv || !DATA.ml_dimer) return;
+  const ctx = cv.getContext("2d");
+  const ml = DATA.ml_dimer;
+  const slider = $("mlRSlider");
+  const rValEl = $("mlRVal");
+  const infoEl = $("mlPointInfo");
+  const rmseEl = $("mlRmse");
+
+  if (rmseEl) rmseEl.textContent = ml.rmse.toFixed(4);
+
+  const rArr = ml.r_test;
+  const eTrue = ml.E_true;
+  const ePred = ml.E_pred;
+  const rTrain = ml.r_train;
+  const eTrain = ml.E_train;
+
+  // Clip for display (LJ diverges)
+  const EMIN = -1.5, EMAX = 8;
+
+  function draw(idx) {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#0d090d";
+    ctx.fillRect(0, 0, W, H);
+
+    const padL = 54, padR = 20, padT = 20, padB = 36;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const rMin = Math.min(...rArr), rMax = Math.max(...rArr);
+    const sx = (r) => padL + (r - rMin) / (rMax - rMin) * plotW;
+    const sy = (e) => padT + (1 - (Math.min(EMAX, Math.max(EMIN, e)) - EMIN) / (EMAX - EMIN)) * plotH;
+
+    // Grid
+    ctx.strokeStyle = "rgba(214,160,180,.08)"; ctx.lineWidth = 1;
+    for (let v = -1; v <= 8; v++) {
+      const y = sy(v);
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    }
+    // Zero line
+    ctx.strokeStyle = "rgba(214,160,180,.2)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, sy(0)); ctx.lineTo(W - padR, sy(0)); ctx.stroke();
+
+    // Axes labels
+    ctx.fillStyle = "#6e5f6e"; ctx.font = "9px Inter, sans-serif"; ctx.textAlign = "right";
+    for (let v of [-1, 0, 1, 2, 4, 6]) {
+      ctx.fillText(v, padL - 4, sy(v) + 3);
+    }
+    ctx.textAlign = "center";
+    for (let r = 2; r <= 5; r++) {
+      ctx.fillText(r + "Å", sx(r), H - padB + 14);
+    }
+
+    // Training points
+    rTrain.forEach((r, i) => {
+      const e = eTrain[i];
+      if (e < EMIN || e > EMAX) return;
+      ctx.fillStyle = "rgba(99,230,164,.35)";
+      ctx.beginPath(); ctx.arc(sx(r), sy(e), 3, 0, Math.PI*2); ctx.fill();
+    });
+
+    // True curve
+    ctx.strokeStyle = "#45d6ff"; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath();
+    rArr.forEach((r, i) => {
+      const e = eTrue[i];
+      if (e < EMIN || e > EMAX) { ctx.moveTo(sx(r), sy(Math.min(EMAX, Math.max(EMIN, e)))); return; }
+      i === 0 ? ctx.moveTo(sx(r), sy(e)) : ctx.lineTo(sx(r), sy(e));
+    });
+    ctx.stroke();
+
+    // Predicted curve
+    ctx.strokeStyle = "#ff3d5a"; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    rArr.forEach((r, i) => {
+      const e = ePred[i];
+      const ec = Math.min(EMAX, Math.max(EMIN, e));
+      i === 0 ? ctx.moveTo(sx(r), sy(ec)) : ctx.lineTo(sx(r), sy(ec));
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Cursor
+    if (idx >= 0) {
+      const r = rArr[idx], et = eTrue[idx], ep = ePred[idx];
+      ctx.strokeStyle = "rgba(255,255,255,.25)"; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(sx(r), padT); ctx.lineTo(sx(r), H - padB); ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = "#45d6ff"; ctx.beginPath(); ctx.arc(sx(r), sy(et), 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#ff3d5a"; ctx.beginPath(); ctx.arc(sx(r), sy(ep), 5, 0, Math.PI*2); ctx.fill();
+
+      rValEl.textContent = r.toFixed(2) + " Å";
+      if (infoEl) infoEl.innerHTML = `r = ${r.toFixed(2)} Å &nbsp;|&nbsp; E<sub>true</sub> = ${et.toFixed(3)} eV &nbsp;|&nbsp; Ê = ${ep.toFixed(3)} eV &nbsp;|&nbsp; error = ${(ep - et).toFixed(3)} eV`;
+    }
+
+    // Legend
+    ctx.fillStyle = "#45d6ff"; ctx.font = "11px Inter, sans-serif"; ctx.textAlign = "left";
+    ctx.fillText("── LJ true", padL + 6, padT + 14);
+    ctx.fillStyle = "#ff3d5a";
+    ctx.fillText("- - KRR predicted", padL + 6, padT + 28);
+    ctx.fillStyle = "rgba(99,230,164,.8)";
+    ctx.fillText("● train points", padL + 6, padT + 42);
+
+    // Axis titles
+    ctx.fillStyle = "#6e5f6e"; ctx.font = "10px Inter, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("interatomic distance (Å)", padL + plotW/2, H - 2);
+    ctx.save(); ctx.translate(12, padT + plotH/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText("energy (eV)", 0, 0); ctx.restore();
+  }
+
+  slider.oninput = () => { draw(Number(slider.value)); };
+  draw(100);
+}
+
