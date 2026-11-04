@@ -17,7 +17,7 @@
 </header>
 
 <main>
-  <div class="wip">Draft preview · 3D explainer · 10 sections</div>
+  <div class="wip">Draft preview · 3D explainer · 11 sections</div>
   <h1>SOAP in <em>3D</em></h1>
   <p class="lede">
     Smooth Overlap of Atomic Positions turns a local atomic environment into a
@@ -41,7 +41,7 @@
         <label class="slider">Gaussian width σ <input id="sigma" type="range" min="0.20" max="0.80" step="0.01" value="0.45"><span id="sigmaVal">0.45</span></label>
         <div class="controls">
           <button class="pill" id="toggleDensity" aria-pressed="true">density cloud</button>
-          <button class="pill" id="toggleCutoff" aria-pressed="true">cutoff sphere</button>
+          <button class="pill" id="toggleCutoff" aria-pressed="false">cutoff sphere</button>
           <button class="pill" id="toggleSlices" aria-pressed="true">cross-sections</button>
           <button class="pill" id="toggleSpin" aria-pressed="false">auto-rotate</button>
         </div>
@@ -145,6 +145,9 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
             <div><b id="intProgress">0%</b><small>samples</small></div>
           </div>
           <div class="progress"><i id="intBar"></i></div>
+          <div class="controls" style="margin-top:12px" id="integGeomButtons"></div>
+          <label class="slider">rotate geometry <input id="integRot" type="range" min="0" max="180" step="1" value="0"><span id="integRotVal">0°</span></label>
+          <label class="slider">cutoff r<sub>c</sub> <input id="integCut" type="range" min="2" max="6" step="0.1" value="4"><span id="integCutVal">4.0 Å</span></label>
           <div class="controls" style="margin-top:12px" id="sampleModes">
             <button class="pill" data-sample="grid" aria-pressed="true">uniform grid</button>
             <button class="pill" data-sample="random" aria-pressed="false">random sphere</button>
@@ -166,6 +169,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
             the sum over samples times the cell volume is <code>c<sub>nlm</sub></code>.</p>
         </div>
       </div>
+      <div id="integTotals" class="toplist" style="margin:10px 0"></div>
       <div class="cgrid-wrap"><div id="cGrid" class="cgrid"></div></div>
       <p class="note"><strong>What is illustrative here:</strong> the grid integration
         uses a simple Gaussian radial basis to make the arithmetic visible. dscribe
@@ -282,7 +286,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="dimension">
-    <h2>8 · The dimensionality problem</h2>
+    <h2>9 · The dimensionality problem</h2>
     <p class="sub">
       The uncompressed power spectrum grows with the <em>square</em> of the number
       of species-resolved radial channels. On a three-element demo that is 390
@@ -308,6 +312,50 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
         mu2 = <code>n_max(n_max+1)/2 · (l_max+1)</code>, independent of S.
         At S=20, uncompressed is <strong>16 200</strong> numbers, mu1nu1 is
         <strong>1 600</strong>, mu2 is <strong>50</strong>.</p>
+    </div>
+  </section>
+
+  <section id="localglobal">
+    <h2>10 · Local fingerprint vs global fingerprint</h2>
+    <p class="sub">
+      Everything in the 3D scene is a <strong>local</strong> SOAP vector: one
+      descriptor for one central atom and its neighbours. A materials property
+      model usually needs one vector per crystal, so the local vectors are combined
+      into a <strong>global</strong> fingerprint.
+    </p>
+    <div class="card">
+      <div class="flow">
+        <div class="flow-step"><b>p<sub>site 1</sub></b><span>local</span></div>
+        <div class="flow-step"><b>p<sub>site 2</sub></b><span>local</span></div>
+        <div class="flow-step"><b>…</b><span>all sites</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step out"><b>p<sub>global</sub></b><span>one vector per structure</span></div>
+      </div>
+      <p class="sub" style="margin-top:18px">
+        The usual global descriptor is the average over sites:
+      </p>
+      <div class="formula accent">p<sub>global</sub> = (1/N<sub>sites</sub>) Σ<sub>i</sub> p<sub>site i</sub></div>
+      <p class="sub">
+        Sometimes it is species-weighted, or concatenated with composition
+        features. The invariance arguments are unchanged: each local vector is
+        rotation-invariant, and so is the average.
+      </p>
+      <div class="grid2" style="margin-top:16px">
+        <div>
+          <h3 style="margin-top:0">Use local when…</h3>
+          <p class="note">you care about environments: clustering sites, detecting
+            motifs, comparing coordination, or explaining which local geometry
+            drives a prediction. It is also what you use for a single adsorbed
+            molecule or surface site.</p>
+        </div>
+        <div>
+          <h3 style="margin-top:0">Use global when…</h3>
+          <p class="note">you train a structure-level property model (band gap,
+            formation energy, refractive index). One vector per crystal is what
+            scikit-learn/MODNet-style regressors expect; the cost is that site-level
+            information is averaged away.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -356,7 +404,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="limits">
-    <h2>10 · What to remember</h2>
+    <h2>11 · What to remember</h2>
     <div class="card">
       <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
         invariant, fixed-length, and interpretable through its radial/angular

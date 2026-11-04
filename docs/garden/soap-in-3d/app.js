@@ -11,7 +11,7 @@ let mode = "off";
 let pcaMode = "off";
 let sigma = 0.45;
 let showDensity = true;
-let showCutoff = true;
+let showCutoff = false;
 let showSlices = true;
 let sliceAngle = 0;
 let sliceTilt = 0;
@@ -866,9 +866,25 @@ function updateSH3D(l, m) {
   shScene.add(shMesh);
 }
 
-/* ---------------- integration animation ---------------- */
+/* ---------------- integration animation (geometry-aware) ---------------- */
 let integ = null;
 let sampleMode = "grid";
+let integGeom = "tetra";
+let integCutoff = 4;
+let integRot = 0;
+let rebuildIntegral = () => {};
+
+function integAtoms() {
+  const base = DATA.presets[integGeom].atoms.slice(1).map((a) => ({
+    x: a.position[0], y: a.position[1], z: a.position[2],
+  }));
+  const t = integRot * Math.PI / 180;
+  return base.map((a) => ({
+    x: a.x * Math.cos(t) - a.y * Math.sin(t),
+    y: a.x * Math.sin(t) + a.y * Math.cos(t),
+    z: a.z,
+  }));
+}
 const COEFF_ORDER = (() => {
   const out = [];
   for (let n = 0; n < 4; n++)
@@ -879,9 +895,10 @@ const COEFF_ORDER = (() => {
 
 function integKey(n, l, m) { return `${n},${l},${m}`; }
 
+/* ---------------- integration animation (geometry-aware) ---------------- */
 function buildIntegPoints() {
-  const R = cutoff;
-  const atoms = DATA.presets[preset].atoms.slice(1);
+  const R = integCutoff;
+  const atoms = integAtoms();
   const pts = [];
   const SCALE = 1e6;
   if (sampleMode === "grid") {
@@ -893,7 +910,7 @@ function buildIntegPoints() {
         const y = -R + 2 * R * j / (N - 1);
         for (let k = 0; k < N; k++) {
           const z = -R + 2 * R * k / (N - 1);
-          const rho = densityAt(x, y, z);
+          const rho = densityAtoms(atoms, x, y, z);
           if (rho > 1e-6) pts.push({ x, y, z, rho, w: dV * SCALE });
         }
       }
@@ -903,8 +920,8 @@ function buildIntegPoints() {
   if (sampleMode === "sites") {
     const w = 1 / atoms.length * SCALE;
     atoms.forEach((a) => pts.push({
-      x: a.position[0], y: a.position[1], z: a.position[2],
-      rho: densityAt(a.position[0], a.position[1], a.position[2]), w,
+      x: a.x, y: a.y, z: a.z,
+      rho: densityAtoms(atoms, a.x, a.y, a.z), w,
     }));
     return { pts };
   }
@@ -917,7 +934,7 @@ function buildIntegPoints() {
         x = (Math.random() * 2 - 1) * R; y = (Math.random() * 2 - 1) * R; z = (Math.random() * 2 - 1) * R;
         d = Math.hypot(x, y, z);
       } while (d > R);
-      pts.push({ x, y, z, rho: densityAt(x, y, z), w });
+      pts.push({ x, y, z, rho: densityAtoms(atoms, x, y, z), w });
     }
     return { pts };
   }
@@ -926,17 +943,17 @@ function buildIntegPoints() {
   const norm = Math.pow(2 * Math.PI * sig * sig, 1.5);
   for (let i = 0; i < N; i++) {
     const a = atoms[Math.floor(Math.random() * atoms.length)];
-    const x = a.position[0] + (Math.random() + Math.random() + Math.random() - 1.5) * sig * 2;
-    const y = a.position[1] + (Math.random() + Math.random() + Math.random() - 1.5) * sig * 2;
-    const z = a.position[2] + (Math.random() + Math.random() + Math.random() - 1.5) * sig * 2;
+    const x = a.x + (Math.random() + Math.random() + Math.random() - 1.5) * sig * 2;
+    const y = a.y + (Math.random() + Math.random() + Math.random() - 1.5) * sig * 2;
+    const z = a.z + (Math.random() + Math.random() + Math.random() - 1.5) * sig * 2;
     let q = 0;
     atoms.forEach((b) => {
-      const d2 = (x - b.position[0]) ** 2 + (y - b.position[1]) ** 2 + (z - b.position[2]) ** 2;
+      const d2 = (x - b.x) ** 2 + (y - b.y) ** 2 + (z - b.z) ** 2;
       q += Math.exp(-d2 / (2 * sig * sig)) / norm;
     });
     q /= atoms.length;
     q = Math.max(q, 1e-8);
-    pts.push({ x, y, z, rho: densityAt(x, y, z), w: (1 / (N * q)) * SCALE });
+    pts.push({ x, y, z, rho: densityAtoms(atoms, x, y, z), w: (1 / (N * q)) * SCALE });
   }
   return { pts };
 }
@@ -995,39 +1012,43 @@ function initIntegration() {
   controls.autoRotateSpeed = 1.0;
   scene.add(new THREE.AmbientLight(0xffffff, 1));
   let points = null;
-  let geometry = null;
-  let colors = null;
 
-  const build = () => {
+  // Explicit rebuild: disposes the previous Points geometry, so switching
+  // geometry / cutoff / sampling mode repeatedly always replaces the cloud.
+  const rebuild = () => {
     if (integ) { clearTimeout(integ.timer); integ.playing = false; removeLobe(); }
     const { pts } = buildIntegPoints();
     const pos = new Float32Array(pts.length * 3);
     const col = new Float32Array(pts.length * 3);
-    pts.forEach((p, i) => { pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z; });
-    if (points) { scene.remove(points); geometry.dispose(); points.material.dispose(); }
-    geometry = new THREE.BufferGeometry();
+    pts.forEach((p, i) => {
+      pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z;
+    });
+    if (points) { scene.remove(points); points.geometry.dispose(); points.material.dispose(); }
+    const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    colors = new THREE.BufferAttribute(col, 3);
+    const colors = new THREE.BufferAttribute(col, 3);
     geometry.setAttribute("color", colors);
     points = new THREE.Points(geometry, new THREE.PointsMaterial({
       size: 0.11, vertexColors: true, transparent: true, opacity: 0.95,
       depthWrite: false, blending: THREE.AdditiveBlending,
     }));
     scene.add(points);
-    integ = { renderer, scene, camera, controls, points, geometry, colors, pts,
-      idx: 0, batch: 0, sum: 0, current: COEFF_ORDER[0], coeffs: {}, playing: false, timer: null };
+    integ = { renderer, scene, camera, controls, points, colors, pts,
+      idx: 0, batch: 0, sum: 0, current: COEFF_ORDER[0], coeffs: {},
+      playing: false, timer: null, lobe: null };
     resetIntegration();
   };
+  rebuildIntegral = rebuild;
 
   (function loop() {
     requestAnimationFrame(loop);
     if (integ) { integ.controls.update(); integ.renderer.render(integ.scene, integ.camera); }
   })();
 
-  build();
-  integ._rebuild = build;
+  rebuild();
   window.addEventListener("resize", () => {
     const w = canvas.clientWidth || 540, h = canvas.clientHeight || 400;
+    if (!integ) return;
     integ.renderer.setSize(w, h, false);
     integ.camera.aspect = w / h; integ.camera.updateProjectionMatrix();
   });
@@ -1068,6 +1089,7 @@ function resetIntegration() {
   startCoeff();
   updateIntegUI(0);
   $("intBar").style.width = "0%";
+  updateIntegTotals();
 }
 
 function startCoeff() {
@@ -1085,7 +1107,7 @@ function startCoeff() {
   $("intProgress").textContent = "0%";
   $("intBar").style.width = "0%";
   removeLobe();
-  integ.lobe = makeLobeMesh(c.l, c.m, cutoff);
+  integ.lobe = makeLobeMesh(c.l, c.m, integCutoff);
   integ.scene.add(integ.lobe);
   integ.flashUntil = performance.now() + 650;
 }
@@ -1125,6 +1147,7 @@ function stepIntegration() {
   $("intSum").textContent = Math.abs(integ.sum) < 0.01 ? integ.sum.toExponential(2) : integ.sum.toFixed(3);
   if (end >= total) {
     integ.coeffs[integKey(c.n, c.l, c.m)] = integ.sum;
+    updateIntegTotals();
     const cell = $(`cell-${c.n}-${c.l}-${c.m}`);
     if (cell) {
       cell.textContent = Math.abs(integ.sum) < 0.01 ? integ.sum.toExponential(1) : integ.sum.toFixed(2);
@@ -1142,6 +1165,21 @@ function stepIntegration() {
     }
   }
   updateIntegUI(pct);
+}
+
+function updateIntegTotals() {
+  if (!integ) return;
+  const vals = Object.values(integ.coeffs);
+  const sumAbs = vals.reduce((a, v) => a + Math.abs(v), 0);
+  const total = vals.reduce((a, v) => a + v, 0);
+  const el = $("integTotals");
+  if (el) el.innerHTML =
+    `<span>coefficients: <b>${vals.length}/${COEFF_ORDER.length}</b></span>` +
+    `<span>Σ c: <b>${total.toExponential(2)}</b></span>` +
+    `<span>Σ |c|: <b>${sumAbs.toExponential(2)}</b></span>` +
+    `<span>geometry: <b>${DATA.presets[integGeom].label}</b></span>` +
+    `<span>cutoff: <b>${integCutoff.toFixed(1)} Å</b></span>` +
+    `<span>rotation: <b>${integRot}°</b></span>`;
 }
 
 function updateIntegUI(pct) {
@@ -1182,12 +1220,45 @@ function stepOneCoeff() {
 
 function initIntegControls() {
   buildCGrid();
+
+  // geometry selector for the integral widget
+  const gbox = $("integGeomButtons");
+  if (gbox) {
+    gbox.innerHTML = "";
+    Object.entries(DATA.presets).forEach(([key, pr]) => {
+      const b = document.createElement("button");
+      b.className = "pill";
+      b.textContent = pr.label;
+      b.setAttribute("aria-pressed", key === integGeom);
+      b.onclick = () => {
+        integGeom = key;
+        [...gbox.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
+        pauseInteg();
+        rebuildIntegral();
+      };
+      gbox.appendChild(b);
+    });
+  }
+  const rot = $("integRot");
+  if (rot) rot.oninput = () => {
+    integRot = Number(rot.value);
+    $("integRotVal").textContent = integRot + "°";
+    pauseInteg();
+    rebuildIntegral();
+  };
+  const cut = $("integCut");
+  if (cut) cut.oninput = () => {
+    integCutoff = Number(cut.value);
+    $("integCutVal").textContent = integCutoff.toFixed(1) + " Å";
+    pauseInteg();
+    rebuildIntegral();
+  };
   document.querySelectorAll("[data-sample]").forEach((b) => {
     b.onclick = () => {
       sampleMode = b.dataset.sample;
       document.querySelectorAll("[data-sample]").forEach((x) => x.setAttribute("aria-pressed", x === b));
       pauseInteg();
-      if (integ && integ._rebuild) integ._rebuild();
+      rebuildIntegral();
     };
   });
   $("intPlay").onclick = () => { if (integ.idx >= COEFF_ORDER.length) resetIntegration(); startInteg(); };
@@ -1195,6 +1266,7 @@ function initIntegControls() {
   $("intReset").onclick = () => { pauseInteg(); resetIntegration(); };
   $("intStep").onclick = stepOneCoeff;
 }
+
 /* ---------------- rotation invariance ---------------- */
 const ROT_ATOMS = [
   { x: 0, y: 0, z: 0 },
