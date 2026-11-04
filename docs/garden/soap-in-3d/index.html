@@ -281,24 +281,26 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     <div class="card">
       <div class="grid2" style="align-items:start;margin-bottom:14px">
         <div>
-          <p class="note" style="margin-top:0"><strong>The test cluster:</strong>
-            a central atom (grey) with four asymmetric neighbors — one close along
-            x, one above and to the left, one below, one far along z. The asymmetry
-            is deliberate: a symmetric cluster (tetrahedral/octahedral) would give
+          <div class="canvas-label">asymmetric test cluster</div>
+          <canvas id="rotScene" width="540" height="340" style="width:100%;height:auto;display:block;border-radius:10px;background:radial-gradient(circle at 50% 45%, #1a1020, #08060a 70%);cursor:grab"></canvas>
+          <p class="note" style="margin-top:6px"><strong>The test cluster:</strong>
+            a central atom (grey) with four asymmetric neighbors. The asymmetry
+            is deliberate: a symmetric cluster would give
             nearly zero <code>l&gt;0</code> coefficients and show little change on
-            rotation.</p>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);margin:6px 0">
-            <span style="color:var(--ice)">● central (0,0,0)</span>
-            <span>● (1.35, 0.05, 0)</span>
-            <span>● (−0.55, 1.15, 0.15)</span>
-            <span>● (−0.55, −1.00, 0.35)</span>
-            <span>● (0.10, 0.15, 1.50)</span>
-          </div>
+            rotation. Drag the slider — the atoms rotate around z.</p>
         </div>
         <div>
           <div class="kv">
             <div><b id="rotCChange">–</b><small>Σ |Δc|</small></div>
             <div><b id="rotPChange">–</b><small>Σ |Δp|</small></div>
+          </div>
+          <p class="note" style="margin:0 0 4px"><strong>Coordinates:</strong></p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);margin:0 0 10px">
+            <span style="color:var(--ice)">● (0,0,0)</span>
+            <span>● (1.35,0.05,0)</span>
+            <span>● (−0.55,1.15,0.15)</span>
+            <span>● (−0.55,−1.00,0.35)</span>
+            <span>● (0.10,0.15,1.50)</span>
           </div>
         </div>
       </div>
@@ -382,11 +384,17 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       Change the cutoff and watch the fingerprint change.
     </p>
     <div class="card">
-      <div class="callout" style="margin-bottom:12px">
-        <strong>Geometry used here:</strong> tetrahedral cluster (4 neighbors at
-        ~1.9 Å, symmetric). The values shown are real dscribe SOAP outputs for
-        the central atom of the central-atom-to-neighbors system.
-        Switch preset in section 1 to see how the fingerprint changes.
+      <div class="grid2" style="align-items:start;margin-bottom:14px">
+        <div class="callout" style="margin:0">
+          <strong>Geometry used here:</strong> tetrahedral cluster (4 neighbors at
+          ~1.9 Å, symmetric). The values shown are real dscribe SOAP outputs for
+          the central atom. Switch preset in section 1 to see how the fingerprint changes.
+        </div>
+        <div>
+          <div class="canvas-label">current geometry</div>
+          <canvas id="spectrumScene" width="540" height="260" style="width:100%;height:auto;display:block;border-radius:10px;background:radial-gradient(circle at 50% 45%, #1a1020, #08060a 70%);cursor:grab"></canvas>
+          <p class="hint" style="position:static;margin-top:4px">drag to orbit · this is the molecule being featurized</p>
+        </div>
       </div>
       <div class="controls">
         <button class="pill" data-mode="off" aria-pressed="true">uncompressed</button>
@@ -450,7 +458,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
         <div><b id="compBlocks">–</b><small>channel blocks</small></div>
         <div><b id="compMode">–</b><small>scheme</small></div>
       </div>
-      <canvas id="compBlocksCanvas" width="900" height="300"></canvas>
+      <canvas id="compBlocksCanvas" width="900" height="480"></canvas>
       <div id="compNote" class="note"></div>
     </div>
 
