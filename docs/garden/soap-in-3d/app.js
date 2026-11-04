@@ -1074,7 +1074,16 @@ function buildCGrid() {
     pairs.forEach(([l, m]) => {
       const c = document.createElement("div");
       c.className = "cell"; c.id = `cell-${n}-${l}-${m}`;
-      c.textContent = "·"; g.appendChild(c);
+      c.textContent = "·";
+      c.style.cursor = "pointer";
+      c.title = `click to jump to n=${n}, l=${l}, m=${m}`;
+      c.onclick = () => {
+        if (!integ) return;
+        pauseInteg();
+        const target = COEFF_ORDER.findIndex(co => co.n === n && co.l === l && co.m === m);
+        if (target >= 0) { integ.idx = target; startCoeff(); }
+      };
+      g.appendChild(c);
     });
   }
 }

@@ -120,6 +120,7 @@ select{font:inherit}
 .cgrid .cell.done{color:#eee9ee;border-color:rgba(214,160,180,.3)}
 .cgrid .cell.neg{color:#7fb0ff}
 .cgrid .cell.cur{border-color:var(--ice);box-shadow:0 0 0 1px rgba(69,214,255,.4)}
+.cgrid .cell:hover{border-color:var(--red);color:var(--text);transition:.1s}
 .cgrid .rowlabel{font-size:.58rem;color:var(--dim);display:flex;align-items:center;justify-content:flex-end;padding-right:4px}
 
 /* callout boxes */

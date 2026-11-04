@@ -65,10 +65,15 @@
     <div class="card formula-card">
       <div class="formula">ρ<sub>i</sub>(<b>r</b>) = Σ<sub>j</sub> exp(−|<b>r</b> − <b>r</b><sub>ij</sub>|² / 2σ²)</div>
       <div class="formula">ρ<sub>i</sub>(<b>r</b>) = Σ<sub>nlm</sub> c<sub>nlm</sub><sup>(i)</sup> g<sub>n</sub>(r) Y<sub>lm</sub>(<b>r̂</b>)</div>
-      <div class="formula accent">p<sub>nn′l</sub><sup>(i)</sup> = Σ<sub>m</sub> c<sub>nlm</sub><sup>(i)</sup> c<sub>n′lm</sub><sup>(i)*</sup></div>
+      <div class="formula accent">p<sub>nn′l</sub><sup>(i)</sup> = Σ<sub>m</sub> c<sub>nlm</sub><sup>(i)</sup> c<sub>n′lm</sub><sup>(i)</sup></div>
       <p class="note">The power spectrum removes the <code>m</code> index, and with it the
         orientation. What is left is invariant under rotation, translation and
-        permutation of identical atoms.</p>
+        permutation of identical atoms. Here <code>n</code> and <code>n′</code> are
+        both radial indices (0…n_max−1); the descriptor stores the upper triangle
+        <code>n′ ≥ n</code>, giving one value per radial pair and angular channel
+        <code>l</code>. Because dscribe uses <strong>real</strong> spherical
+        harmonics, all c<sub>nlm</sub> and all p<sub>nn′l</sub> are real numbers —
+        no complex conjugate needed.</p>
     </div>
   </section>
 
@@ -134,9 +139,13 @@
       integrating the density against it gives one coefficient <code>c<sub>nlm</sub></code>.
     </p>
     <div class="card">
-      <p class="note" style="margin-top:0">Real spherical harmonics up to <code>l=3</code>.
-        Red is positive, blue is negative; the number of angular lobes grows with
-        <code>l</code>. Click a tile to inspect it.</p>
+      <p class="note" style="margin-top:0"><strong>Real</strong> spherical harmonics up to <code>l=3</code>.
+        <strong>Red = positive, blue = negative</strong> regions of the function;
+        the number of angular lobes grows with <code>l</code>.
+        Each tile shows an <strong>equirectangular projection</strong>: the horizontal
+        axis is the azimuthal angle φ ∈ [0, 2π] (like a world map's longitude) and
+        the vertical axis is the polar angle θ ∈ [0, π] (latitude). One full period of
+        the function fits in the rectangle. Click a tile to inspect it in 3D.</p>
       <div class="sh-grid" id="shGallery"></div>
       <div class="grid2" style="margin-top:16px;align-items:start">
         <canvas id="shDetail" width="540" height="260"></canvas>
@@ -162,10 +171,11 @@
     </div>
     <p class="sub" style="margin-top:14px">
       For every radial channel <code>n</code> and angular channel <code>(l,m)</code>
-      you get one complex number. The power spectrum multiplies pairs and sums over
-      <code>m</code>:
+      you get one <strong>real</strong> number (dscribe uses real spherical harmonics,
+      so no imaginary part arises). The power spectrum pairs every <code>n</code> with
+      every <code>n′ ≥ n</code> and sums over <code>m</code>:
     </p>
-    <div class="formula accent">p<sub>nn′l</sub> = Σ<sub>m=-l..l</sub> c<sub>nlm</sub> c<sub>n′lm</sub><sup>*</sup></div>
+    <div class="formula accent">p<sub>nn′l</sub> = Σ<sub>m=-l..l</sub> c<sub>nlm</sub> · c<sub>n′lm</sub></div>
     <div class="callout amber">
       <strong>What c<sub>nlm</sub> physically means:</strong>
       think of it as a measurement result, not just a number.
@@ -188,7 +198,7 @@
       Wigner D-matrix <code>D<sup>l</sup>(α)</code>:
       <code>c'<sub>nlm</sub> = Σ<sub>m'</sub> D<sup>l</sup><sub>mm'</sub>(α) c<sub>nlm'</sub></code>.
       The power spectrum is the dot product of two such vectors over <code>m</code>:
-      <code>p<sub>nn'l</sub> = c<sub>nl</sub>· c<sub>n'l</sub></code>.
+      <code>p<sub>nn′l</sub> = c<sub>nl</sub> · c<sub>n′l</sub></code>.
       Because <code>D<sup>l</sup></code> is unitary, the dot product is unchanged —
       exactly the way a rotation of a 3D vector does not change its length.
       Summing over <code>m</code> effectively takes a "squared length" in orientation
@@ -231,9 +241,13 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
             <button class="pill" data-sample="sites" aria-pressed="false">atomic sites</button>
           </div>
           <p class="note" style="margin:6px 0 4px"><strong>Try the sampling modes:</strong>
-            a uniform grid is symmetric, so for <code>l&gt;0</code> positive and negative
-            lobes cancel to almost zero. Random-sphere and atom-cloud samples break
-            that symmetry and give a non-trivial coefficient.</p>
+            the neighbor <em>density</em> ρ(r) is concentrated around atom positions —
+            it is not spherically symmetric. So even a uniform grid gives non-trivial
+            <code>l&gt;0</code> coefficients: each grid point is weighted by the local
+            density value, which breaks symmetry wherever neighbors sit off-centre.
+            Only a perfectly spherically symmetric density would make all <code>l&gt;0</code>
+            coefficients vanish. <em>Atomic-sites</em> mode places one point per
+            neighbor (the dimer has one neighbor → one point; that is correct).</p>
           <div class="controls" style="margin-top:4px">
             <button class="pill primary" id="intPlay">play all</button>
             <button class="pill" id="intPause">pause</button>
@@ -246,6 +260,8 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
         </div>
       </div>
       <div id="integTotals" class="toplist" style="margin:10px 0"></div>
+      <p class="note" style="margin:8px 0 2px"><strong>Click any cell</strong> in the
+        table below to jump the animation to that coefficient.</p>
       <div class="cgrid-wrap"><div id="cGrid" class="cgrid"></div></div>
       <p class="note"><strong>What is illustrative here:</strong> the grid integration
         uses a simple Gaussian radial basis to make the arithmetic visible. dscribe
@@ -254,50 +270,8 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     </div>
   </section>
 
-  <section id="spectrum">
-    <h2>5 · The power spectrum is the fingerprint</h2>
-    <p class="sub">
-      Each cell is one <code>(n, n′, l)</code> channel, summed over species pairs.
-      Change the geometry or the cutoff and watch the fingerprint change. The
-      values are real dscribe SOAP outputs for the central atom.
-    </p>
-    <div class="card">
-      <div class="controls">
-        <button class="pill" data-mode="off" aria-pressed="true">uncompressed</button>
-        <button class="pill" data-mode="mu1nu1" aria-pressed="false">mu1nu1 compression</button>
-      </div>
-      <div class="kv">
-        <div><b id="descLen">–</b><small>descriptor length</small></div>
-        <div><b id="descMode">–</b><small>mode</small></div>
-        <div><b id="descCut">–</b><small>cutoff (Å)</small></div>
-      </div>
-      <div class="controls">
-        <div class="controls" id="pairButtons" style="margin:0"></div>
-        <div class="controls" id="lButtons" style="margin:0"></div>
-      </div>
-      <p class="note" style="margin:8px 0 4px"><strong>How to read it:</strong>
-        rows are radial pairs <code>(n, n′)</code>, columns are <code>l</code>.
-        Every printed number is one <code>p<sub>nn′l</sub></code> value. Colour is
-        only a visual aid; the numbers are the data. Negative values are real:
-        for <code>n ≠ n′</code> the power spectrum is a cross term and can be
-        negative. Click a box to inspect it.</p>
-      <div class="grid2" style="align-items:start">
-        <div><div class="canvas-label">all values · heatmap</div><canvas id="heatmap" width="520" height="360"></canvas></div>
-        <div><div class="canvas-label">bar view · selected l</div><canvas id="spectrumBars" width="520" height="360"></canvas></div>
-      </div>
-      <div class="colorbar"><span>0</span><i></i><span id="heatMax">–</span></div>
-      <div id="cellInfo" class="note"></div>
-      <div id="topComponents" class="toplist"></div>
-      <details class="code-panel" style="margin-top:12px">
-        <summary>show every value for this species pair</summary>
-        <div id="spectrumTable" style="padding:10px 14px"></div>
-      </details>
-      <p class="note" id="heatNote"></p>
-    </div>
-  </section>
-
   <section id="rotation">
-    <h2>6 · Rotate the environment: c changes, the fingerprint doesn’t</h2>
+    <h2>5 · Rotate the environment: c changes, the fingerprint doesn’t</h2>
     <p class="sub">
       Individual <code>c<sub>nlm</sub></code> values are tied to the axes: rotate
       the neighbour geometry and they change. The power spectrum sums over
@@ -305,6 +279,29 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       that makes SOAP usable as a descriptor.
     </p>
     <div class="card">
+      <div class="grid2" style="align-items:start;margin-bottom:14px">
+        <div>
+          <p class="note" style="margin-top:0"><strong>The test cluster:</strong>
+            a central atom (grey) with four asymmetric neighbors — one close along
+            x, one above and to the left, one below, one far along z. The asymmetry
+            is deliberate: a symmetric cluster (tetrahedral/octahedral) would give
+            nearly zero <code>l&gt;0</code> coefficients and show little change on
+            rotation.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);margin:6px 0">
+            <span style="color:var(--ice)">● central (0,0,0)</span>
+            <span>● (1.35, 0.05, 0)</span>
+            <span>● (−0.55, 1.15, 0.15)</span>
+            <span>● (−0.55, −1.00, 0.35)</span>
+            <span>● (0.10, 0.15, 1.50)</span>
+          </div>
+        </div>
+        <div>
+          <div class="kv">
+            <div><b id="rotCChange">–</b><small>Σ |Δc|</small></div>
+            <div><b id="rotPChange">–</b><small>Σ |Δp|</small></div>
+          </div>
+        </div>
+      </div>
       <label class="slider">rotation around z <input id="rotAngle" type="range" min="0" max="180" step="5" value="0"><span id="rotAngleVal">0°</span></label>
       <div class="grid2" style="align-items:start">
         <div>
@@ -312,25 +309,16 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
           <table id="rotTable"><thead><tr><th>coefficient</th><th>θ=0</th><th>θ</th><th>change</th></tr></thead><tbody></tbody></table>
         </div>
         <div>
-          <div class="kv">
-            <div><b id="rotCChange">–</b><small>Σ |Δc|</small></div>
-            <div><b id="rotPChange">–</b><small>Σ |Δp|</small></div>
-          </div>
-          <p class="note">A deliberately asymmetric four-neighbour cluster. The
-            <code>c</code> values swing with the angle; the power spectrum stays
-            put (up to grid integration error).</p>
+          <p class="note">The <code>c</code> values swing with the angle; the power
+            spectrum stays put (up to grid integration error). Drag the slider
+            to see the effect.</p>
         </div>
       </div>
-      <p class="note"><strong>Local vs global:</strong> everything on this page is
-        a <em>local</em> fingerprint — one vector per central site. Materials
-        property models usually use a <em>global</em> fingerprint: average (or
-        species-weighted average) of the local vectors over all sites in the
-        structure. Same invariance, one vector per crystal.</p>
     </div>
   </section>
 
   <section id="species">
-    <h2>6b · Multi-element SOAP: one density field per species</h2>
+    <h2>6 · Multi-element SOAP: one density field per species</h2>
     <p class="sub">
       With a single element you get one density field. With <code>S</code> elements
       SOAP builds <strong>one density field per element</strong>:
@@ -376,15 +364,66 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
             <strong>The cost:</strong> going from 3 to 20 species (a typical alloy
             dataset) multiplies the number of species-pair blocks by
             <code>(20·21/2)/(3·4/2) = 70</code>. That is the quadratic scaling
-            that the mu1nu1 and mu2 compression schemes in section 7 address.
+            that the mu1nu1 and mu2 compression schemes in section 8 address.
           </div>
         </div>
       </div>
     </div>
   </section>
 
+  <section id="spectrum">
+    <h2>7 · The power spectrum is the fingerprint</h2>
+    <p class="sub">
+      After computing all the c<sub>nlm</sub> coefficients, SOAP pairs every
+      radial channel <code>n</code> with every <code>n′ ≥ n</code> and sums
+      over <code>m</code>. The result is a fixed-length vector of real numbers
+      that is invariant to rotation. Each cell below is one <code>(n, n′, l)</code>
+      value for the <strong>tetrahedral</strong> geometry (the default preset).
+      Change the cutoff and watch the fingerprint change.
+    </p>
+    <div class="card">
+      <div class="callout" style="margin-bottom:12px">
+        <strong>Geometry used here:</strong> tetrahedral cluster (4 neighbors at
+        ~1.9 Å, symmetric). The values shown are real dscribe SOAP outputs for
+        the central atom of the central-atom-to-neighbors system.
+        Switch preset in section 1 to see how the fingerprint changes.
+      </div>
+      <div class="controls">
+        <button class="pill" data-mode="off" aria-pressed="true">uncompressed</button>
+        <button class="pill" data-mode="mu1nu1" aria-pressed="false">mu1nu1 compression</button>
+      </div>
+      <div class="kv">
+        <div><b id="descLen">–</b><small>descriptor length</small></div>
+        <div><b id="descMode">–</b><small>mode</small></div>
+        <div><b id="descCut">–</b><small>cutoff (Å)</small></div>
+      </div>
+      <div class="controls">
+        <div class="controls" id="pairButtons" style="margin:0"></div>
+        <div class="controls" id="lButtons" style="margin:0"></div>
+      </div>
+      <p class="note" style="margin:8px 0 4px"><strong>How to read it:</strong>
+        rows are radial pairs <code>(n, n′)</code>, columns are <code>l</code>.
+        Every printed number is one <code>p<sub>nn′l</sub></code> value. Colour is
+        only a visual aid; the numbers are the data. Negative values are real:
+        for <code>n ≠ n′</code> the power spectrum is a cross term and can be
+        negative. Click a box to inspect it.</p>
+      <div class="grid2" style="align-items:start">
+        <div><div class="canvas-label">all values · heatmap</div><canvas id="heatmap" width="520" height="360"></canvas></div>
+        <div><div class="canvas-label">bar view · selected l</div><canvas id="spectrumBars" width="520" height="360"></canvas></div>
+      </div>
+      <div class="colorbar"><span>0</span><i></i><span id="heatMax">–</span></div>
+      <div id="cellInfo" class="note"></div>
+      <div id="topComponents" class="toplist"></div>
+      <details class="code-panel" style="margin-top:12px">
+        <summary>show every value for this species pair</summary>
+        <div id="spectrumTable" style="padding:10px 14px"></div>
+      </details>
+      <p class="note" id="heatNote"></p>
+    </div>
+  </section>
+
   <section id="compression">
-    <h2>7 · Compression: from hundreds of numbers to a map</h2>
+    <h2>8 · Compression: from hundreds of numbers to a map</h2>
     <p class="sub">
       SOAP vectors are high-dimensional and grow with the number of species.
       The <strong>mu1nu1</strong> scheme from Darby et al. compresses the
@@ -440,7 +479,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="dimension">
-    <h2>8 · The dimensionality problem</h2>
+    <h2>9 · The dimensionality problem</h2>
     <p class="sub">
       The uncompressed power spectrum grows with the <em>square</em> of the number
       of species-resolved radial channels. On a three-element demo that is 390
@@ -470,7 +509,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="localglobal">
-    <h2>9 · Local fingerprint vs global fingerprint</h2>
+    <h2>10 · Local fingerprint vs global fingerprint</h2>
     <p class="sub">
       Everything in the 3D scene is a <strong>local</strong> SOAP vector: one
       descriptor for one central atom and its neighbours. A materials property
@@ -514,7 +553,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="limits">
-    <h2>10 · What to remember</h2>
+    <h2>11 · What to remember</h2>
     <div class="card">
       <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
         invariant, fixed-length, and interpretable through its radial/angular
