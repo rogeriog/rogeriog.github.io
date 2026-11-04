@@ -879,8 +879,9 @@ let integCutoff = 4;
 let integRot = 0;
 let rebuildIntegral = () => {};
 
-function integAtoms() {
-  const base = DATA.presets[integGeom].atoms.slice(1).map((a) => ({
+function integAtoms(includeCenter) {
+  const all = DATA.presets[integGeom].atoms;
+  const base = (includeCenter ? all : all.slice(1)).map((a) => ({
     x: a.position[0], y: a.position[1], z: a.position[2],
   }));
   const t = integRot * Math.PI / 180;
@@ -923,8 +924,10 @@ function buildIntegPoints() {
     return { pts };
   }
   if (sampleMode === "sites") {
-    const w = 1 / atoms.length * SCALE;
-    atoms.forEach((a) => pts.push({
+    // include ALL atoms (central + neighbors) as sample points
+    const allAtoms = integAtoms(true);
+    const w = 1 / allAtoms.length * SCALE;
+    allAtoms.forEach((a) => pts.push({
       x: a.x, y: a.y, z: a.z,
       rho: densityAtoms(atoms, a.x, a.y, a.z), w,
     }));
@@ -1488,6 +1491,16 @@ function buildSpecAtoms() {
   const p = DATA.presets[preset];
   if (!p) return;
   const atoms = p.atoms;
+
+  // populate atom list for section 7
+  const listEl = document.getElementById("specAtomList");
+  if (listEl) {
+    listEl.innerHTML = atoms.map((a, i) => {
+      const role = i === 0 ? " (central)" : "";
+      const col = COLORS[a.symbol] || "#ffffff";
+      return `<span><b style="color:${col}">${a.symbol}${role}</b> [${a.position.map(v => v.toFixed(2)).join(", ")}]</span>`;
+    }).join("");
+  }
 
   // central atom
   grp.add(new THREE.Mesh(
