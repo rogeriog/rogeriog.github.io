@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOAP compression schemes — mu1nu1 explorer</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08060a;--border:rgba(214,160,180,.14);--text:#eee9ee;--muted:#a79ba6;--dim:#6e5f6e;
+--red:#ff3d5a;--blue:#5a6cff;--ice:#45d6ff}
+*{box-sizing:border-box}
+body{margin:0;background:
+ radial-gradient(900px 600px at 8% -5%, rgba(120,18,40,.28), transparent 65%),
+ radial-gradient(760px 620px at 95% 15%, rgba(30,45,120,.24), transparent 70%),
+ var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;padding:18px}
+h1{font-family:'Space Grotesk';font-size:1.3rem;margin:0 0 6px}
+h1 em{font-style:normal;color:var(--red)}
+p{color:var(--muted);font-size:.85rem;margin:6px 0 12px}
+code{color:var(--ice);font-size:.85em}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+button.pill{font:inherit;font-size:.76rem;padding:6px 12px;border-radius:10px;cursor:pointer;
+ color:var(--muted);background:transparent;border:1px solid var(--border);transition:.18s}
+button.pill:hover{color:var(--text);border-color:var(--red)}
+button.pill[aria-pressed="true"]{color:#14060a;background:var(--red);border-color:var(--red);font-weight:600}
+.slider{display:flex;align-items:center;gap:10px;font-size:.76rem;color:var(--muted);margin:6px 0 10px}
+.slider input{flex:1;accent-color:var(--red)}
+.slider span{color:var(--ice);min-width:26px;text-align:right}
+.kv{display:flex;gap:22px;flex-wrap:wrap;margin:8px 0 12px}
+.kv b{font-family:'Space Grotesk';font-size:1.35rem;color:var(--ice);display:block;line-height:1.1}
+.kv small{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+canvas{width:100%;height:auto;display:block;background:#0d090d;border-radius:10px}
+.note{font-size:.74rem;color:var(--dim);margin:10px 0 2px}
+.note strong{color:var(--muted)}
+.formula{font-family:ui-monospace,monospace;font-size:.85rem;background:#0d090d;border:1px solid var(--border);
+ border-radius:8px;padding:8px 12px;margin:10px 0;overflow-x:auto}
+.formula.accent{color:var(--ice);border-color:rgba(69,214,255,.3)}
+a{color:var(--red)}
+footer{margin-top:16px;font-size:.72rem;color:var(--dim)}
+</style>
+</head>
+<body>
+<h1>SOAP <em>compression schemes</em> — off · crossover · mu1nu1 · mu2</h1>
+<p>The uncompressed SOAP power spectrum pairs every species-resolved radial channel with every other:
+ with <em>S</em> species and n<sub>max</sub>=4 there are S·4 channels and the upper triangle of all their
+ products is stored — length grows like <strong>S²</strong>. Darby et al.'s <strong>mu1nu1</strong>
+ (implemented in dscribe as <code>compression={"mode":"mu1nu1"}</code>) replaces the second factor with a
+ sum over all species:
+</p>
+<div class="formula accent">p<sup>Z₁,Z₂</sup><sub>nn′l</sub> = Σ<sub>m</sub> (c<sup>Z₁</sup><sub>nlm</sub>)* · (Σ<sub>z</sub> c<sup>z</sup><sub>n′lm</sub>)</div>
+<p>One species index survives, the pair structure collapses, and the length scales <strong>linearly</strong> with S.</p>
+<div class="controls" id="compModes"></div>
+<label class="slider">species in the dataset <input id="compSpecies" type="range" min="1" max="12" step="1" value="3"><span id="compSpeciesVal">3</span></label>
+<div class="kv">
+  <div><b id="compLen">–</b><small>descriptor length</small></div>
+  <div><b id="compBlocks">–</b><small>channel blocks</small></div>
+  <div><b id="compMode">–</b><small>scheme</small></div>
+</div>
+<canvas id="compBlocksCanvas" width="900" height="300"></canvas>
+<div id="compNote" class="note"></div>
+<p class="note"><strong>Real dscribe anchors at S=3:</strong> off 390 · mu1nu1 240 · crossover 150 · mu2 50.
+ At S=20 (MP-20): off 16 200 · mu1nu1 1 600 · crossover 2 000 · mu2 50.
+ At S=89 (full MP): off 317 730 · mu1nu1 7 120 · crossover 8 950 · mu2 50.</p>
+<p class="note"><strong>What each scheme keeps:</strong> off keeps everything (species pairs); mu1nu1 keeps
+ species identity on one side but sums the other over species; crossover keeps per-species blocks but drops
+ cross-species terms; mu2 is element-agnostic. Accuracy loss is usually modest versus the dimensional savings.</p>
+<footer>Standalone widget · part of <a href="../">SOAP in 3D</a> · not indexed</footer>
+<script>
+const SCHEMES={
+ off:{label:"uncompressed",len:(S)=>(S*4)*(S*4+1)/2*5,
+   note:(S)=>`The upper triangle of a ${S*4}×${S*4} channel grid — every species pair (Z₁,Z₂) with Z₂ ≥ Z₁ is its own block. Length grows like S².`},
+ mu1nu1:{label:"mu1nu1 (Darby)",len:(S)=>16*S*5,
+   note:(S)=>`One full n×n′ block per species Z₁; the second factor sums over all species (Σ_z). Species identity survives on one side only — between "off" and "mu2". Linear in S.`},
+ crossover:{label:"crossover",len:(S)=>S*10*5,
+   note:(S)=>`Each species keeps its own upper-triangle block, but cross-species (Z₁≠Z₂) information is dropped entirely. Linear in S.`},
+ mu2:{label:"mu2",len:()=>50,
+   note:(S)=>`Species labels removed completely: one element-agnostic upper triangle. Constant length regardless of S — the most compressed, least element-specific.`}};
+let mode="off";
+function counts(S){return{off:(S*4)*(S*4+1)/2*5,mu1nu1:16*S*5,crossover:S*10*5,mu2:50}}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);
+ ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function draw(){
+ const cv=document.getElementById("compBlocksCanvas"),ctx=cv.getContext("2d");
+ const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
+ const S=+document.getElementById("compSpecies").value;
+ const scheme=SCHEMES[mode];
+ ctx.font="11px Inter,sans-serif";ctx.fillStyle="#6e5f6e";ctx.textAlign="left";
+ ctx.fillText(mode==="off"?"each cell-set = one (Z₁,Z₂) species-pair block of n×n′ radial channels":"each cell-set = one species block of n×n′ radial channels",16,20);
+ let blocks=[];
+ if(mode==="off"){for(let z1=0;z1<S;z1++)for(let z2=z1;z2<S;z2++)blocks.push([z1,z2])}
+ else if(mode==="mu2"){blocks.push([0,0])}
+ else{for(let z1=0;z1<S;z1++)blocks.push([z1,z1])}
+ const pad=24,area=W-2*pad;
+ const cols=Math.ceil(Math.sqrt(blocks.length)),rows=Math.ceil(blocks.length/cols);
+ const bw=Math.min(64,(area/cols)-8),bh=Math.min(52,(H-80)/rows-8);
+ blocks.forEach(([z1,z2],i)=>{
+  const cx=pad+(i%cols)*(bw+8),cy=40+Math.floor(i/cols)*(bh+8);
+  const hue=200+(z1*47+z2*31)%140;
+  ctx.fillStyle=`hsla(${hue},70%,55%,0.55)`;ctx.strokeStyle="rgba(214,160,180,.35)";
+  roundRect(ctx,cx,cy,bw,bh,6);ctx.fill();ctx.stroke();
+  if(bw>40){ctx.fillStyle="#eee9ee";ctx.textAlign="center";
+   const lbl=mode==="off"?`${z1}${z2}`:(mode==="mu2"?"Σ":"Z"+(z1+1));
+   ctx.fillText(lbl,cx+bw/2,cy+bh/2+4)}});
+ const c=counts(S);
+ const names=[["off","off"],["mu1nu1","mu1nu1"],["crossover","cross"],["mu2","mu2"]];
+ const maxLen=Math.max(...Object.values(c));
+ const barY=H-56,barH=34,bw2=(W-2*pad-60)/4;
+ names.forEach(([k,lbl],i)=>{
+  const x=pad+50+i*bw2;const h=(c[k]/maxLen)*(barH-6)+4;
+  ctx.fillStyle=k===mode?"#ff3d5a":"rgba(90,108,255,.45)";
+  ctx.fillRect(x,barY+barH-h,bw2-12,h);
+  ctx.fillStyle="#a79ba6";ctx.textAlign="center";
+  ctx.fillText(lbl+" · "+c[k].toLocaleString(),x+(bw2-12)/2,H-10)});
+ ctx.fillStyle="#6e5f6e";ctx.textAlign="left";ctx.fillText("length at S="+S,pad,barY-8);
+ document.getElementById("compLen").textContent=scheme.len(S).toLocaleString();
+ document.getElementById("compBlocks").textContent=blocks.length;
+ document.getElementById("compMode").textContent=scheme.label;
+ document.getElementById("compNote").innerHTML="<strong>"+scheme.label+":</strong> "+scheme.note(S)
+  +' <em>Real dscribe anchors at S=3:</em> off 390 · mu1nu1 240 · crossover 150 · mu2 50.';
+}
+const modes=document.getElementById("compModes");
+Object.entries(SCHEMES).forEach(([k,v])=>{
+ const b=document.createElement("button");b.className="pill";b.textContent=v.label;
+ b.setAttribute("aria-pressed",k===mode);
+ b.onclick=()=>{mode=k;[...modes.children].forEach(x=>x.setAttribute("aria-pressed",x===b));draw()};
+ modes.appendChild(b)});
+const slider=document.getElementById("compSpecies");
+slider.oninput=()=>{document.getElementById("compSpeciesVal").textContent=slider.value;draw()};
+draw();
+</script>
+</body>
+</html>

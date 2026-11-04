@@ -408,6 +408,7 @@ async function init() {
   initDimension();
   initSH();
   initRotation();
+  initCompressionExplorer();
   initIntegration();
   initIntegControls();
   window.addEventListener("resize", resize);
@@ -1354,4 +1355,132 @@ function drawRotation() {
 function initRotation() {
   $("rotAngle").oninput = drawRotation;
   drawRotation();
+}
+
+/* ---------------- mu1nu1 compression explorer ---------------- */
+const COMP_SCHEMES = {
+  off:      { label: "uncompressed", len: (S) => (S*4)*(S*4+1)/2*5, blocks: (S) => S*(S+1)/2*16,
+              note: (S,n) => `The upper triangle of a ${S*4}×${S*4} channel grid — every species pair (Z₁,Z₂) with Z₂ ≥ Z₁ is its own block. Length grows like S².` },
+  mu1nu1:   { label: "mu1nu1 (Darby)", len: (S) => 16*S*5, blocks: (S) => S*16,
+              note: (S,n) => `One full n×n′ block per species Z₁; the second factor sums over all species (Σ_z). Species identity survives on one side only — between "off" and "mu2". Length grows like S.` },
+  crossover:{ label: "crossover", len: (S) => S*10*5, blocks: (S) => S*10,
+              note: (S,n) => `Each species keeps its own upper-triangle block, but cross-species (Z₁≠Z₂) information is dropped entirely. Linear in S.` },
+  mu2:      { label: "mu2", len: () => 10*5, blocks: () => 10,
+              note: (S,n) => `Species labels removed completely: one element-agnostic upper triangle. Constant length regardless of S — the most compressed, least element-specific.` },
+};
+let compMode = "off";
+
+function compCounts(S) {
+  return {
+    off: (S*4)*(S*4+1)/2*5,
+    mu1nu1: 16*S*5,
+    crossover: S*10*5,
+    mu2: 10*5,
+  };
+}
+
+function drawCompBlocks() {
+  const cv = $("compBlocksCanvas");
+  if (!cv) return;
+  const ctx = cv.getContext("2d");
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  const S = Number($("compSpecies").value);
+  const scheme = COMP_SCHEMES[compMode];
+  const nmax = 4;
+
+  ctx.font = "11px Inter, sans-serif";
+  ctx.fillStyle = "#6e5f6e";
+  ctx.textAlign = "left";
+  ctx.fillText(compMode === "off"
+    ? "each coloured cell-set = one (Z₁,Z₂) species-pair block of n×n′ radial channels"
+    : "each coloured cell-set = one species block of n×n′ radial channels", 16, 20);
+
+  // draw channel blocks
+  let blocks = [];
+  if (compMode === "off") {
+    for (let z1 = 0; z1 < S; z1++) for (let z2 = z1; z2 < S; z2++) blocks.push([z1, z2]);
+  } else if (compMode === "mu1nu1") {
+    for (let z1 = 0; z1 < S; z1++) blocks.push([z1, z1]);
+  } else if (compMode === "crossover") {
+    for (let z1 = 0; z1 < S; z1++) blocks.push([z1, z1]);
+  } else {
+    blocks.push([0, 0]);
+  }
+
+  const pad = 24, area = W - 2 * pad;
+  const cols = Math.ceil(Math.sqrt(blocks.length));
+  const rows = Math.ceil(blocks.length / cols);
+  const bw = Math.min(64, (area / cols) - 8);
+  const bh = Math.min(52, (H - 80) / rows - 8);
+  blocks.forEach(([z1, z2], i) => {
+    const cx = pad + (i % cols) * (bw + 8);
+    const cy = 40 + Math.floor(i / cols) * (bh + 8);
+    const hue = 200 + (z1 * 47 + z2 * 31) % 140;
+    ctx.fillStyle = `hsla(${hue},70%,55%,0.55)`;
+    ctx.strokeStyle = "rgba(214,160,180,.35)";
+    roundRect(ctx, cx, cy, bw, bh, 6);
+    ctx.fill(); ctx.stroke();
+    if (bw > 40) {
+      ctx.fillStyle = "#eee9ee"; ctx.textAlign = "center";
+      const lbl = compMode === "off" ? `${z1}${z2}` : (compMode === "mu2" ? "Σ" : `Z${z1+1}`);
+      ctx.fillText(lbl, cx + bw/2, cy + bh/2 + 4);
+    }
+  });
+
+  // length bars for all schemes at this S
+  const c = compCounts(S);
+  const names = [["off","off"],["mu1nu1","mu1nu1"],["crossover","cross"],["mu2","mu2"]];
+  const maxLen = Math.max(...Object.values(c));
+  const barY = H - 56, barH = 34;
+  const bw2 = (W - 2*pad - 60) / 4;
+  names.forEach(([k, lbl], i) => {
+    const x = pad + 50 + i * bw2;
+    const h = (c[k] / maxLen) * (barH - 6) + 4;
+    ctx.fillStyle = k === compMode ? "#ff3d5a" : "rgba(90,108,255,.45)";
+    ctx.fillRect(x, barY + barH - h, bw2 - 12, h);
+    ctx.fillStyle = "#a79ba6"; ctx.textAlign = "center";
+    ctx.fillText(lbl + " · " + c[k].toLocaleString(), x + (bw2 - 12)/2, H - 10);
+  });
+  ctx.fillStyle = "#6e5f6e"; ctx.textAlign = "left";
+  ctx.fillText("length at S=" + S, pad, barY - 8);
+
+  $("compLen").textContent = scheme.len(S).toLocaleString();
+  $("compBlocks").textContent = blocks.length;
+  $("compMode").textContent = scheme.label;
+  $("compNote").innerHTML = "<strong>" + scheme.label + ":</strong> " + scheme.note(S, nmax)
+    + ` <em>Real dscribe anchors at S=3:</em> off 390 · mu1nu1 240 · crossover 150 · mu2 50.`;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function initCompressionExplorer() {
+  const slider = $("compSpecies");
+  if (!slider) return;
+  const modes = $("compModes");
+  Object.entries(COMP_SCHEMES).forEach(([k, v]) => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.textContent = v.label;
+    b.setAttribute("aria-pressed", k === compMode);
+    b.onclick = () => {
+      compMode = k;
+      [...modes.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
+      drawCompBlocks();
+    };
+    modes.appendChild(b);
+  });
+  slider.oninput = () => {
+    $("compSpeciesVal").textContent = slider.value;
+    drawCompBlocks();
+  };
+  drawCompBlocks();
 }

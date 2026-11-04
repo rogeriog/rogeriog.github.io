@@ -93,6 +93,7 @@
           <div class="kv"><div><b id="shLm">–</b><small>selected harmonic</small></div></div>
           <div class="formula" id="shFormula" style="font-size:.86rem">–</div>
           <p class="note" id="shExplain"></p>
+      <p class="note">Standalone version: <a href="embed/harmonics.html">garden/soap-in-3d/embed/harmonics.html</a> (accepts <code>?l=2&m=1</code>)</p>
         </div>
       </div>
     </div>
@@ -262,6 +263,29 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       length then scales linearly rather than quadratically with the number of
       elements.
     </p>
+    <h3>Inside mu1nu1 — how the species dimension collapses</h3>
+    <div class="card">
+      <p class="note" style="margin-top:0">Uncompressed SOAP pairs <em>every</em>
+        species-resolved radial channel with every other: with <code>S</code> species
+        and <code>n<sub>max</sub>=4</code> radial functions there are
+        <code>S·4</code> channels, and the power spectrum stores the upper-triangle
+        pairs of all of them. <strong>mu1nu1</strong> (Darby et al., implemented in
+        dscribe as <code>compression=&#123;"mode":"mu1nu1"&#125;</code>) replaces the
+        second factor of each product with a sum over <em>all</em> species:
+        <code>p<sup>Z₁,Z₂</sup><sub>nn′l</sub> = Σ<sub>m</sub> (c<sup>Z₁</sup><sub>nlm</sub>)* · (Σ<sub>z</sub> c<sup>z</sup><sub>n′lm</sub>)</code>.
+        One species index survives, the pair structure collapses, and the length
+        scales linearly with <code>S</code> instead of quadratically.</p>
+      <div class="controls" id="compModes"></div>
+      <label class="slider">species in the dataset <input id="compSpecies" type="range" min="1" max="12" step="1" value="3"><span id="compSpeciesVal">3</span></label>
+      <div class="kv">
+        <div><b id="compLen">–</b><small>descriptor length</small></div>
+        <div><b id="compBlocks">–</b><small>channel blocks</small></div>
+        <div><b id="compMode">–</b><small>scheme</small></div>
+      </div>
+      <canvas id="compBlocksCanvas" width="900" height="300"></canvas>
+      <div id="compNote" class="note"></div>
+    </div>
+
     <div class="card">
       <div class="controls">
         <button class="pill" data-pca="off" aria-pressed="true">PCA on uncompressed</button>
@@ -282,11 +306,12 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
         spectrum scales as <code>(n_species·n_max)(n_species·n_max+1)/2·(l_max+1)</code>.
         mu1nu1 keeps species identity but removes the explicit species-pair
         cross terms; mu2 goes further and drops species labels entirely.</p>
+      <p class="note">Standalone version: <a href="embed/compression.html">garden/soap-in-3d/embed/compression.html</a></p>
     </div>
   </section>
 
   <section id="dimension">
-    <h2>9 · The dimensionality problem</h2>
+    <h2>8 · The dimensionality problem</h2>
     <p class="sub">
       The uncompressed power spectrum grows with the <em>square</em> of the number
       of species-resolved radial channels. On a three-element demo that is 390
@@ -316,7 +341,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="localglobal">
-    <h2>10 · Local fingerprint vs global fingerprint</h2>
+    <h2>9 · Local fingerprint vs global fingerprint</h2>
     <p class="sub">
       Everything in the 3D scene is a <strong>local</strong> SOAP vector: one
       descriptor for one central atom and its neighbours. A materials property
@@ -404,7 +429,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="limits">
-    <h2>11 · What to remember</h2>
+    <h2>10 · What to remember</h2>
     <div class="card">
       <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
         invariant, fixed-length, and interpretable through its radial/angular
