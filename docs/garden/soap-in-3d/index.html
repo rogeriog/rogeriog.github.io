@@ -231,24 +231,23 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
             <div><b id="intProgress">0%</b><small>samples</small></div>
           </div>
           <div class="progress"><i id="intBar"></i></div>
-          <p class="note" style="margin:4px 0 2px"><strong>Sampling strategy</strong> — how the 3D space is probed:</p>
-          <div class="controls" id="sampleModes">
-            <button class="pill" data-sample="grid" aria-pressed="true">uniform grid</button>
-            <button class="pill" data-sample="random" aria-pressed="false">random sphere</button>
-            <button class="pill" data-sample="cloud" aria-pressed="false">density cloud</button>
-            <button class="pill" data-sample="sites" aria-pressed="false">atomic sites</button>
-          </div>
-          <p class="note" style="margin:4px 0 2px"><strong>Atomic environment</strong> — geometry that defines the density ρ(<b>r</b>):</p>
-          <div class="controls" id="integGeomButtons"></div>
+          <div class="controls" style="margin-top:12px" id="integGeomButtons"></div>
           <label class="slider">rotate geometry <input id="integRot" type="range" min="0" max="180" step="1" value="0"><span id="integRotVal">0°</span></label>
           <label class="slider">cutoff r<sub>c</sub> <input id="integCut" type="range" min="2" max="6" step="0.1" value="4"><span id="integCutVal">4.0 Å</span></label>
+          <div class="controls" style="margin-top:12px" id="sampleModes">
+            <button class="pill" data-sample="grid" aria-pressed="true">uniform grid</button>
+            <button class="pill" data-sample="random" aria-pressed="false">random sphere</button>
+            <button class="pill" data-sample="cloud" aria-pressed="false">atom cloud</button>
+            <button class="pill" data-sample="sites" aria-pressed="false">atomic sites</button>
+          </div>
           <p class="note" style="margin:6px 0 4px"><strong>Try the sampling modes:</strong>
-            <em>uniform grid</em> and <em>random sphere</em> sample all of 3D space
-            independently of the geometry — the geometry only defines where atoms
-            sit and thus what the density ρ(r) looks like at each sample point.
-            <em>Density cloud</em> draws samples concentrated around atom positions
-            (importance sampling). <em>Atomic sites</em> places one point per atom
-            (central + neighbors): the dimer has 2 atoms → 2 points.</p>
+            the neighbor <em>density</em> ρ(r) is concentrated around atom positions —
+            it is not spherically symmetric. So even a uniform grid gives non-trivial
+            <code>l&gt;0</code> coefficients: each grid point is weighted by the local
+            density value, which breaks symmetry wherever neighbors sit off-centre.
+            Only a perfectly spherically symmetric density would make all <code>l&gt;0</code>
+            coefficients vanish. <em>Atomic-sites</em> mode places one point per
+            neighbor (the dimer has one neighbor → one point; that is correct).</p>
           <div class="controls" style="margin-top:4px">
             <button class="pill primary" id="intPlay">play all</button>
             <button class="pill" id="intPause">pause</button>
@@ -282,25 +281,24 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     <div class="card">
       <div class="grid2" style="align-items:start;margin-bottom:14px">
         <div>
-          <div class="canvas-label">asymmetric test cluster</div>
-          <canvas id="rotScene" width="540" height="340" style="width:100%;height:auto;display:block;border-radius:10px;background:radial-gradient(circle at 50% 45%, #1a1020, #08060a 70%);cursor:grab"></canvas>
-          <p class="note" style="margin-top:6px"><strong>Molecule:</strong></p>
-          <div class="controls" id="rotPresetButtons"></div>
-          <p class="note" style="margin-top:6px">The central atom (atom 0, shown dark) stays fixed
-            at the origin; all other atoms rotate around z. Drag the slider to rotate.</p>
+          <p class="note" style="margin-top:0"><strong>The test cluster:</strong>
+            a central atom (grey) with four asymmetric neighbors — one close along
+            x, one above and to the left, one below, one far along z. The asymmetry
+            is deliberate: a symmetric cluster (tetrahedral/octahedral) would give
+            nearly zero <code>l&gt;0</code> coefficients and show little change on
+            rotation.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);margin:6px 0">
+            <span style="color:var(--ice)">● central (0,0,0)</span>
+            <span>● (1.35, 0.05, 0)</span>
+            <span>● (−0.55, 1.15, 0.15)</span>
+            <span>● (−0.55, −1.00, 0.35)</span>
+            <span>● (0.10, 0.15, 1.50)</span>
+          </div>
         </div>
         <div>
           <div class="kv">
             <div><b id="rotCChange">–</b><small>Σ |Δc|</small></div>
             <div><b id="rotPChange">–</b><small>Σ |Δp|</small></div>
-          </div>
-          <p class="note" style="margin:0 0 4px"><strong>Coordinates:</strong></p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);margin:0 0 10px">
-            <span style="color:var(--ice)">● (0,0,0)</span>
-            <span>● (1.35,0.05,0)</span>
-            <span>● (−0.55,1.15,0.15)</span>
-            <span>● (−0.55,−1.00,0.35)</span>
-            <span>● (0.10,0.15,1.50)</span>
           </div>
         </div>
       </div>
@@ -380,27 +378,15 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       radial channel <code>n</code> with every <code>n′ ≥ n</code> and sums
       over <code>m</code>. The result is a fixed-length vector of real numbers
       that is invariant to rotation. Each cell below is one <code>(n, n′, l)</code>
-      value. Switch presets to compare fingerprints across molecules — including
-      water and CO₂.
+      value for the <strong>tetrahedral</strong> geometry (the default preset).
+      Change the cutoff and watch the fingerprint change.
     </p>
     <div class="card">
-      <p class="note" style="margin-top:0"><strong>Molecule:</strong></p>
-      <div class="controls" id="specPresetButtons" style="margin:0 0 14px"></div>
-      <div class="grid2" style="align-items:start;margin-bottom:14px">
-        <div>
-          <div class="callout" style="margin:0 0 10px">
-            <strong>Central atom:</strong> SOAP always describes the local environment
-            of <em>one</em> atom — the <strong>central atom</strong> (shown larger, in dark).
-            The spectrum below is computed for <strong>atom 0</strong> (the first atom in
-            each preset). All neighbors within the cutoff contribute to its density.
-          </div>
-          <div id="specAtomList" class="toplist" style="margin:0"></div>
-        </div>
-        <div>
-          <div class="canvas-label">current geometry · central atom highlighted</div>
-          <canvas id="spectrumScene" width="540" height="260" style="width:100%;height:auto;display:block;border-radius:10px;background:radial-gradient(circle at 50% 45%, #1a1020, #08060a 70%);cursor:grab"></canvas>
-          <p class="hint" style="position:static;margin-top:4px">drag to orbit · the large dark sphere is the central atom whose spectrum is shown</p>
-        </div>
+      <div class="callout" style="margin-bottom:12px">
+        <strong>Geometry used here:</strong> tetrahedral cluster (4 neighbors at
+        ~1.9 Å, symmetric). The values shown are real dscribe SOAP outputs for
+        the central atom of the central-atom-to-neighbors system.
+        Switch preset in section 1 to see how the fingerprint changes.
       </div>
       <div class="controls">
         <button class="pill" data-mode="off" aria-pressed="true">uncompressed</button>
@@ -440,17 +426,23 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     <h2>8 · Compression: from hundreds of numbers to a map</h2>
     <p class="sub">
       SOAP vectors are high-dimensional and grow with the number of species.
-      Several compression schemes trade off information for compactness:
-      <strong>mu1nu1</strong> (Darby et al.) keeps one species index,
-      <strong>crossover</strong> retains only same-species blocks, and
-      <strong>mu2</strong> drops species labels entirely. For 3 species,
-      the uncompressed descriptor has 390 values; mu1nu1 keeps 240, crossover 150,
-      and mu2 just 50 — all without retraining the basis.
+      The <strong>mu1nu1</strong> scheme from Darby et al. compresses the
+      species dimension: for 3 species it cuts 390 numbers to 240, and the
+      length then scales linearly rather than quadratically with the number of
+      elements.
     </p>
+    <h3>Inside mu1nu1 — how the species dimension collapses</h3>
     <div class="card">
-      <p class="note" style="margin-top:0">The matrix below shows how each scheme
-        restructures the species-pair block grid. Switch modes and drag the species
-        slider to see the effect on descriptor length.</p>
+      <p class="note" style="margin-top:0">Uncompressed SOAP pairs <em>every</em>
+        species-resolved radial channel with every other: with <code>S</code> species
+        and <code>n<sub>max</sub>=4</code> radial functions there are
+        <code>S·4</code> channels, and the power spectrum stores the upper-triangle
+        pairs of all of them. <strong>mu1nu1</strong> (Darby et al., implemented in
+        dscribe as <code>compression=&#123;"mode":"mu1nu1"&#125;</code>) replaces the
+        second factor of each product with a sum over <em>all</em> species:
+        <code>p<sup>Z₁,Z₂</sup><sub>nn′l</sub> = Σ<sub>m</sub> (c<sup>Z₁</sup><sub>nlm</sub>)* · (Σ<sub>z</sub> c<sup>z</sup><sub>n′lm</sub>)</code>.
+        One species index survives, the pair structure collapses, and the length
+        scales linearly with <code>S</code> instead of quadratically.</p>
       <div class="controls" id="compModes"></div>
       <label class="slider">species in the dataset <input id="compSpecies" type="range" min="1" max="12" step="1" value="3"><span id="compSpeciesVal">3</span></label>
       <div class="kv">
@@ -458,9 +450,8 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
         <div><b id="compBlocks">–</b><small>channel blocks</small></div>
         <div><b id="compMode">–</b><small>scheme</small></div>
       </div>
-      <canvas id="compBlocksCanvas" width="900" height="480"></canvas>
+      <canvas id="compBlocksCanvas" width="900" height="300"></canvas>
       <div id="compNote" class="note"></div>
-      <div id="compModeDesc" class="callout" style="margin-top:16px"></div>
     </div>
 
     <div class="card">

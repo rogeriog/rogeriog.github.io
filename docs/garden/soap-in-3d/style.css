@@ -148,12 +148,15 @@ details.code-panel summary::-webkit-details-marker{display:none}
 details.code-panel pre{background:#0d090d;border:1px solid var(--border);border-radius:8px;
   padding:12px 14px;font-size:.74rem;color:var(--muted);overflow-x:auto;margin:6px 0 0}
 
+/* dim chart side-by-side: collapse on narrow */
+@media(max-width:640px){#dimChart,#dimChartLin{margin-bottom:12px}}
+
 /* ---- mobile overflow fixes ---- */
 /* harmonics gallery: let the grid fit any viewport instead of fixed column counts */
 .sh-grid{grid-template-columns:repeat(auto-fill,minmax(64px,1fr))!important}
 @media(min-width:900px){.sh-grid{grid-template-columns:repeat(9,1fr)!important}}
 /* all fixed-width canvases must shrink to their container */
-#shDetail,#sh3d,#spectrumBars,#dimChart,#heatmap,#pca,#integrand3d,#compBlocksCanvas,#rbasisCanvas,#speciesCanvas{width:100%;height:auto;display:block}
+#shDetail,#sh3d,#spectrumBars,#dimChart,#dimChartLin,#heatmap,#pca,#integrand3d,#compBlocksCanvas,#rbasisCanvas,#speciesCanvas{width:100%;height:auto;display:block}
 /* formulas and code panels scroll instead of pushing the page wide */
 .formula,.code-panel pre,.kv{overflow-x:auto;max-width:100%}
 .grid2{min-width:0}

@@ -179,12 +179,7 @@ function initSceneControls() {
     b.onclick = () => {
       preset = key;
       [...pc.children].forEach((c) => c.setAttribute("aria-pressed", c === b));
-      // sync section-7 preset buttons
-      document.querySelectorAll("#specPresetButtons button").forEach((x) => {
-        x.setAttribute("aria-pressed", x.textContent === p.label);
-      });
       buildScene();
-      buildSpecAtoms();
       renderHeatmap();
     };
     pc.appendChild(b);
@@ -362,7 +357,7 @@ function renderPCA() {
   ctx.fillText("PC1", W - 46, sy(0) - 8);
   ctx.fillText("PC2", sx(0) + 8, pad + 12);
   const ev = DATA.compression.explained_variance[pcaMode];
-  $("pcaVar").textContent = (ev * 100).toFixed(1) + "%";
+  $("pcaVar").textContent = ((ev[0] + ev[1]) * 100).toFixed(1) + "%";
 }
 
 function initSpectrumControls() {
@@ -413,8 +408,6 @@ async function init() {
   initDimension();
   initSH();
   initRotation();
-  initSpectrumScene();
-  initSpectrumPresets();
   initCompressionExplorer();
   initIntegration();
   initIntegControls();
@@ -879,14 +872,13 @@ function updateSH3D(l, m) {
 /* ---------------- integration animation (geometry-aware) ---------------- */
 let integ = null;
 let sampleMode = "grid";
-let integGeom = "perovskite";
+let integGeom = "tetra";
 let integCutoff = 4;
 let integRot = 0;
 let rebuildIntegral = () => {};
 
-function integAtoms(includeCenter) {
-  const all = DATA.presets[integGeom].atoms;
-  const base = (includeCenter ? all : all.slice(1)).map((a) => ({
+function integAtoms() {
+  const base = DATA.presets[integGeom].atoms.slice(1).map((a) => ({
     x: a.position[0], y: a.position[1], z: a.position[2],
   }));
   const t = integRot * Math.PI / 180;
@@ -929,10 +921,8 @@ function buildIntegPoints() {
     return { pts };
   }
   if (sampleMode === "sites") {
-    // include ALL atoms (central + neighbors) as sample points
-    const allAtoms = integAtoms(true);
-    const w = 1 / allAtoms.length * SCALE;
-    allAtoms.forEach((a) => pts.push({
+    const w = 1 / atoms.length * SCALE;
+    atoms.forEach((a) => pts.push({
       x: a.x, y: a.y, z: a.z,
       rho: densityAtoms(atoms, a.x, a.y, a.z), w,
     }));
@@ -1290,24 +1280,13 @@ function initIntegControls() {
 }
 
 /* ---------------- rotation invariance ---------------- */
-// fallback asymmetric cluster used when DATA not yet loaded
-const ROT_ATOMS_DEFAULT = [
+const ROT_ATOMS = [
   { x: 0, y: 0, z: 0 },
   { x: 1.35, y: 0.05, z: 0.0 },
   { x: -0.55, y: 1.15, z: 0.15 },
   { x: -0.55, y: -1.00, z: 0.35 },
   { x: 0.10, y: 0.15, z: 1.50 },
 ];
-let rotPreset = "tetra"; // molecule used in the rotation demo
-
-function getRotAtoms() {
-  if (DATA && DATA.presets[rotPreset]) {
-    return DATA.presets[rotPreset].atoms.map((a) => ({
-      x: a.position[0], y: a.position[1], z: a.position[2],
-    }));
-  }
-  return ROT_ATOMS_DEFAULT;
-}
 
 function densityAtoms(atoms, x, y, z, sig = sigma) {
   let rho = 0;
@@ -1321,7 +1300,7 @@ function densityAtoms(atoms, x, y, z, sig = sigma) {
 
 function rotatedAtoms(deg) {
   const t = deg * Math.PI / 180;
-  return getRotAtoms().map((a) => ({
+  return ROT_ATOMS.map((a) => ({
     x: a.x * Math.cos(t) - a.y * Math.sin(t),
     y: a.x * Math.sin(t) + a.y * Math.cos(t),
     z: a.z,
@@ -1384,211 +1363,9 @@ function drawRotation() {
   $("rotPChange").textContent = (100 * dp / (p0sum || 1)).toFixed(2) + "%";
 }
 
-let rotScene3d = null;
-
-function initRotScene() {
-  const canvas = $("rotScene");
-  if (!canvas) return;
-  const ren = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  ren.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  ren.setSize(canvas.clientWidth || 540, canvas.clientHeight || 340, false);
-  const sc = new THREE.Scene();
-  const cam = new THREE.PerspectiveCamera(38, (canvas.clientWidth||540)/(canvas.clientHeight||340), 0.1, 30);
-  cam.position.set(3.0, 2.5, 4.0);
-  const ctrl = new OrbitControls(cam, canvas);
-  ctrl.enableDamping = true;
-  sc.add(new THREE.AmbientLight(0xffffff, 0.8));
-  sc.add(new THREE.DirectionalLight(0xffffff, 0.6));
-
-  const grp = new THREE.Group();
-  sc.add(grp);
-  rotScene3d = { ren, sc, cam, ctrl, grp };
-
-  buildRotAtoms(0);
-
-  (function loop() {
-    requestAnimationFrame(loop);
-    if (rotScene3d) { rotScene3d.ctrl.update(); rotScene3d.ren.render(rotScene3d.sc, rotScene3d.cam); }
-  })();
-  window.addEventListener("resize", () => {
-    if (!rotScene3d) return;
-    const w = canvas.clientWidth || 540, h = canvas.clientHeight || 340;
-    rotScene3d.ren.setSize(w, h, false);
-    rotScene3d.cam.aspect = w / h; rotScene3d.cam.updateProjectionMatrix();
-  });
-}
-
-function buildRotAtoms(deg) {
-  if (!rotScene3d) return;
-  const grp = rotScene3d.grp;
-  clearGroup(grp);
-  const atoms = rotatedAtoms(deg);
-  const neighborColors = [0x5a6cff, 0x63e6a4, 0xe8a05a, 0xd45aff];
-
-  // central atom
-  grp.add(new THREE.Mesh(
-    new THREE.SphereGeometry(0.38, 28, 20),
-    new THREE.MeshStandardMaterial({ color: 0x1a1420, roughness: 0.35, metalness: 0.2, emissive: 0x2a0b12 })
-  ));
-
-  // neighbors + bonds
-  const bondPts = [];
-  atoms.slice(1).forEach((a, i) => {
-    const col = neighborColors[i % neighborColors.length];
-    const s = new THREE.Mesh(
-      new THREE.SphereGeometry(0.28, 24, 16),
-      new THREE.MeshStandardMaterial({ color: col, roughness: 0.4, metalness: 0.1 })
-    );
-    s.position.set(a.x, a.y, a.z);
-    grp.add(s);
-    bondPts.push(0, 0, 0, a.x, a.y, a.z);
-  });
-  const bondGeo = new THREE.BufferGeometry();
-  bondGeo.setAttribute("position", new THREE.Float32BufferAttribute(bondPts, 3));
-  grp.add(new THREE.LineSegments(bondGeo, new THREE.LineBasicMaterial({ color: 0x6e5f6e, transparent: true, opacity: 0.55 })));
-
-  // z-axis indicator
-  const zMat = new THREE.LineBasicMaterial({ color: 0x45d6ff, transparent: true, opacity: 0.3 });
-  const zGeo = new THREE.BufferGeometry();
-  zGeo.setAttribute("position", new THREE.Float32BufferAttribute([0, 0, -2.5, 0, 0, 2.5], 3));
-  grp.add(new THREE.LineSegments(zGeo, zMat));
-}
-
 function initRotation() {
-  initRotScene();
-
-  // build preset buttons for the rotation demo
-  const rotPB = $("rotPresetButtons");
-  if (rotPB && DATA) {
-    Object.entries(DATA.presets).forEach(([key, p]) => {
-      const b = document.createElement("button");
-      b.className = "pill";
-      b.textContent = p.label;
-      b.setAttribute("aria-pressed", key === rotPreset);
-      b.onclick = () => {
-        rotPreset = key;
-        [...rotPB.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
-        buildRotAtoms(Number($("rotAngle").value));
-        drawRotation();
-      };
-      rotPB.appendChild(b);
-    });
-  }
-
-  $("rotAngle").oninput = () => {
-    buildRotAtoms(Number($("rotAngle").value));
-    drawRotation();
-  };
+  $("rotAngle").oninput = drawRotation;
   drawRotation();
-}
-
-/* ---------------- spectrum 3D scene (shows current preset geometry) ---- */
-let specScene3d = null;
-
-function initSpectrumPresets() {
-  const spPB = $("specPresetButtons");
-  if (!spPB || !DATA) return;
-  spPB.innerHTML = "";
-  Object.entries(DATA.presets).forEach(([key, p]) => {
-    const b = document.createElement("button");
-    b.className = "pill";
-    b.textContent = p.label;
-    b.setAttribute("aria-pressed", key === preset);
-    b.onclick = () => {
-      preset = key;
-      // sync global section-1 preset buttons too
-      document.querySelectorAll("#presetControls button").forEach((x) => {
-        x.setAttribute("aria-pressed", x.textContent === p.label);
-      });
-      [...spPB.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
-      buildScene();
-      buildSpecAtoms();
-      renderHeatmap();
-    };
-    spPB.appendChild(b);
-  });
-}
-
-function initSpectrumScene() {
-  const canvas = $("spectrumScene");
-  if (!canvas) return;
-  const ren = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  ren.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  ren.setSize(canvas.clientWidth || 540, canvas.clientHeight || 260, false);
-  const sc = new THREE.Scene();
-  const cam = new THREE.PerspectiveCamera(38, (canvas.clientWidth||540)/(canvas.clientHeight||260), 0.1, 30);
-  cam.position.set(3.0, 2.0, 4.0);
-  const ctrl = new OrbitControls(cam, canvas);
-  ctrl.enableDamping = true;
-  ctrl.autoRotate = true;
-  ctrl.autoRotateSpeed = 0.8;
-  sc.add(new THREE.AmbientLight(0xffffff, 0.8));
-  sc.add(new THREE.DirectionalLight(0xffffff, 0.6));
-
-  const grp = new THREE.Group();
-  sc.add(grp);
-  specScene3d = { ren, sc, cam, ctrl, grp };
-
-  buildSpecAtoms();
-
-  (function loop() {
-    requestAnimationFrame(loop);
-    if (specScene3d) { specScene3d.ctrl.update(); specScene3d.ren.render(specScene3d.sc, specScene3d.cam); }
-  })();
-  window.addEventListener("resize", () => {
-    if (!specScene3d) return;
-    const w = canvas.clientWidth || 540, h = canvas.clientHeight || 260;
-    specScene3d.ren.setSize(w, h, false);
-    specScene3d.cam.aspect = w / h; specScene3d.cam.updateProjectionMatrix();
-  });
-}
-
-function buildSpecAtoms() {
-  if (!specScene3d || !DATA) return;
-  const grp = specScene3d.grp;
-  clearGroup(grp);
-  const p = DATA.presets[preset];
-  if (!p) return;
-  const atoms = p.atoms;
-
-  // populate atom list for section 7
-  const listEl = document.getElementById("specAtomList");
-  if (listEl) {
-    listEl.innerHTML = atoms.map((a, i) => {
-      const role = i === 0 ? " (central)" : "";
-      const col = COLORS[a.symbol] || "#ffffff";
-      return `<span><b style="color:${col}">${a.symbol}${role}</b> [${a.position.map(v => v.toFixed(2)).join(", ")}]</span>`;
-    }).join("");
-  }
-
-  // central atom
-  grp.add(new THREE.Mesh(
-    new THREE.SphereGeometry(0.38, 28, 20),
-    new THREE.MeshStandardMaterial({ color: 0x1a1420, roughness: 0.35, metalness: 0.2, emissive: 0x2a0b12 })
-  ));
-
-  // neighbors + bonds
-  const bondPts = [];
-  atoms.slice(1).forEach((a) => {
-    const [x, y, z] = a.position;
-    const col = new THREE.Color(COLORS[a.symbol] || "#ffffff");
-    const s = new THREE.Mesh(
-      new THREE.SphereGeometry(a.symbol === "H" ? 0.24 : 0.32, 24, 16),
-      new THREE.MeshStandardMaterial({ color: col, roughness: 0.4, metalness: 0.1 })
-    );
-    s.position.set(x, y, z);
-    grp.add(s);
-    bondPts.push(0, 0, 0, x, y, z);
-  });
-  const bondGeo = new THREE.BufferGeometry();
-  bondGeo.setAttribute("position", new THREE.Float32BufferAttribute(bondPts, 3));
-  grp.add(new THREE.LineSegments(bondGeo, new THREE.LineBasicMaterial({ color: 0x6e5f6e, transparent: true, opacity: 0.55 })));
-
-  // cutoff sphere wireframe
-  grp.add(new THREE.Mesh(
-    new THREE.SphereGeometry(cutoff, 32, 20),
-    new THREE.MeshBasicMaterial({ color: 0x45d6ff, wireframe: true, transparent: true, opacity: 0.03 })
-  ));
 }
 
 /* ---------------- mu1nu1 compression explorer ---------------- */
@@ -1619,244 +1396,68 @@ function drawCompBlocks() {
   const ctx = cv.getContext("2d");
   const W = cv.width, H = cv.height;
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = "#0d090d";
-  ctx.fillRect(0, 0, W, H);
   const S = Number($("compSpecies").value);
   const scheme = COMP_SCHEMES[compMode];
   const nmax = 4;
 
-  const SP_COLORS = ["#ff3d5a","#5a6cff","#45d6ff","#63e6a4","#e8a05a","#d45aff","#ffdd55","#a0e060","#ff8fb0","#80d8ff","#b0ff80","#ffb060"];
-  const SP_LABELS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
-
-  /* ── LEFT: S×S species-pair matrix ── */
-  const matPad = { l: 50, t: 50, r: 20 };
-  const matW = Math.min(H - 80, (W * 0.42) - matPad.l - matPad.r);
-  const cellSz = Math.floor(matW / Math.max(S, 1));
-  const gridW = cellSz * S;
-  const gx0 = matPad.l;
-  const gy0 = matPad.t;
-
-  // title
-  ctx.fillStyle = "#6e5f6e";
   ctx.font = "11px Inter, sans-serif";
-  ctx.textAlign = "left";
-  ctx.fillText("Species-pair blocks (Z₁, Z₂)", gx0, gy0 - 16);
-
-  // axis labels
-  ctx.fillStyle = "#a79ba6";
-  ctx.font = "10px Inter, sans-serif";
-  ctx.textAlign = "center";
-  for (let i = 0; i < S; i++) {
-    ctx.fillStyle = SP_COLORS[i % SP_COLORS.length];
-    ctx.fillText(SP_LABELS[i], gx0 + i * cellSz + cellSz/2, gy0 - 4);
-    ctx.save(); ctx.translate(gx0 - 8, gy0 + i * cellSz + cellSz/2);
-    ctx.fillText(SP_LABELS[i], 0, 4);
-    ctx.restore();
-  }
-  ctx.fillStyle = "#6e5f6e"; ctx.textAlign = "center";
-  ctx.fillText("Z₂", gx0 + gridW/2, gy0 - 28);
-  ctx.save(); ctx.translate(gx0 - 28, gy0 + gridW/2); ctx.rotate(-Math.PI/2);
-  ctx.fillText("Z₁", 0, 0); ctx.restore();
-
-  // draw cells
-  for (let r = 0; r < S; r++) {
-    for (let c = 0; c < S; c++) {
-      const x = gx0 + c * cellSz;
-      const y = gy0 + r * cellSz;
-
-      // determine cell state for current compression mode
-      let active = false, merged = false, dropped = false, label = "";
-      if (compMode === "off") {
-        // upper triangle: c >= r
-        active = c >= r;
-        dropped = c < r;
-        label = SP_LABELS[r] + SP_LABELS[c];
-      } else if (compMode === "mu1nu1") {
-        // each row r is kept, but all columns merge into one "Σ_z" block per row
-        active = true;
-        merged = c !== r; // off-diagonal cells are merged INTO the diagonal
-        label = c === r ? SP_LABELS[r] + "·Σ" : "";
-      } else if (compMode === "crossover") {
-        // only diagonal blocks survive
-        active = c === r;
-        dropped = c !== r;
-        label = c === r ? SP_LABELS[r] + SP_LABELS[r] : "";
-      } else { // mu2
-        // everything collapses to one block
-        active = true;
-        merged = !(r === 0 && c === 0);
-        label = (r === 0 && c === 0) ? "Σ·Σ" : "";
-      }
-
-      const gap = 2;
-      if (dropped) {
-        // dropped cell: dim outline with × pattern
-        ctx.strokeStyle = "rgba(214,160,180,.08)";
-        ctx.lineWidth = 1;
-        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 3);
-        ctx.stroke();
-        // small × in center
-        if (cellSz > 20) {
-          ctx.strokeStyle = "rgba(255,61,90,.25)";
-          ctx.lineWidth = 1;
-          const cx = x + cellSz/2, cy = y + cellSz/2, d = Math.min(cellSz*0.15, 6);
-          ctx.beginPath(); ctx.moveTo(cx-d, cy-d); ctx.lineTo(cx+d, cy+d); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(cx+d, cy-d); ctx.lineTo(cx-d, cy+d); ctx.stroke();
-        }
-      } else if (merged) {
-        // merged cell: dashed outline, arrow toward merge target
-        const rowCol = SP_COLORS[r % SP_COLORS.length];
-        ctx.globalAlpha = 0.12;
-        ctx.fillStyle = rowCol;
-        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 3);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = rowCol;
-        ctx.setLineDash([3, 3]);
-        ctx.lineWidth = 1;
-        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 3);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        // arrow pointing toward diagonal
-        if (cellSz > 22) {
-          const cx = x + cellSz/2, cy = y + cellSz/2;
-          let tx, ty;
-          if (compMode === "mu1nu1") {
-            tx = gx0 + r * cellSz + cellSz/2; ty = gy0 + r * cellSz + cellSz/2;
-          } else {
-            tx = gx0 + cellSz/2; ty = gy0 + cellSz/2; // mu2: merge to (0,0)
-          }
-          const dx = tx - cx, dy = ty - cy;
-          const dist = Math.hypot(dx, dy) || 1;
-          const ax = dx / dist * Math.min(cellSz*0.28, 10);
-          const ay = dy / dist * Math.min(cellSz*0.28, 10);
-          ctx.strokeStyle = rowCol;
-          ctx.globalAlpha = 0.5;
-          ctx.lineWidth = 1.5;
-          ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + ax, cy + ay); ctx.stroke();
-          // arrowhead
-          const headLen = 4;
-          const angle = Math.atan2(ay, ax);
-          ctx.beginPath();
-          ctx.moveTo(cx+ax, cy+ay);
-          ctx.lineTo(cx+ax-headLen*Math.cos(angle-0.5), cy+ay-headLen*Math.sin(angle-0.5));
-          ctx.moveTo(cx+ax, cy+ay);
-          ctx.lineTo(cx+ax-headLen*Math.cos(angle+0.5), cy+ay-headLen*Math.sin(angle+0.5));
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-        }
-      } else {
-        // active cell: filled block
-        const col = (compMode === "mu2") ? "#a79ba6" : SP_COLORS[r % SP_COLORS.length];
-        ctx.globalAlpha = 0.35;
-        ctx.fillStyle = col;
-        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 4);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = col;
-        ctx.lineWidth = 1.5;
-        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 4);
-        ctx.stroke();
-        // label
-        if (cellSz > 28 && label) {
-          ctx.fillStyle = "#eee9ee";
-          ctx.font = cellSz > 40 ? "bold 11px 'Space Grotesk',sans-serif" : "bold 9px 'Space Grotesk',sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText(label, x + cellSz/2, y + cellSz/2 + 4);
-        }
-      }
-    }
-  }
-
-  /* ── RIGHT: comparison bars ── */
-  const barX0 = gx0 + gridW + 60;
-  const barW = W - barX0 - 30;
-  const c2 = compCounts(S);
-  const names = [["off","uncompressed"],["mu1nu1","mu1nu1"],["crossover","crossover"],["mu2","mu2"]];
-  const maxLen = Math.max(...Object.values(c2));
-  const barH = 22;
-  const barGap = 10;
-  const barTop = gy0 + 10;
-
   ctx.fillStyle = "#6e5f6e";
-  ctx.font = "11px Inter, sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText("Descriptor length at S = " + S, barX0, barTop - 14);
+  ctx.fillText(compMode === "off"
+    ? "each coloured cell-set = one (Z₁,Z₂) species-pair block of n×n′ radial channels"
+    : "each coloured cell-set = one species block of n×n′ radial channels", 16, 20);
 
-  names.forEach(([k, lbl], i) => {
-    const y = barTop + i * (barH + barGap);
-    const w = Math.max(2, (c2[k] / maxLen) * barW);
-    const active = k === compMode;
-
-    ctx.fillStyle = active ? "rgba(255,61,90,.75)" : "rgba(90,108,255,.35)";
-    roundRect(ctx, barX0, y, w, barH, 4);
-    ctx.fill();
-    if (active) {
-      ctx.strokeStyle = "#ff3d5a"; ctx.lineWidth = 1;
-      roundRect(ctx, barX0, y, w, barH, 4);
-      ctx.stroke();
-    }
-
-    // label left side
-    ctx.fillStyle = active ? "#eee9ee" : "#a79ba6";
-    ctx.font = active ? "bold 11px 'Space Grotesk',sans-serif" : "11px Inter,sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText(lbl, barX0 + w + 8, y + barH/2 + 4);
-
-    // value
-    ctx.fillStyle = active ? "#ff3d5a" : "#6e5f6e";
-    ctx.textAlign = "right";
-    ctx.font = "bold 11px 'Space Grotesk',sans-serif";
-    const valStr = c2[k].toLocaleString();
-    ctx.fillText(valStr, barX0 + Math.max(w - 6, barW * 0.6), y + barH/2 + 4);
-  });
-
-  // scaling annotation
-  const scaleY = barTop + names.length * (barH + barGap) + 14;
-  ctx.fillStyle = "#6e5f6e";
-  ctx.font = "10px Inter,sans-serif";
-  ctx.textAlign = "left";
-  ctx.fillText("Scaling: off ~ S²  ·  mu1nu1 ~ S  ·  crossover ~ S  ·  mu2 ~ 1", barX0, scaleY);
-
-  /* ── LEGEND at bottom ── */
-  const legY = Math.max(gy0 + gridW + 26, scaleY + 30);
-  const legItems = [];
+  // draw channel blocks
+  let blocks = [];
   if (compMode === "off") {
-    legItems.push(["rgba(255,61,90,.55)", "kept (upper triangle)"],
-                   ["transparent", "redundant (lower triangle, same pair reversed)"]);
+    for (let z1 = 0; z1 < S; z1++) for (let z2 = z1; z2 < S; z2++) blocks.push([z1, z2]);
   } else if (compMode === "mu1nu1") {
-    legItems.push(["rgba(255,61,90,.55)", "result block (Z₁·Σ_z)"],
-                   ["rgba(255,61,90,.15)", "merged into row diagonal (dashed = summed over)"]);
+    for (let z1 = 0; z1 < S; z1++) blocks.push([z1, z1]);
   } else if (compMode === "crossover") {
-    legItems.push(["rgba(255,61,90,.55)", "kept (diagonal only, Z₁=Z₂)"],
-                   ["transparent", "dropped (cross-species, marked ×)"]);
+    for (let z1 = 0; z1 < S; z1++) blocks.push([z1, z1]);
   } else {
-    legItems.push(["rgba(167,155,166,.55)", "single merged block (Σ·Σ)"],
-                   ["rgba(167,155,166,.15)", "merged in (dashed = summed)"]);
+    blocks.push([0, 0]);
   }
-  legItems.forEach(([col, txt], i) => {
-    const lx = gx0 + i * 320;
-    ctx.fillStyle = col || "transparent";
-    ctx.strokeStyle = col === "transparent" ? "rgba(214,160,180,.15)" : (col || "rgba(214,160,180,.15)");
-    ctx.lineWidth = 1;
-    if (col === "transparent") { ctx.setLineDash([]); }
-    roundRect(ctx, lx, legY, 14, 14, 3);
-    if (col !== "transparent") ctx.fill();
-    ctx.stroke();
-    if (col === "transparent") {
-      // × inside
-      ctx.strokeStyle = "rgba(255,61,90,.35)";
-      ctx.beginPath(); ctx.moveTo(lx+4, legY+4); ctx.lineTo(lx+10, legY+10); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(lx+10, legY+4); ctx.lineTo(lx+4, legY+10); ctx.stroke();
+
+  const pad = 24, area = W - 2 * pad;
+  const cols = Math.ceil(Math.sqrt(blocks.length));
+  const rows = Math.ceil(blocks.length / cols);
+  const bw = Math.min(64, (area / cols) - 8);
+  const bh = Math.min(52, (H - 80) / rows - 8);
+  blocks.forEach(([z1, z2], i) => {
+    const cx = pad + (i % cols) * (bw + 8);
+    const cy = 40 + Math.floor(i / cols) * (bh + 8);
+    const hue = 200 + (z1 * 47 + z2 * 31) % 140;
+    ctx.fillStyle = `hsla(${hue},70%,55%,0.55)`;
+    ctx.strokeStyle = "rgba(214,160,180,.35)";
+    roundRect(ctx, cx, cy, bw, bh, 6);
+    ctx.fill(); ctx.stroke();
+    if (bw > 40) {
+      ctx.fillStyle = "#eee9ee"; ctx.textAlign = "center";
+      const lbl = compMode === "off" ? `${z1}${z2}` : (compMode === "mu2" ? "Σ" : `Z${z1+1}`);
+      ctx.fillText(lbl, cx + bw/2, cy + bh/2 + 4);
     }
-    ctx.fillStyle = "#a79ba6";
-    ctx.font = "10px Inter,sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText(txt, lx + 20, legY + 11);
   });
+
+  // length bars for all schemes at this S
+  const c = compCounts(S);
+  const names = [["off","off"],["mu1nu1","mu1nu1"],["crossover","cross"],["mu2","mu2"]];
+  const maxLen = Math.max(...Object.values(c));
+  const barY = H - 56, barH = 34;
+  const bw2 = (W - 2*pad - 60) / 4;
+  names.forEach(([k, lbl], i) => {
+    const x = pad + 50 + i * bw2;
+    const h = (c[k] / maxLen) * (barH - 6) + 4;
+    ctx.fillStyle = k === compMode ? "#ff3d5a" : "rgba(90,108,255,.45)";
+    ctx.fillRect(x, barY + barH - h, bw2 - 12, h);
+    ctx.fillStyle = "#a79ba6"; ctx.textAlign = "center";
+    ctx.fillText(lbl + " · " + c[k].toLocaleString(), x + (bw2 - 12)/2, H - 10);
+  });
+  ctx.fillStyle = "#6e5f6e"; ctx.textAlign = "left";
+  ctx.fillText("length at S=" + S, pad, barY - 8);
 
   $("compLen").textContent = scheme.len(S).toLocaleString();
-  $("compBlocks").textContent = compMode === "off" ? S*(S+1)/2 : (compMode === "mu2" ? 1 : S);
+  $("compBlocks").textContent = blocks.length;
   $("compMode").textContent = scheme.label;
   $("compNote").innerHTML = "<strong>" + scheme.label + ":</strong> " + scheme.note(S, nmax)
     + ` <em>Real dscribe anchors at S=3:</em> off 390 · mu1nu1 240 · crossover 150 · mu2 50.`;
@@ -1872,48 +1473,6 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-const COMP_MODE_DESCRIPTIONS = {
-  off: `<strong>Uncompressed (off):</strong> the full power spectrum stores every
-    species-pair block p<sup>Z₁Z₂</sup><sub>nn′l</sub>. With S species and
-    n<sub>max</sub> radial functions, there are S·n<sub>max</sub> species-resolved
-    channels. The descriptor stores upper-triangle pairs of all of them:
-    length = S·n<sub>max</sub>·(S·n<sub>max</sub>+1)/2 · (l<sub>max</sub>+1).
-    This grows <strong>quadratically</strong> with S.
-    For 3 species (C, H, O) this gives <strong>390 values</strong>.`,
-
-  mu1nu1: `<strong>mu1nu1 (Darby et al.):</strong> replaces the second species
-    factor with a sum over all species:
-    p<sup>Z₁</sup><sub>nn′l</sub> = Σ<sub>m</sub> c<sup>Z₁</sup><sub>nlm</sub> ·
-    (Σ<sub>z</sub> c<sup>z</sup><sub>n′lm</sub>).
-    One species index survives, the pair structure collapses, and the length scales
-    <strong>linearly</strong> with S: length = n<sub>max</sub>² · S · (l<sub>max</sub>+1).
-    For 3 species this gives <strong>240 values</strong>. This is the default
-    compression in dscribe (<code>compression={"mode":"mu1nu1"}</code>).`,
-
-  crossover: `<strong>Crossover:</strong> keeps only same-species diagonal blocks
-    p<sup>ZZ</sup><sub>nn′l</sub> and drops all cross-species terms (Z₁ ≠ Z₂).
-    Loses inter-species correlations but stays <strong>linear</strong> in S:
-    length = n<sub>max</sub>·(n<sub>max</sub>+1)/2 · S · (l<sub>max</sub>+1).
-    For 3 species this gives <strong>150 values</strong>.`,
-
-  mu2: `<strong>mu2:</strong> both species indices are summed away:
-    p<sub>nn′l</sub> = Σ<sub>m</sub> (Σ<sub>z</sub> c<sup>z</sup><sub>nlm</sub>) ·
-    (Σ<sub>z′</sub> c<sup>z′</sup><sub>n′lm</sub>).
-    The result is completely species-agnostic: one upper-triangle block of
-    length = n<sub>max</sub>·(n<sub>max</sub>+1)/2 · (l<sub>max</sub>+1),
-    <strong>constant</strong> regardless of how many elements are present.
-    For any number of species this gives just <strong>50 values</strong>.`,
-};
-
-function updateCompModeDesc() {
-  const el = $("compModeDesc");
-  if (!el) return;
-  const html = COMP_MODE_DESCRIPTIONS[compMode] || "";
-  el.innerHTML = html;
-  // style amber for "when to use" note if mu2
-  el.className = "callout";
-}
-
 function initCompressionExplorer() {
   const slider = $("compSpecies");
   if (!slider) return;
@@ -1927,7 +1486,6 @@ function initCompressionExplorer() {
       compMode = k;
       [...modes.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
       drawCompBlocks();
-      updateCompModeDesc();
     };
     modes.appendChild(b);
   });
@@ -1936,7 +1494,6 @@ function initCompressionExplorer() {
     drawCompBlocks();
   };
   drawCompBlocks();
-  updateCompModeDesc();
 }
 
 /* ============================================================
