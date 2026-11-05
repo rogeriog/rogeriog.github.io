@@ -523,66 +523,8 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
     </div>
   </section>
 
-  <section id="limits">
-    <h2>10 · What to remember</h2>
-    <div class="card">
-      <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
-        invariant, fixed-length, and interpretable through its radial/angular
-        channels. But it depends on <code>r_cut</code>, <code>n_max</code>,
-        <code>l_max</code>, and on how species are weighted. Change the cutoff and
-        you are describing a different environment.</p>
-      <p class="note" style="margin-bottom:0">Sections below explore more: the SOAP kernel matrix, smoothness &amp; cutoff sensitivity, and a toy ML example. Next in the garden: using SOAP vectors
-        to cluster environments, appending cluster one-hot codes to a graph model,
-        and comparing cutoffs at 2/4/6 Å.</p>
-    </div>
-  </section>
-
-  <section id="localglobal">
-    <h2>11 · Local fingerprint vs global fingerprint</h2>
-    <p class="sub">
-      Everything in the 3D scene is a <strong>local</strong> SOAP vector: one
-      descriptor for one central atom and its neighbours. A materials property
-      model usually needs one vector per crystal, so the local vectors are combined
-      into a <strong>global</strong> fingerprint.
-    </p>
-    <div class="card">
-      <div class="flow">
-        <div class="flow-step"><b>p<sub>site 1</sub></b><span>local</span></div>
-        <div class="flow-step"><b>p<sub>site 2</sub></b><span>local</span></div>
-        <div class="flow-step"><b>…</b><span>all sites</span></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step out"><b>p<sub>global</sub></b><span>one vector per structure</span></div>
-      </div>
-      <p class="sub" style="margin-top:18px">
-        The usual global descriptor is the average over sites:
-      </p>
-      <div class="formula accent">p<sub>global</sub> = (1/N<sub>sites</sub>) Σ<sub>i</sub> p<sub>site i</sub></div>
-      <p class="sub">
-        Sometimes it is species-weighted, or concatenated with composition
-        features. The invariance arguments are unchanged: each local vector is
-        rotation-invariant, and so is the average.
-      </p>
-      <div class="grid2" style="margin-top:16px">
-        <div>
-          <h3 style="margin-top:0">Use local when…</h3>
-          <p class="note">you care about environments: clustering sites, detecting
-            motifs, comparing coordination, or explaining which local geometry
-            drives a prediction. It is also what you use for a single adsorbed
-            molecule or surface site.</p>
-        </div>
-        <div>
-          <h3 style="margin-top:0">Use global when…</h3>
-          <p class="note">you train a structure-level property model (band gap,
-            formation energy, refractive index). One vector per crystal is what
-            scikit-learn/MODNet-style regressors expect; the cost is that site-level
-            information is averaged away.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <section id="similarity">
-    <h2>12 · SOAP similarity: comparing environments</h2>
+    <h2>10 · SOAP similarity: comparing environments</h2>
     <p class="sub">
       Two environments <strong>A</strong> and <strong>B</strong> are similar if their power
       spectra point in the same direction. The SOAP kernel raises that cosine similarity
@@ -612,7 +554,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="smoothness">
-    <h2>13 · Smoothness &amp; cutoff sensitivity</h2>
+    <h2>11 · Smoothness &amp; cutoff sensitivity</h2>
     <p class="sub">
       Two key design choices affect how the descriptor responds to perturbations:
       the Gaussian width σ controls <strong>smoothness</strong> (larger σ → less sensitive to tiny atomic displacements),
@@ -712,7 +654,7 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
   </section>
 
   <section id="mlpotential">
-    <h2>14 · Toy ML: learning a dimer potential</h2>
+    <h2>12 · Toy ML: learning a dimer potential</h2>
     <p class="sub">
       A minimal end-to-end example: fit a Kernel Ridge Regression model to a
       dimer potential using SOAP descriptors.
@@ -778,6 +720,64 @@ The c<sub>nlm</sub> themselves are internal; the page shows the resulting p.</pr
       </div>
     </div>
   </section>
+  <section id="localglobal">
+    <h2>13 · Local fingerprint vs global fingerprint</h2>
+    <p class="sub">
+      Everything in the 3D scene is a <strong>local</strong> SOAP vector: one
+      descriptor for one central atom and its neighbours. A materials property
+      model usually needs one vector per crystal, so the local vectors are combined
+      into a <strong>global</strong> fingerprint.
+    </p>
+    <div class="card">
+      <div class="flow">
+        <div class="flow-step"><b>p<sub>site 1</sub></b><span>local</span></div>
+        <div class="flow-step"><b>p<sub>site 2</sub></b><span>local</span></div>
+        <div class="flow-step"><b>…</b><span>all sites</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step out"><b>p<sub>global</sub></b><span>one vector per structure</span></div>
+      </div>
+      <p class="sub" style="margin-top:18px">
+        The usual global descriptor is the average over sites:
+      </p>
+      <div class="formula accent">p<sub>global</sub> = (1/N<sub>sites</sub>) Σ<sub>i</sub> p<sub>site i</sub></div>
+      <p class="sub">
+        Sometimes it is species-weighted, or concatenated with composition
+        features. The invariance arguments are unchanged: each local vector is
+        rotation-invariant, and so is the average.
+      </p>
+      <div class="grid2" style="margin-top:16px">
+        <div>
+          <h3 style="margin-top:0">Use local when…</h3>
+          <p class="note">you care about environments: clustering sites, detecting
+            motifs, comparing coordination, or explaining which local geometry
+            drives a prediction. It is also what you use for a single adsorbed
+            molecule or surface site.</p>
+        </div>
+        <div>
+          <h3 style="margin-top:0">Use global when…</h3>
+          <p class="note">you train a structure-level property model (band gap,
+            formation energy, refractive index). One vector per crystal is what
+            scikit-learn/MODNet-style regressors expect; the cost is that site-level
+            information is averaged away.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="limits">
+    <h2>14 · What to remember</h2>
+    <div class="card">
+      <p style="margin-top:0"><strong>SOAP is a local fingerprint.</strong> It is
+        invariant, fixed-length, and interpretable through its radial/angular
+        channels. But it depends on <code>r_cut</code>, <code>n_max</code>,
+        <code>l_max</code>, and on how species are weighted. Change the cutoff and
+        you are describing a different environment.</p>
+      <p class="note" style="margin-bottom:0">Earlier sections covered: the SOAP kernel matrix, smoothness &amp; cutoff sensitivity, and a toy ML example. Next in the garden: using SOAP vectors
+        to cluster environments, appending cluster one-hot codes to a graph model,
+        and comparing cutoffs at 2/4/6 Å.</p>
+    </div>
+  </section>
+
 </main>
 
 <footer>Preview build · Rogério Gouvêa · not indexed</footer>
