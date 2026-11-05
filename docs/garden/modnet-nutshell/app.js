@@ -627,6 +627,10 @@ function drawFRRReal() {
     }
   });
 
+  const lastRank = last ? frrReal.rankByFeat[last] : null;
+  $("frrInterp").textContent = lastRank && lastRank.interpretation
+    ? `Last pick — ${last.split("|").slice(0, 2).join(" · ")}: ${lastRank.interpretation}`
+    : (last ? `Last pick — ${last.split("|").slice(0, 2).join(" · ")}` : "Click “next feature” to run the selection.");
   $("frrStep").textContent = frr.selected.length;
   $("frrP").textContent = frr.last && frr.last.p != null ? Number(frr.last.p).toFixed(2) : "–";
   $("frrC").textContent = frr.last && frr.last.c != null ? Number(frr.last.c).toExponential(1) : "–";
@@ -700,6 +704,10 @@ function drawFRR() {
     }
   });
 
+  const lastRank = last ? frrReal.rankByFeat[last] : null;
+  $("frrInterp").textContent = lastRank && lastRank.interpretation
+    ? `Last pick — ${last.split("|").slice(0, 2).join(" · ")}: ${lastRank.interpretation}`
+    : (last ? `Last pick — ${last.split("|").slice(0, 2).join(" · ")}` : "Click “next feature” to run the selection.");
   $("frrStep").textContent = frr.selected.length;
   $("frrP").textContent = frr.last && frr.last.p != null ? frr.last.p.toFixed(2) : "–";
   $("frrC").textContent = frr.last && frr.last.c != null ? frr.last.c.toExponential(1) : "–";

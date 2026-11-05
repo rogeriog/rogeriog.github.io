@@ -20,7 +20,8 @@
       "max_redundancy": null,
       "rr_score": null,
       "p": null,
-      "c": null
+      "c": null,
+      "interpretation": "Fraction of valence electrons in p orbitals; separates ionic s-block compounds from covalent p-electron materials, whose softer electron clouds polarize more strongly and drive higher refractive index."
     },
     {
       "step": 1,
@@ -29,7 +30,8 @@
       "max_redundancy": 0.01582670917152148,
       "rr_score": 10235.461513345363,
       "p": 4.1,
-      "c": 1e-06
+      "c": 1e-06,
+      "interpretation": "Carbon content flags organic/carbonate chemistry, a very different polarizability regime from the purely inorganic bulk of the dataset."
     },
     {
       "step": 2,
@@ -38,7 +40,8 @@
       "max_redundancy": 0.05583529818452259,
       "rr_score": 1745.1051284238094,
       "p": 3.972196835690842,
-      "c": 8e-06
+      "c": 8e-06,
+      "interpretation": "Fluorine's tightly bound electrons give it the lowest polarizability of any element \u2014 heavy fluorides are the classic low-index compounds, so F fraction is a strong negative index marker."
     },
     {
       "step": 3,
@@ -47,7 +50,8 @@
       "max_redundancy": 0.056352169545680314,
       "rr_score": 604.3449962162538,
       "p": 3.879261770433856,
-      "c": 2.7e-05
+      "c": 2.7e-05,
+      "interpretation": "Fewest unfilled valence states among constituent elements; closed-shell ions signal ionic insulators whose electronic polarizability is limited."
     },
     {
       "step": 4,
@@ -56,7 +60,8 @@
       "max_redundancy": 0.08587270413497906,
       "rr_score": 294.42299313797736,
       "p": 3.8035595493631007,
-      "c": 6.4e-05
+      "c": 6.4e-05,
+      "interpretation": "Mean simulated atomic packing efficiency from ionic radii; tighter packing concentrates electron density per unit volume, which raises the refractive index."
     },
     {
       "step": 5,
@@ -65,7 +70,8 @@
       "max_redundancy": 0.10117256179143073,
       "rr_score": 174.2960482566686,
       "p": 3.7385384245136484,
-      "c": 0.000125
+      "c": 0.000125,
+      "interpretation": "Mean elemental melting point is a proxy for bond strength \u2014 stiffer bonds hold electrons more rigidly and depress polarizability, hence index."
     },
     {
       "step": 6,
@@ -74,7 +80,8 @@
       "max_redundancy": 0.12166487063833162,
       "rr_score": 104.75579311812146,
       "p": 3.6809309955683123,
-      "c": 0.000216
+      "c": 0.000216,
+      "interpretation": "Range of covalent radii across elements; large size mismatch signals chemically heterogeneous bonding environments that distort the polarizability landscape."
     },
     {
       "step": 7,
@@ -83,7 +90,8 @@
       "max_redundancy": 0.11358088883484298,
       "rr_score": 68.968710561112,
       "p": 3.6288374302068878,
-      "c": 0.000343
+      "c": 0.000343,
+      "interpretation": "Deringer-style band center of the filled states; deeper band centers correlate with stronger, more covalent bonding and a smaller electronic gap, both of which shape n."
     },
     {
       "step": 8,
@@ -92,7 +100,8 @@
       "max_redundancy": 0.14506474371207112,
       "rr_score": 47.313357669458476,
       "p": 3.5810413160023717,
-      "c": 0.000512
+      "c": 0.000512,
+      "interpretation": "Mean periodic row of the constituent elements; heavier (high-row) elements carry more, more loosely bound electrons and therefore more polarizable clouds."
     },
     {
       "step": 9,
@@ -101,7 +110,8 @@
       "max_redundancy": 0.12593048121993886,
       "rr_score": 30.707727995373517,
       "p": 3.536710125887723,
-      "c": 0.0007289999999999999
+      "c": 0.0007289999999999999,
+      "interpretation": "Miedema amorphization enthalpy of the composition; inter-element chemical affinity contrasts track bond polarity, which modulates optical polarizability."
     },
     {
       "step": 10,
