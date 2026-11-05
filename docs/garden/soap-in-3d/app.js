@@ -338,7 +338,8 @@ function renderPCA() {
   ctx.clearRect(0, 0, W, H);
   const pts = DATA.compression.points[pcaMode];
   if (!pts || !pts.length) return;
-  // Auto-scale from actual data range
+
+  // Auto-scale from data range
   const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
   const xmin = Math.min(...xs), xmax = Math.max(...xs);
   const ymin = Math.min(...ys), ymax = Math.max(...ys);
@@ -348,33 +349,49 @@ function renderPCA() {
   const dataW = W - 2 * pad, dataH = H - 2 * pad;
   const sx = (x) => pad + ((x - (xmin - xpad)) / (xspan + 2 * xpad)) * dataW;
   const sy = (y) => H - pad - ((y - (ymin - ypad)) / (yspan + 2 * ypad)) * dataH;
-  // Axis lines (at data mean)
+
+  // Axis crosshairs at data center
   const xmid = (xmin + xmax) / 2, ymid = (ymin + ymax) / 2;
   ctx.strokeStyle = "rgba(214,160,180,.18)";
   ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(sx(xmid), pad); ctx.lineTo(sx(xmid), H - pad);
   ctx.moveTo(pad, sy(ymid)); ctx.lineTo(W - pad, sy(ymid)); ctx.stroke();
-  const PRESET_COLORS = {
-    dimer: "#63e6a4", tetra: "#ff3d5a", octa: "#5a6cff",
-    fcc: "#45d6ff", perovskite: "#e8a05a", layered: "#d45aff",
-    distorted: "#ffdd55", water: "#7fb0ff", co2: "#ff7a7a",
-    methanol: "#a0e060", formaldehyde: "#f0a0d0"
-  };
+
+  // Cluster colors — keyed by "base" (dimer/tetra/octa from jittered templates)
+  const BASE_COLORS = { tetra: "#ff3d5a", octa: "#5a6cff", dimer: "#63e6a4" };
+  const BASE_LABELS = { dimer: "dimer (CO)", tetra: "tetrahedral (CH₄)", octa: "octahedral (CO₆)" };
+
   pts.forEach((p) => {
+    const key = p.base || p.preset || "unknown";
     ctx.beginPath();
-    ctx.arc(sx(p.x), sy(p.y), 3.6, 0, Math.PI * 2);
-    ctx.fillStyle = PRESET_COLORS[p.preset] || "#a79ba6";
-    ctx.globalAlpha = 0.8;
+    ctx.arc(sx(p.x), sy(p.y), 4, 0, Math.PI * 2);
+    ctx.fillStyle = BASE_COLORS[key] || "#a79ba6";
+    ctx.globalAlpha = 0.75;
     ctx.fill();
   });
   ctx.globalAlpha = 1;
+
+  // Axis labels
   ctx.font = "11px Inter, sans-serif";
   ctx.fillStyle = "#6e5f6e";
   ctx.fillText("PC1", W - 46, sy(ymid) - 8);
   ctx.fillText("PC2", sx(xmid) + 8, pad + 12);
-  // ev is a plain scalar (e.g. 0.9013)
+
+  // Legend
+  ctx.font = "10px Inter, sans-serif";
+  let legX = W - 170, legY = pad + 8;
+  Object.entries(BASE_COLORS).forEach(([key, col]) => {
+    ctx.fillStyle = col; ctx.globalAlpha = 0.85;
+    ctx.beginPath(); ctx.arc(legX, legY + 5, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = "#a79ba6"; ctx.textAlign = "left";
+    ctx.fillText(BASE_LABELS[key] || key, legX + 10, legY + 9);
+    legY += 18;
+  });
+
+  // Explained variance (ev is [pc1, pc2] array)
   const ev = DATA.compression.explained_variance[pcaMode];
-  $("pcaVar").textContent = (ev * 100).toFixed(1) + "%";
+  const total = Array.isArray(ev) ? (ev[0] + ev[1]) : ev;
+  $("pcaVar").textContent = (total * 100).toFixed(1) + "%";
 }
 
 function initSpectrumControls() {
@@ -1416,68 +1433,227 @@ function drawCompBlocks() {
   const ctx = cv.getContext("2d");
   const W = cv.width, H = cv.height;
   ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#0d090d";
+  ctx.fillRect(0, 0, W, H);
   const S = Number($("compSpecies").value);
   const scheme = COMP_SCHEMES[compMode];
   const nmax = 4;
 
-  ctx.font = "11px Inter, sans-serif";
-  ctx.fillStyle = "#6e5f6e";
-  ctx.textAlign = "left";
-  ctx.fillText(compMode === "off"
-    ? "each coloured cell-set = one (Z₁,Z₂) species-pair block of n×n′ radial channels"
-    : "each coloured cell-set = one species block of n×n′ radial channels", 16, 20);
+  const SP_COLORS = ["#ff3d5a","#5a6cff","#45d6ff","#63e6a4","#e8a05a","#d45aff","#ffdd55","#a0e060","#ff8fb0","#80d8ff","#b0ff80","#ffb060"];
+  const SP_LABELS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
 
-  // draw channel blocks
-  let blocks = [];
-  if (compMode === "off") {
-    for (let z1 = 0; z1 < S; z1++) for (let z2 = z1; z2 < S; z2++) blocks.push([z1, z2]);
-  } else if (compMode === "mu1nu1") {
-    for (let z1 = 0; z1 < S; z1++) blocks.push([z1, z1]);
-  } else if (compMode === "crossover") {
-    for (let z1 = 0; z1 < S; z1++) blocks.push([z1, z1]);
-  } else {
-    blocks.push([0, 0]);
+  /* ── LEFT: S×S species-pair matrix ── */
+  const matPad = { l: 50, t: 50, r: 20 };
+  const matW = Math.min(H - 80, (W * 0.42) - matPad.l - matPad.r);
+  const cellSz = Math.floor(matW / Math.max(S, 1));
+  const gridW = cellSz * S;
+  const gx0 = matPad.l;
+  const gy0 = matPad.t;
+
+  // title
+  ctx.fillStyle = "#6e5f6e";
+  ctx.font = "11px Inter, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("Species-pair blocks (Z₁, Z₂)", gx0, gy0 - 16);
+
+  // axis labels
+  ctx.fillStyle = "#a79ba6";
+  ctx.font = "10px Inter, sans-serif";
+  ctx.textAlign = "center";
+  for (let i = 0; i < S; i++) {
+    ctx.fillStyle = SP_COLORS[i % SP_COLORS.length];
+    ctx.fillText(SP_LABELS[i], gx0 + i * cellSz + cellSz/2, gy0 - 4);
+    ctx.save(); ctx.translate(gx0 - 8, gy0 + i * cellSz + cellSz/2);
+    ctx.fillText(SP_LABELS[i], 0, 4);
+    ctx.restore();
+  }
+  ctx.fillStyle = "#6e5f6e"; ctx.textAlign = "center";
+  ctx.fillText("Z₂", gx0 + gridW/2, gy0 - 28);
+  ctx.save(); ctx.translate(gx0 - 28, gy0 + gridW/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText("Z₁", 0, 0); ctx.restore();
+
+  // draw cells
+  for (let r = 0; r < S; r++) {
+    for (let c2 = 0; c2 < S; c2++) {
+      const x = gx0 + c2 * cellSz;
+      const y = gy0 + r * cellSz;
+
+      let active = false, merged = false, dropped = false, label = "";
+      if (compMode === "off") {
+        active = c2 >= r;
+        dropped = c2 < r;
+        label = SP_LABELS[r] + SP_LABELS[c2];
+      } else if (compMode === "mu1nu1") {
+        active = true;
+        merged = c2 !== r;
+        label = c2 === r ? SP_LABELS[r] + "·Σ" : "";
+      } else if (compMode === "crossover") {
+        active = c2 === r;
+        dropped = c2 !== r;
+        label = c2 === r ? SP_LABELS[r] + SP_LABELS[r] : "";
+      } else { // mu2
+        active = true;
+        merged = !(r === 0 && c2 === 0);
+        label = (r === 0 && c2 === 0) ? "Σ·Σ" : "";
+      }
+
+      const gap = 2;
+      if (dropped) {
+        ctx.strokeStyle = "rgba(214,160,180,.08)";
+        ctx.lineWidth = 1;
+        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 3);
+        ctx.stroke();
+        if (cellSz > 20) {
+          ctx.strokeStyle = "rgba(255,61,90,.25)";
+          ctx.lineWidth = 1;
+          const cx2 = x + cellSz/2, cy2 = y + cellSz/2, d = Math.min(cellSz*0.15, 6);
+          ctx.beginPath(); ctx.moveTo(cx2-d, cy2-d); ctx.lineTo(cx2+d, cy2+d); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx2+d, cy2-d); ctx.lineTo(cx2-d, cy2+d); ctx.stroke();
+        }
+      } else if (merged) {
+        const rowCol = SP_COLORS[r % SP_COLORS.length];
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = rowCol;
+        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 3);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = rowCol;
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1;
+        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 3);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        if (cellSz > 22) {
+          const cx2 = x + cellSz/2, cy2 = y + cellSz/2;
+          let tx, ty;
+          if (compMode === "mu1nu1") {
+            tx = gx0 + r * cellSz + cellSz/2; ty = gy0 + r * cellSz + cellSz/2;
+          } else {
+            tx = gx0 + cellSz/2; ty = gy0 + cellSz/2;
+          }
+          const dx = tx - cx2, dy = ty - cy2;
+          const dist = Math.hypot(dx, dy) || 1;
+          const ax = dx / dist * Math.min(cellSz*0.28, 10);
+          const ay = dy / dist * Math.min(cellSz*0.28, 10);
+          ctx.strokeStyle = rowCol;
+          ctx.globalAlpha = 0.5;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(cx2, cy2); ctx.lineTo(cx2 + ax, cy2 + ay); ctx.stroke();
+          const headLen = 4;
+          const angle = Math.atan2(ay, ax);
+          ctx.beginPath();
+          ctx.moveTo(cx2+ax, cy2+ay);
+          ctx.lineTo(cx2+ax-headLen*Math.cos(angle-0.5), cy2+ay-headLen*Math.sin(angle-0.5));
+          ctx.moveTo(cx2+ax, cy2+ay);
+          ctx.lineTo(cx2+ax-headLen*Math.cos(angle+0.5), cy2+ay-headLen*Math.sin(angle+0.5));
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      } else {
+        const col = (compMode === "mu2") ? "#a79ba6" : SP_COLORS[r % SP_COLORS.length];
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = col;
+        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 4);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, x+gap, y+gap, cellSz-2*gap, cellSz-2*gap, 4);
+        ctx.stroke();
+        if (cellSz > 28 && label) {
+          ctx.fillStyle = "#eee9ee";
+          ctx.font = cellSz > 40 ? "bold 11px 'Space Grotesk',sans-serif" : "bold 9px 'Space Grotesk',sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(label, x + cellSz/2, y + cellSz/2 + 4);
+        }
+      }
+    }
   }
 
-  const pad = 24, area = W - 2 * pad;
-  const cols = Math.ceil(Math.sqrt(blocks.length));
-  const rows = Math.ceil(blocks.length / cols);
-  const bw = Math.min(64, (area / cols) - 8);
-  const bh = Math.min(52, (H - 80) / rows - 8);
-  blocks.forEach(([z1, z2], i) => {
-    const cx = pad + (i % cols) * (bw + 8);
-    const cy = 40 + Math.floor(i / cols) * (bh + 8);
-    const hue = 200 + (z1 * 47 + z2 * 31) % 140;
-    ctx.fillStyle = `hsla(${hue},70%,55%,0.55)`;
-    ctx.strokeStyle = "rgba(214,160,180,.35)";
-    roundRect(ctx, cx, cy, bw, bh, 6);
-    ctx.fill(); ctx.stroke();
-    if (bw > 40) {
-      ctx.fillStyle = "#eee9ee"; ctx.textAlign = "center";
-      const lbl = compMode === "off" ? `${z1}${z2}` : (compMode === "mu2" ? "Σ" : `Z${z1+1}`);
-      ctx.fillText(lbl, cx + bw/2, cy + bh/2 + 4);
+  /* ── RIGHT: comparison bars ── */
+  const barX0 = gx0 + gridW + 60;
+  const barW2 = W - barX0 - 30;
+  const cc = compCounts(S);
+  const names = [["off","uncompressed"],["mu1nu1","mu1nu1"],["crossover","crossover"],["mu2","mu2"]];
+  const maxLen = Math.max(...Object.values(cc));
+  const barH = 22;
+  const barGap = 10;
+  const barTop = gy0 + 10;
+
+  ctx.fillStyle = "#6e5f6e";
+  ctx.font = "11px Inter, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("Descriptor length at S = " + S, barX0, barTop - 14);
+
+  names.forEach(([k, lbl], i) => {
+    const y = barTop + i * (barH + barGap);
+    const w = Math.max(2, (cc[k] / maxLen) * barW2);
+    const isActive = k === compMode;
+
+    ctx.fillStyle = isActive ? "rgba(255,61,90,.75)" : "rgba(90,108,255,.35)";
+    roundRect(ctx, barX0, y, w, barH, 4);
+    ctx.fill();
+    if (isActive) {
+      ctx.strokeStyle = "#ff3d5a"; ctx.lineWidth = 1;
+      roundRect(ctx, barX0, y, w, barH, 4);
+      ctx.stroke();
     }
+
+    ctx.fillStyle = isActive ? "#eee9ee" : "#a79ba6";
+    ctx.font = isActive ? "bold 11px 'Space Grotesk',sans-serif" : "11px Inter,sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(lbl, barX0 + w + 8, y + barH/2 + 4);
+
+    ctx.fillStyle = isActive ? "#ff3d5a" : "#6e5f6e";
+    ctx.textAlign = "right";
+    ctx.font = "bold 11px 'Space Grotesk',sans-serif";
+    ctx.fillText(cc[k].toLocaleString(), barX0 + Math.max(w - 6, barW2 * 0.6), y + barH/2 + 4);
   });
 
-  // length bars for all schemes at this S
-  const c = compCounts(S);
-  const names = [["off","off"],["mu1nu1","mu1nu1"],["crossover","cross"],["mu2","mu2"]];
-  const maxLen = Math.max(...Object.values(c));
-  const barY = H - 56, barH = 34;
-  const bw2 = (W - 2*pad - 60) / 4;
-  names.forEach(([k, lbl], i) => {
-    const x = pad + 50 + i * bw2;
-    const h = (c[k] / maxLen) * (barH - 6) + 4;
-    ctx.fillStyle = k === compMode ? "#ff3d5a" : "rgba(90,108,255,.45)";
-    ctx.fillRect(x, barY + barH - h, bw2 - 12, h);
-    ctx.fillStyle = "#a79ba6"; ctx.textAlign = "center";
-    ctx.fillText(lbl + " · " + c[k].toLocaleString(), x + (bw2 - 12)/2, H - 10);
+  // scaling annotation
+  const scaleY = barTop + names.length * (barH + barGap) + 14;
+  ctx.fillStyle = "#6e5f6e";
+  ctx.font = "10px Inter,sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("Scaling: off ~ S²  ·  mu1nu1 ~ S  ·  crossover ~ S  ·  mu2 ~ 1", barX0, scaleY);
+
+  /* ── LEGEND at bottom ── */
+  const legY = Math.max(gy0 + gridW + 26, scaleY + 30);
+  const legItems = [];
+  if (compMode === "off") {
+    legItems.push(["rgba(255,61,90,.55)", "kept (upper triangle)"],
+                   ["transparent", "redundant (lower triangle, same pair reversed)"]);
+  } else if (compMode === "mu1nu1") {
+    legItems.push(["rgba(255,61,90,.55)", "result block (Z₁·Σ_z)"],
+                   ["rgba(255,61,90,.15)", "merged into row diagonal (dashed = summed over)"]);
+  } else if (compMode === "crossover") {
+    legItems.push(["rgba(255,61,90,.55)", "kept (diagonal only, Z₁=Z₂)"],
+                   ["transparent", "dropped (cross-species, marked ×)"]);
+  } else {
+    legItems.push(["rgba(167,155,166,.55)", "single merged block (Σ·Σ)"],
+                   ["rgba(167,155,166,.15)", "merged in (dashed = summed)"]);
+  }
+  legItems.forEach(([col, txt], i) => {
+    const lx = gx0 + i * 320;
+    ctx.fillStyle = col || "transparent";
+    ctx.strokeStyle = col === "transparent" ? "rgba(214,160,180,.15)" : (col || "rgba(214,160,180,.15)");
+    ctx.lineWidth = 1;
+    roundRect(ctx, lx, legY, 14, 14, 3);
+    if (col !== "transparent") ctx.fill();
+    ctx.stroke();
+    if (col === "transparent") {
+      ctx.strokeStyle = "rgba(255,61,90,.35)";
+      ctx.beginPath(); ctx.moveTo(lx+4, legY+4); ctx.lineTo(lx+10, legY+10); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(lx+10, legY+4); ctx.lineTo(lx+4, legY+10); ctx.stroke();
+    }
+    ctx.fillStyle = "#a79ba6";
+    ctx.font = "10px Inter,sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(txt, lx + 20, legY + 11);
   });
-  ctx.fillStyle = "#6e5f6e"; ctx.textAlign = "left";
-  ctx.fillText("length at S=" + S, pad, barY - 8);
 
   $("compLen").textContent = scheme.len(S).toLocaleString();
-  $("compBlocks").textContent = blocks.length;
+  $("compBlocks").textContent = compMode === "off" ? S*(S+1)/2 : (compMode === "mu2" ? 1 : S);
   $("compMode").textContent = scheme.label;
   $("compNote").innerHTML = "<strong>" + scheme.label + ":</strong> " + scheme.note(S, nmax)
     + ` <em>Real dscribe anchors at S=3:</em> off 390 · mu1nu1 240 · crossover 150 · mu2 50.`;
