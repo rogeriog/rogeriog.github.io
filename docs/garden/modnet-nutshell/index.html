@@ -68,12 +68,14 @@
         <li><strong>mean baseline</strong> — always predicts the training-set mean. Any useful model must beat this.</li>
       </ul>
       <p class="note">
-        <strong>Real run:</strong> MODNet versus random forest, extra trees and
-        histogram gradient boosting on the same splits; six training sizes
-        (200–4 000) × 3 seeds, fixed 800-sample test set. MODNet uses selected
-        features and 1 000 epochs; the tree models use all features. The dashed
-        line is MEGNet's MatBench value (0.478) as a literature reference — its
-        split is not identical, so treat it as context, not a head-to-head.
+        <strong>Real run:</strong> MODNet (<code>fit_preset</code>, the library's own
+        preset protocol — nested validation, feature selection inside the fold) versus
+        random forest, extra trees and histogram gradient boosting on the same
+        800-sample test set. MODNet, allnet, ridge and the mean baseline use training
+        sizes 100–3 200 × 3 seeds; the tree baselines use 200–4 000 × 3 seeds (log
+        axis). Full-data 5-fold CV: <b id="lcCV">–</b>. The dashed line is MEGNet's
+        MatBench value (0.478) as a literature reference — its split is not identical,
+        so treat it as context, not a head-to-head.
       </p>
     </div>
     <details class="compact">
@@ -310,6 +312,23 @@
         ReLU, batch normalization only when there is more than one target. With 64
         inputs that is about 6–7k weights; with 200 inputs, about 15k. The exact count
         is printed in the code map.</p>
+      <div class="grid2" style="margin-top:18px">
+        <div>
+          <svg id="archFitChart" viewBox="0 0 460 300" role="img" aria-label="Real MODNet training curve"></svg>
+          <div class="legend" id="archFitLegend"></div>
+        </div>
+        <div>
+          <label class="sub" style="display:block;margin:0 0 6px">preset grid — pick one</label>
+          <select id="archPreset" style="width:100%;margin-bottom:10px;background:#14060a;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font:inherit;font-size:.8rem"></select>
+          <div id="archPresetInfo"></div>
+        </div>
+      </div>
+      <p class="note"><strong>Real run:</strong> a single <code>MODNetModel</code> (not the
+        fit_preset ensemble) on 800 training samples, with the preset
+        <code>gen_presets</code> picks for 187 selected features — widths
+        128 → 32 → 8 → 8, ELU, MAE loss, early stop after 229 epochs, test MAE
+        0.484. The dropdown browses all 54 presets in the grid the search draws
+        from.</p>
     </div>
     <details class="code-panel">
       <summary>in the codebase · model</summary>
@@ -356,6 +375,29 @@
         In the paper the related targets were vibrational properties at different
         temperatures, with a ~8% MAE gain on S(305 K).
       </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <svg id="jointRealChart" viewBox="0 0 900 340" role="img" aria-label="Real joint versus single-task MAE"></svg>
+      <div class="legend" id="jointRealLegend"></div>
+      <div class="grid2" style="margin-top:16px">
+        <div><svg id="jointParity" viewBox="0 0 460 340" role="img" aria-label="Prediction versus true value"></svg></div>
+        <div>
+          <div class="controls" id="jointTargetControls"></div>
+          <div class="controls" id="jointModeControls"></div>
+          <div class="kv">
+            <div><b id="jointParMAE">–</b><small>test MAE</small></div>
+            <div><b id="jointParN">–</b><small>test materials</small></div>
+          </div>
+          <p class="note" style="margin-top:0">Parity at the largest training size
+            (n = 70, seed 1): predicted vs true on the 25 held-out materials.</p>
+        </div>
+      </div>
+      <p class="note"><strong>Real run:</strong> the only bundled multi-target dataset
+        (100 materials, formation energy + band gap), training sizes 25–70 × 3 seeds,
+        identical model capacity. Honest result: joint learning helps egap
+        (~12% lower MAE at n = 70) but hurts eform (~24% higher) — these two
+        targets share less structure than the synthetic demo assumes, which is
+        exactly the caveat from the intro.</p>
     </div>
     <div class="card" style="margin-top:16px">
       <div class="grid2">
@@ -441,6 +483,30 @@
       a small feedforward network → joint heads → GA over hyperparameters and nested
       validation. The bet is not a bigger model; it is better use of limited data.
     </p>
+    <div class="card">
+      <h3 style="margin-top:0">Where the error concentrates</h3>
+      <div class="grid2">
+        <div>
+          <p class="sub" style="margin:0 0 10px">test MAE by subgroup — 800 held-out materials</p>
+          <div class="bars" id="biasBars"></div>
+          <div class="kv" style="margin-top:14px">
+            <div><b id="biasOverall">–</b><small>overall MAE</small></div>
+            <div><b id="biasOxide">–</b><small>oxide MAE</small></div>
+            <div><b id="biasNonOxide">–</b><small>non-oxide MAE</small></div>
+          </div>
+        </div>
+        <div>
+          <svg id="biasPca" viewBox="0 0 460 340" role="img" aria-label="Test error in PCA space"></svg>
+          <div class="controls" id="biasControls"></div>
+          <p class="note" style="margin-top:8px">Each dot is a held-out material placed
+            by the first two principal components of its descriptors (PCA fit on the
+            training set); colour is absolute error, blue → red.</p>
+        </div>
+      </div>
+      <p class="note"><strong>Real run:</strong> predictions of the fit_preset model on
+        the full 4 764-sample <code>matbench_dielectric</code> test split. The oxide
+        gap is large and clean — “average MAE” hides it.</p>
+    </div>
     <div class="card">
       <p style="margin-top:0"><strong>Honest limits.</strong> MODNet is descriptor-based,
         not a graph model. On very large datasets, graph networks win. Its accuracy depends

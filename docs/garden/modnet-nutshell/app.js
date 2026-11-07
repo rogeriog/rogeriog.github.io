@@ -117,6 +117,44 @@ function initCross() {
 /* ---------- 0b. real learning curves ---------- */
 const lcHidden = { main: new Set(), base: new Set() };
 
+function normLC(data) {
+  if (!data || !Array.isArray(data.mae)) return [];
+  const byN = {};
+  for (const row of data.mae) {
+    const n = row[0];
+    if (Array.isArray(row[1])) {
+      const vals = row[1].filter((v) => v != null);
+      if (vals.length) byN[n] = vals;
+    } else if (row.length >= 3 && row[2] != null) {
+      (byN[n] = byN[n] || []).push(row[2]);
+    }
+  }
+  return Object.keys(byN).map(Number).sort((a, b) => a - b).map((n) => {
+    const v = byN[n];
+    return { n, mean: v.reduce((a, x) => a + x, 0) / v.length, lo: Math.min(...v), hi: Math.max(...v) };
+  });
+}
+
+function lcInterp(points, n) {
+  if (!points.length || n < points[0].n || n > points[points.length - 1].n) return null;
+  const lx = Math.log10(n);
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i], b = points[i + 1];
+    if (n >= a.n && n <= b.n) {
+      const t = (lx - Math.log10(a.n)) / (Math.log10(b.n) - Math.log10(a.n));
+      return a.mean + t * (b.mean - a.mean);
+    }
+  }
+  const last = points[points.length - 1];
+  return n === last.n ? last.mean : null;
+}
+
+function niceTicks(min, max) {
+  const cands = [100, 200, 300, 500, 800, 1000, 2000, 4000, 8000];
+  const t = cands.filter((v) => v >= min && v <= max);
+  return t.length ? t : [Math.round(min), Math.round(max)];
+}
+
 async function initLearningCurves() {
   let modnet, models;
   try {
@@ -128,46 +166,51 @@ async function initLearningCurves() {
     $("lcChart").parentNode.style.display = "none";
     return;
   }
+  const cv = modnet.full_dataset_cv;
+  if (cv && $("lcCV")) {
+    $("lcCV").textContent =
+      `${cv.mean_mae.toFixed(3)} ± ${cv.std_mae.toFixed(3)} over ${cv.folds} folds on all ${cv.n.toLocaleString("en-US")} samples`;
+  }
+  const mm = modnet.models || {}, bm = models.models || {};
   const main = [
-    { key: "modnet", label: "MODNet", color: "#ff3d5a", data: modnet.models.modnet.mae },
-    { key: "random_forest", label: "Random forest", color: "#5a6cff", data: models.models.random_forest.mae },
-    { key: "extra_trees", label: "Extra trees", color: "#63e6a4", data: models.models.extra_trees.mae },
-    { key: "hist_gb", label: "Hist gradient boosting", color: "#e8a05a", data: models.models.hist_gb.mae },
+    { key: "modnet", label: "MODNet", color: "#ff3d5a", data: normLC(mm.modnet) },
+    { key: "random_forest", label: "Random forest", color: "#5a6cff", data: normLC(bm.random_forest) },
+    { key: "extra_trees", label: "Extra trees", color: "#63e6a4", data: normLC(bm.extra_trees) },
+    { key: "hist_gb", label: "Hist gradient boosting", color: "#e8a05a", data: normLC(bm.hist_gb) },
     { key: "megnet", label: "MEGNet (MatBench ref.)", color: "#a79ba6", dash: "5 4", constant: 0.478 },
   ];
   const base = [
-    { key: "allnet", label: "All features", color: "#5a6cff", data: modnet.models.allnet.mae },
-    { key: "ridge", label: "Ridge", color: "#45d6ff", data: modnet.models.ridge.mae },
-    { key: "dummy", label: "Mean baseline", color: "#63e6a4", data: modnet.models.dummy.mae },
+    { key: "allnet", label: "All features", color: "#5a6cff", data: normLC(mm.allnet) },
+    { key: "ridge", label: "Ridge", color: "#45d6ff", data: normLC(mm.ridge) },
+    { key: "dummy", label: "Mean baseline", color: "#63e6a4", data: normLC(mm.dummy) },
   ];
-  drawLC("lcChart", "lcLegend", "main", main, modnet.sizes);
-  drawLC("lcBaselineChart", "lcBaselineLegend", "base", base, modnet.sizes);
+  drawLC("lcChart", "lcLegend", "main", main);
+  drawLC("lcBaselineChart", "lcBaselineLegend", "base", base);
 }
 
-function drawLC(svgId, legendId, group, series, sizes) {
+function drawLC(svgId, legendId, group, series) {
   const svg = $(svgId);
   if (!svg) return;
-  const stats = {};
-  series.forEach((sr) => {
-    if (sr.constant != null) return;
-    stats[sr.key] = sizes.map((n) => {
-      const vals = sr.data.filter((x) => x[0] === n).map((x) => x[2]);
-      if (!vals.length) return null;
-      return { mean: vals.reduce((a, v) => a + v, 0) / vals.length, lo: Math.min(...vals), hi: Math.max(...vals) };
-    });
-  });
+  const allPts = series.filter((s) => s.data).flatMap((s) => s.data);
+  if (!allPts.length) { svg.parentNode.style.display = "none"; return; }
+  const nMin = Math.min(...allPts.map((p) => p.n));
+  const nMax = Math.max(...allPts.map((p) => p.n));
+  const lMin = Math.log10(nMin), lMax = Math.log10(nMax);
   const valsAll = [];
-  Object.values(stats).forEach((arr) => arr.forEach((p) => p && valsAll.push(p.lo, p.hi)));
-  if (series.some((s) => s.constant != null)) valsAll.push(0.478);
+  series.forEach((sr) => {
+    if (sr.constant != null) valsAll.push(sr.constant);
+    else sr.data.forEach((p) => valsAll.push(p.lo, p.hi));
+  });
   const ymax = Math.max(...valsAll) * 1.1;
   const W = 900, H = 340, P = { t: 30, r: 20, b: 44, l: 60 };
   const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
-  const sx = (i) => x0 + (i / (sizes.length - 1)) * (x1 - x0);
+  const sx = (n) => x0 + ((Math.log10(n) - lMin) / (lMax - lMin)) * (x1 - x0);
   const sy = (v) => y0 - (v / ymax) * (y0 - y1);
   svg.innerHTML = "";
   const ax = el("g", { class: "axis" });
-  sizes.forEach((n, i) => {
-    const t = el("text", { x: sx(i), y: H - 20, "text-anchor": "middle" }); t.textContent = n; ax.appendChild(t);
+  niceTicks(nMin, nMax).forEach((n) => {
+    const t = el("text", { x: sx(n), y: H - 20, "text-anchor": "middle" }); t.textContent = n; ax.appendChild(t);
+    ax.appendChild(el("line", { x1: sx(n), x2: sx(n), y1: y1, y2: y0, class: "gridline" }));
   });
   for (let i = 0; i <= 4; i++) {
     const v = ymax * i / 4;
@@ -175,26 +218,33 @@ function drawLC(svgId, legendId, group, series, sizes) {
     ax.appendChild(el("line", { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: "gridline" }));
   }
   const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
-  xl.textContent = "training samples"; ax.appendChild(xl);
+  xl.textContent = "training samples (log scale)"; ax.appendChild(xl);
   const yl = el("text", { transform: `translate(12,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle" });
   yl.textContent = "test MAE (lower is better)"; ax.appendChild(yl);
   svg.appendChild(ax);
 
-  // shade sizes where MODNet beats every shown non-reference model
+  // shade training sizes where MODNet beats every shown non-reference model
   if (group === "main" && !lcHidden.main.has("modnet")) {
-    sizes.forEach((n, i) => {
-      const m = stats.modnet[i];
-      if (!m) return;
-      const rivals = ["random_forest", "extra_trees", "hist_gb"].filter((k) => !lcHidden.main.has(k) && stats[k] && stats[k][i]);
-      if (!rivals.length) return;
-      if (rivals.every((k) => m.mean < stats[k][i].mean - 0.001)) {
-        const half = i === 0 ? (sx(1) - sx(0)) / 2 : (sx(i) - sx(i - 1)) / 2;
-        svg.appendChild(el("rect", { x: sx(i) - half, y: y1, width: 2 * half, height: y0 - y1,
-          fill: "rgba(255,61,90,.14)", stroke: "rgba(255,61,90,.35)", "stroke-width": 1 }));
-        const t = el("text", { x: sx(i), y: y1 - 6, "text-anchor": "middle", fill: "#ff3d5a", "font-size": 10 });
-        t.textContent = "MODNet wins"; svg.appendChild(t);
-      }
-    });
+    const modnet = series.find((s) => s.key === "modnet");
+    const rivals = ["random_forest", "extra_trees", "hist_gb"]
+      .map((k) => series.find((s) => s.key === k))
+      .filter((s) => s && !lcHidden.main.has(s.key));
+    if (modnet && rivals.length === 3) {
+      const xs = modnet.data.map((p) => sx(p.n));
+      modnet.data.forEach((p, i) => {
+        const rivalMeans = rivals.map((s) => lcInterp(s.data, p.n));
+        if (rivalMeans.some((v) => v == null)) return;
+        if (rivalMeans.every((v) => p.mean < v - 0.001)) {
+          const half = i === 0 ? (xs[1] - xs[0]) / 2
+            : i === xs.length - 1 ? (xs[i] - xs[i - 1]) / 2
+            : (xs[i + 1] - xs[i - 1]) / 4;
+          svg.appendChild(el("rect", { x: xs[i] - half, y: y1, width: 2 * half, height: y0 - y1,
+            fill: "rgba(255,61,90,.14)", stroke: "rgba(255,61,90,.35)", "stroke-width": 1 }));
+          const t = el("text", { x: xs[i], y: y1 - 6, "text-anchor": "middle", fill: "#ff3d5a", "font-size": 10 });
+          t.textContent = "MODNet wins"; svg.appendChild(t);
+        }
+      });
+    }
   }
 
   series.forEach((sr) => {
@@ -204,14 +254,12 @@ function drawLC(svgId, legendId, group, series, sizes) {
         stroke: sr.color, "stroke-width": 1.5, "stroke-dasharray": sr.dash || "5 4", opacity: 0.8 }));
       return;
     }
-    const pts = stats[sr.key];
-    pts.forEach((p, i) => {
-      if (!p) return;
-      svg.appendChild(el("line", { x1: sx(i), x2: sx(i), y1: sy(p.lo), y2: sy(p.hi), stroke: sr.color, opacity: 0.3 }));
+    sr.data.forEach((p) => {
+      svg.appendChild(el("line", { x1: sx(p.n), x2: sx(p.n), y1: sy(p.lo), y2: sy(p.hi), stroke: sr.color, opacity: 0.3 }));
     });
     svg.appendChild(el("path", { class: "series", stroke: sr.color, "stroke-dasharray": sr.dash || "",
-      d: pts.map((p, i) => p ? `${i ? "L" : "M"}${sx(i)} ${sy(p.mean)}` : "").join(" ") }));
-    pts.forEach((p, i) => p && svg.appendChild(el("circle", { cx: sx(i), cy: sy(p.mean), r: 4, fill: sr.color, class: "dot" })));
+      d: sr.data.map((p, i) => `${i ? "L" : "M"}${sx(p.n)} ${sy(p.mean)}`).join(" ") }));
+    sr.data.forEach((p) => svg.appendChild(el("circle", { cx: sx(p.n), cy: sy(p.mean), r: 4, fill: sr.color, class: "dot" })));
   });
 
   const lg = $(legendId);
@@ -223,7 +271,7 @@ function drawLC(svgId, legendId, group, series, sizes) {
     span.innerHTML = `<i class="swatch" style="background:${sr.color};${sr.dash ? "height:0;border-top:2px dashed " + sr.color : ""}"></i>${sr.label}`;
     span.onclick = () => {
       if (lcHidden[group].has(sr.key)) lcHidden[group].delete(sr.key); else lcHidden[group].add(sr.key);
-      drawLC(svgId, legendId, group, series, sizes);
+      drawLC(svgId, legendId, group, series);
     };
     lg.appendChild(span);
   });
@@ -784,6 +832,89 @@ function drawArch() {
   arrow(560, 270, 616, 260);
 }
 
+/* ---------- 4b. real fit + preset grid ---------- */
+let archPresets = [];
+
+async function initArchFit() {
+  let d;
+  try {
+    d = await (await fetch("data/architecture.json")).json();
+  } catch (e) {
+    return;
+  }
+  const f = d.fit;
+  const hist = f.history || {};
+  const nPts = hist.mae ? hist.mae.length : 0;
+  if (!nPts) return;
+  const step = f.epochs_trained / nPts;
+  const svg = $("archFitChart");
+  if (svg) {
+    const W = 460, H = 300, P = { t: 18, r: 18, b: 42, l: 52 };
+    const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
+    const xs = hist.mae.map((_, i) => (i + 1) * step);
+    const vals = [...hist.mae, ...(hist.val_mae || hist.mae)];
+    const ymax = Math.max(...vals) * 1.05;
+    const sx = (e) => x0 + ((e - xs[0]) / (xs[xs.length - 1] - xs[0])) * (x1 - x0);
+    const sy = (v) => y0 - (v / ymax) * (y0 - y1);
+    svg.innerHTML = "";
+    const ax = el("g", { class: "axis" });
+    for (let i = 0; i <= 4; i++) {
+      const v = ymax * i / 4;
+      const t = el("text", { x: x0 - 8, y: sy(v) + 4, "text-anchor": "end" }); t.textContent = v.toFixed(2); ax.appendChild(t);
+      ax.appendChild(el("line", { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: "gridline" }));
+    }
+    [0, 50, 100, 150, 200, 250].forEach((e) => {
+      if (e < xs[0] || e > xs[xs.length - 1]) return;
+      const t = el("text", { x: sx(e), y: H - 18, "text-anchor": "middle" }); t.textContent = e; ax.appendChild(t);
+    });
+    const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
+    xl.textContent = "epoch"; ax.appendChild(xl);
+    const yl = el("text", { transform: `translate(12,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle" });
+    yl.textContent = "MAE"; ax.appendChild(yl);
+    svg.appendChild(ax);
+    const path = (arr) => arr.map((v, i) => `${i ? "L" : "M"}${sx(xs[i])} ${sy(v)}`).join(" ");
+    svg.appendChild(el("path", { class: "series", stroke: "#ff3d5a", d: path(hist.mae) }));
+    if (hist.val_mae) svg.appendChild(el("path", { class: "series", stroke: "#45d6ff", d: path(hist.val_mae) }));
+    const lg = $("archFitLegend");
+    if (lg) {
+      lg.innerHTML =
+        '<span><i class="swatch" style="background:#ff3d5a"></i>train MAE</span>' +
+        (hist.val_mae ? '<span><i class="swatch" style="background:#45d6ff"></i>validation MAE</span>' : "");
+    }
+  }
+
+  archPresets = (d.presets || []).map((p, i) => ({ i, ...p }))
+    .sort((a, b) => (a.n_feat - b.n_feat) || (a.num_neurons[0] - b.num_neurons[0]) || (a.epochs - b.epochs));
+  const sel = $("archPreset");
+  if (sel && archPresets.length) {
+    sel.innerHTML = archPresets.map((p) =>
+      `<option value="${p.i}">#${p.i + 1} · ${p.n_feat} features · ${p.num_neurons.join("→")} · ${p.act}</option>`).join("");
+    sel.onchange = () => showArchPreset(+sel.value);
+    showArchPreset(archPresets[0].i);
+  }
+}
+
+function showArchPreset(i) {
+  const p = archPresets.find((x) => x.i === i);
+  const box = $("archPresetInfo");
+  if (!p || !box) return;
+  const widths = p.num_neurons;
+  const maxW = Math.max(...widths);
+  box.innerHTML =
+    `<table><tbody>` +
+    `<tr><td>features kept (n_feat)</td><td><b>${p.n_feat}</b></td></tr>` +
+    `<tr><td>layer widths</td><td>${widths.map((w) => `<b>${w}</b>`).join(" → ")}</td></tr>` +
+    `<tr><td>activation</td><td>${p.act}</td></tr>` +
+    `<tr><td>loss / epochs</td><td>${p.loss} / ${p.epochs}</td></tr>` +
+    `<tr><td>learning rate</td><td>${p.lr}</td></tr>` +
+    `<tr><td>batch size</td><td>${p.batch_size}</td></tr>` +
+    `<tr><td>feature scaling</td><td>${p.xscale}</td></tr>` +
+    `</tbody></table>` +
+    `<div class="bars" style="margin-top:10px">` +
+    widths.map((w) => `<div class="bar-row"><span>layer</span><span class="bar-track"><span class="bar-fill" style="width:${(w / maxW) * 100}%"></span></span><b>${w}</b></div>`).join("") +
+    `</div>`;
+}
+
 /* ---------- 5. joint vs single ---------- */
 function drawJoint() {
   const svg = $("jointSvg");
@@ -868,6 +999,156 @@ async function initJointChart() {
 
   $("jointLegend").innerHTML = series.map((sr) =>
     `<span><i class="swatch" style="background:${sr.color}"></i>${sr.label}</span>`).join("");
+}
+
+/* ---------- 5d. real joint vs single ---------- */
+let jrData = null;
+let jrTarget = "egap";
+let jrMode = "joint";
+
+async function initJointReal() {
+  const svg = $("jointRealChart");
+  if (!svg) return;
+  let d;
+  try {
+    d = await (await fetch("data/joint_learning.json")).json();
+  } catch (e) {
+    svg.parentNode.style.display = "none";
+    return;
+  }
+  jrData = d;
+  const sizes = d.sizes || [];
+  const series = [];
+  ["eform", "egap"].forEach((t) => {
+    ["joint", "single"].forEach((m) => {
+      const pts = sizes.map((n) => {
+        const vals = d.rows.filter((r) => r.n_train === n)
+          .map((r) => r[m] && r[m][t]).filter((v) => v != null);
+        if (!vals.length) return null;
+        const mean = vals.reduce((a, v) => a + v, 0) / vals.length;
+        const sd = Math.sqrt(vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length);
+        return { n, mean, lo: Math.max(0, mean - sd), hi: mean + sd };
+      }).filter(Boolean);
+      series.push({ key: `${m}-${t}`, color: t === "eform" ? "#ff3d5a" : "#45d6ff",
+        dash: m === "single" ? "5 4" : "", data: pts });
+    });
+  });
+  drawJointRealChart(series);
+
+  const tbox = $("jointTargetControls");
+  if (tbox) {
+    ["eform", "egap"].forEach((t) => {
+      const b = document.createElement("button");
+      b.className = "pill";
+      b.textContent = t;
+      b.setAttribute("aria-pressed", t === jrTarget);
+      b.onclick = () => {
+        jrTarget = t;
+        [...tbox.children].forEach((c) = c.setAttribute("aria-pressed", c === b));
+        drawJointParity();
+      };
+      tbox.appendChild(b);
+    });
+  }
+  const mbox = $("jointModeControls");
+  if (mbox) {
+    [["joint", "joint (shared trunk)"], ["single", "single-task"]].forEach(([k, label]) => {
+      const b = document.createElement("button");
+      b.className = "pill";
+      b.textContent = label;
+      b.setAttribute("aria-pressed", k === jrMode);
+      b.onclick = () => {
+        jrMode = k;
+        [...mbox.children].forEach((c) => c.setAttribute("aria-pressed", c.textContent === label));
+        drawJointParity();
+      };
+      mbox.appendChild(b);
+    });
+  }
+  drawJointParity();
+}
+
+function drawJointRealChart(series) {
+  const svg = $("jointRealChart");
+  if (!svg) return;
+  const allPts = series.flatMap((s) => s.data);
+  if (!allPts.length) return;
+  const ns = [...new Set(allPts.map((p) => p.n))].sort((a, b) => a - b);
+  const lMin = Math.log10(ns[0]), lMax = Math.log10(ns[ns.length - 1]);
+  const ymax = Math.max(...allPts.map((p) => p.hi)) * 1.1;
+  const W = 900, H = 340, P = { t: 24, r: 20, b: 44, l: 60 };
+  const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
+  const sx = (n) => x0 + ((Math.log10(n) - lMin) / (lMax - lMin)) * (x1 - x0);
+  const sy = (v) => y0 - (v / ymax) * (y0 - y1);
+  svg.innerHTML = "";
+  const ax = el("g", { class: "axis" });
+  for (let i = 0; i <= 4; i++) {
+    const v = ymax * i / 4;
+    const t = el("text", { x: x0 - 8, y: sy(v) + 4, "text-anchor": "end" }); t.textContent = v.toFixed(1); ax.appendChild(t);
+    ax.appendChild(el("line", { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: "gridline" }));
+  }
+  ns.forEach((n) => {
+    const t = el("text", { x: sx(n), y: H - 20, "text-anchor": "middle" }); t.textContent = n; ax.appendChild(t);
+  });
+  const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
+  xl.textContent = "training samples (log scale)"; ax.appendChild(xl);
+  const yl = el("text", { transform: `translate(12,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle" });
+  yl.textContent = "test MAE (lower is better)"; ax.appendChild(yl);
+  svg.appendChild(ax);
+
+  series.forEach((sr) => {
+    sr.data.forEach((p) => {
+      svg.appendChild(el("line", { x1: sx(p.n), x2: sx(p.n), y1: sy(p.lo), y2: sy(p.hi), stroke: sr.color, opacity: 0.3 }));
+    });
+    svg.appendChild(el("path", { class: "series", stroke: sr.color, "stroke-dasharray": sr.dash,
+      d: sr.data.map((p, i) => `${i ? "L" : "M"}${sx(p.n)} ${sy(p.mean)}`).join(" ") }));
+    sr.data.forEach((p) => svg.appendChild(el("circle", { cx: sx(p.n), cy: sy(p.mean), r: 4, fill: sr.color, class: "dot" })));
+  });
+
+  const lg = $("jointRealLegend");
+  if (lg) {
+    lg.innerHTML = ["eform", "egap"].map((t) =>
+      `<span><i class="swatch" style="background:${t === "eform" ? "#ff3d5a" : "#45d6ff"}"></i>${t}</span>`).join("") +
+      `<span style="margin-left:10px"><i class="swatch" style="background:#eee9ee;height:0;border-top:2px solid #eee9ee"></i>joint (solid)</span>` +
+      `<span><i class="swatch" style="background:#eee9ee;height:0;border-top:2px dashed #eee9ee"></i>single-task (dashed)</span>`;
+  }
+}
+
+function drawJointParity() {
+  const svg = $("jointParity");
+  if (!svg || !jrData || !jrData.parity) return;
+  const pairs = (jrData.parity[jrMode] || {})[jrTarget] || [];
+  if (!pairs.length) return;
+  const W = 460, H = 340, P = { t: 18, r: 18, b: 42, l: 52 };
+  const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
+  const lo = Math.min(...pairs.flat().concat([0])), hi = Math.max(...pairs.flat());
+  const pad = (hi - lo) * 0.08 || 1;
+  const dmin = lo - pad, dmax = hi + pad;
+  const sx = (v) => x0 + ((v - dmin) / (dmax - dmin)) * (x1 - x0);
+  const sy = (v) => y0 - ((v - dmin) / (dmax - dmin)) * (y0 - y1);
+  svg.innerHTML = "";
+  const ax = el("g", { class: "axis" });
+  for (let i = 0; i <= 4; i++) {
+    const v = dmin + (dmax - dmin) * i / 4;
+    const t = el("text", { x: sx(v), y: H - 18, "text-anchor": "middle" }); t.textContent = v.toFixed(1); ax.appendChild(t);
+    const t2 = el("text", { x: x0 - 8, y: sy(v) + 4, "text-anchor": "end" }); t2.textContent = v.toFixed(1); ax.appendChild(t2);
+    ax.appendChild(el("line", { x1: x0, x2: x1, y1: sy(v), y2: sy(v), class: "gridline" }));
+    ax.appendChild(el("line", { x1: sx(v), x2: sx(v), y1: y1, y2: y0, class: "gridline" }));
+  }
+  svg.appendChild(el("line", { x1: sx(dmin), y1: sy(dmin), x2: sx(dmax), y2: sy(dmax),
+    stroke: "rgba(214,160,180,.4)", "stroke-width": 1.2, "stroke-dasharray": "4 4" }));
+  const xl = el("text", { x: (x0 + x1) / 2, y: H - 4, "text-anchor": "middle" });
+  xl.textContent = `true ${jrTarget}`; ax.appendChild(xl);
+  const yl = el("text", { transform: `translate(12,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle" });
+  yl.textContent = `predicted ${jrTarget}`; ax.appendChild(yl);
+  svg.appendChild(ax);
+  pairs.forEach(([a, b]) => svg.appendChild(el("circle", {
+    cx: sx(a), cy: sy(b), r: 4,
+    fill: jrMode === "joint" ? "#63e6a4" : "#5a6cff", class: "dot", opacity: 0.8,
+  })));
+  const mae = pairs.reduce((acc, [a, b]) => acc + Math.abs(a - b), 0) / pairs.length;
+  $("jointParMAE").textContent = mae.toFixed(3);
+  $("jointParN").textContent = pairs.length;
 }
 
 /* ---------- 5c. real ensemble uncertainty ---------- */
@@ -1003,6 +1284,93 @@ function drawGA() {
   $("gaEvents").innerHTML = html;
 }
 
+/* ---------- 7. subgroup bias ---------- */
+let biasFilter = "all";
+let biasData = null;
+
+function lerpColor(t, a, b) {
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`;
+}
+
+async function initBias() {
+  try {
+    biasData = await (await fetch("data/bias_imbalance.json")).json();
+  } catch (e) {
+    return;
+  }
+  const g = biasData.groups || {};
+  const rows = [
+    { label: "oxides", sub: `${(g.oxide.frac_test * 100).toFixed(0)}% of test set`, mae: g.oxide.mae_oxide },
+    { label: "non-oxides", sub: `${((1 - g.oxide.frac_test) * 100).toFixed(0)}% of test set`, mae: g.oxide.mae_nonoxide },
+    { label: "≥3 elements", sub: `${(g.n_elements_ge3.frac_test * 100).toFixed(0)}% of test set`, mae: g.n_elements_ge3.mae_ge3 },
+    { label: "binary", sub: `${((1 - g.n_elements_ge3.frac_test) * 100).toFixed(0)}% of test set`, mae: g.n_elements_ge3.mae_binary },
+  ].filter((r) => r.mae != null);
+  if (!rows.length) return;
+  const max = Math.max(...rows.map((r) => r.mae));
+  const box = $("biasBars");
+  if (box) {
+    box.innerHTML = rows.map((r) => `
+      <div class="bar-row" title="${r.sub}">
+        <span>${r.label}<br><small style="color:var(--dim)">${r.sub}</small></span>
+        <span class="bar-track"><span class="bar-fill" style="width:${(r.mae / max) * 100}%"></span></span>
+        <b>${r.mae.toFixed(3)}</b>
+      </div>`).join("");
+  }
+  const overall = biasData.samples.reduce((a, s) => a + s.abs_error, 0) / biasData.samples.length;
+  if ($("biasOverall")) $("biasOverall").textContent = overall.toFixed(3);
+  if ($("biasOxide")) $("biasOxide").textContent = g.oxide.mae_oxide.toFixed(3);
+  if ($("biasNonOxide")) $("biasNonOxide").textContent = g.oxide.mae_nonoxide.toFixed(3);
+
+  const cbox = $("biasControls");
+  if (cbox) {
+    [["all", "all"], ["oxide", "oxides"], ["nonoxide", "non-oxides"]].forEach(([k, label]) => {
+      const b = document.createElement("button");
+      b.className = "pill";
+      b.textContent = label;
+      b.setAttribute("aria-pressed", k === biasFilter);
+      b.onclick = () => {
+        biasFilter = k;
+        [...cbox.children].forEach((c) => c.setAttribute("aria-pressed", c === b));
+        drawBiasPCA();
+      };
+      cbox.appendChild(b);
+    });
+  }
+  drawBiasPCA();
+}
+
+function drawBiasPCA() {
+  const svg = $("biasPca");
+  if (!svg || !biasData) return;
+  const pts = biasData.samples.filter((s) =>
+    biasFilter === "all" || (biasFilter === "oxide" ? s.is_oxide : !s.is_oxide));
+  if (!pts.length) return;
+  const xs = biasData.samples.map((s) => s.pca_x), ys = biasData.samples.map((s) => s.pca_y);
+  const xMin = Math.min(...xs), xMax = Math.max(...xs), yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const xp = (xMax - xMin) * 0.06 || 1, yp = (yMax - yMin) * 0.06 || 1;
+  const W = 460, H = 340, P = { t: 14, r: 14, b: 40, l: 48 };
+  const x0 = P.l, x1 = W - P.r, y0 = H - P.b, y1 = P.t;
+  const sx = (v) => x0 + ((v - (xMin - xp)) / (xMax - xMin + 2 * xp)) * (x1 - x0);
+  const sy = (v) => y0 - ((v - (yMin - yp)) / (yMax - yMin + 2 * yp)) * (y0 - y1);
+  const eMax = Math.max(...biasData.samples.map((s) => s.abs_error));
+  svg.innerHTML = "";
+  const ax = el("g", { class: "axis" });
+  ax.appendChild(el("line", { x1: x0, x2: x1, y1: y0, y2: y0 }));
+  ax.appendChild(el("line", { x1: x0, x2: x0, y1: y1, y2: y0 }));
+  const xl = el("text", { x: (x0 + x1) / 2, y: H - 8, "text-anchor": "middle" });
+  xl.textContent = "PC1"; ax.appendChild(xl);
+  const yl = el("text", { transform: `translate(12,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle" });
+  yl.textContent = "PC2"; ax.appendChild(yl);
+  svg.appendChild(ax);
+  pts.forEach((s) => {
+    const t = Math.min(1, s.abs_error / eMax);
+    svg.appendChild(el("circle", {
+      cx: sx(s.pca_x), cy: sy(s.pca_y), r: 3,
+      fill: lerpColor(t, [90, 108, 255], [255, 61, 90]), opacity: 0.75, class: "dot",
+    }));
+  });
+}
+
 /* ---------- boot ---------- */
 initCross();
 initLearningCurves();
@@ -1013,5 +1381,8 @@ initFRR();
 drawArch();
 drawJoint();
 initJointChart();
+initJointReal();
 initEnsemble();
 initGA();
+initArchFit();
+initBias();
