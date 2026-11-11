@@ -13,36 +13,58 @@
     },
     {
       "name": "MatterVial",
-      "description": "Hybrid materials-informatics framework combining feature-based descriptors, graph neural networks, and symbolic regression for accuracy + interpretability. Basis of my first-author npj Computational Materials (2026) paper.",
+      "description": "Hybrid materials-informatics framework combining feature-based descriptors, graph neural networks, and symbolic regression for accuracy + interpretability. Published in npj Computational Materials (2026) — my first-author paper.",
       "tags": [
         "Materials Informatics",
         "GNNs",
         "Symbolic Regression",
         "Python"
       ],
-      "url": ""
+      "url": "https://github.com/rogeriog/MatterVial"
     },
     {
       "name": "VibroML",
-      "description": "Automated toolkit for high-throughput vibrational analysis and dynamic-instability remediation of crystalline materials using machine-learned potentials. arXiv preprint 2026.",
+      "description": "Automated toolkit for high-throughput vibrational analysis and dynamic-instability remediation of crystalline materials using machine-learned potentials. Manuscript under revision at Nature Communications; open code, support data and an 83k-structure Figshare dataset.",
       "tags": [
         "MLIPs",
         "DFT",
         "Automation",
         "Phonons"
       ],
-      "url": ""
+      "url": "https://github.com/rogeriog/VibroML"
+    },
+    {
+      "name": "ProtoCSP",
+      "description": "Crystal-structure prediction by prototype search and transmutation, co-developed with the VibroML pipeline. Open source (MIT); presented in the VibroML paper.",
+      "tags": [
+        "Crystal Structure Prediction",
+        "Alloys",
+        "Python",
+        "MIT"
+      ],
+      "url": "https://github.com/rogeriog/ProtoCSP"
     },
     {
       "name": "MEIDNet",
-      "description": "Multimodal generative AI framework for inverse materials design, co-developed at MODL/UCLouvain with A. Babu, P. Vandergheynst, and G.-M. Rignanese. arXiv preprint 2026.",
+      "description": "Multimodal generative AI framework for inverse materials design, co-developed at MODL/UCLouvain with A. Babu, P. Vandergheynst, and G.-M. Rignanese. Published in npj Computational Materials (2026).",
       "tags": [
         "Generative AI",
         "VAEs",
         "Diffusion Models",
         "Inverse Design"
       ],
-      "url": ""
+      "url": "https://doi.org/10.1038/s41524-026-02153-3"
+    },
+    {
+      "name": "modnet-pt",
+      "description": "PyTorch rewrite of MODNet with a scikit-learn API: fit(X, y) on plain DataFrames, no MODData. Full functional parity — featurization presets, FRR feature selection, joint learning, preset + genetic search, ensembles. Model-level parity confirmed on matbench_dielectric (MAE 0.347 vs 0.353 upstream).",
+      "tags": [
+        "PyTorch",
+        "Materials Informatics",
+        "scikit-learn",
+        "AutoML"
+      ],
+      "url": "https://github.com/rogeriog/modnet-pt"
     },
     {
       "name": "OpenClaw agent fleet",
