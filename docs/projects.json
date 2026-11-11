@@ -2,7 +2,7 @@
   "projects": [
     {
       "name": "Interactive SOAP explainer",
-      "description": "Interactive 3D walkthrough of the SOAP atomic descriptor: density → spherical harmonics → power spectrum → mu1nu1 compression, with real dscribe-computed data and standalone embeddable widgets.",
+      "description": "Interactive 3D walkthrough of the SOAP atomic descriptor: density \u2192 spherical harmonics \u2192 power spectrum \u2192 mu1nu1 compression, with real dscribe-computed data and standalone embeddable widgets.",
       "tags": [
         "Materials Informatics",
         "Interactive",
@@ -13,7 +13,7 @@
     },
     {
       "name": "MatterVial",
-      "description": "Hybrid materials-informatics framework combining feature-based descriptors, graph neural networks, and symbolic regression for accuracy + interpretability. Published in npj Computational Materials (2026) — my first-author paper.",
+      "description": "Hybrid materials-informatics framework combining feature-based descriptors, graph neural networks, and symbolic regression for accuracy + interpretability. Published in npj Computational Materials (2026) \u2014 my first-author paper.",
       "tags": [
         "Materials Informatics",
         "GNNs",
@@ -24,7 +24,7 @@
     },
     {
       "name": "VibroML",
-      "description": "Automated toolkit for high-throughput vibrational analysis and dynamic-instability remediation of crystalline materials using machine-learned potentials. Manuscript under revision at Nature Communications; open code, support data and an 83k-structure Figshare dataset.",
+      "description": "Automated toolkit for high-throughput vibrational analysis and dynamic-instability remediation of crystalline materials using machine-learned potentials. arXiv preprint 2026; open code, support data and an 83k-structure Figshare dataset.",
       "tags": [
         "MLIPs",
         "DFT",
@@ -57,7 +57,7 @@
     },
     {
       "name": "modnet-pt",
-      "description": "PyTorch rewrite of MODNet with a scikit-learn API: fit(X, y) on plain DataFrames, no MODData. Full functional parity — featurization presets, FRR feature selection, joint learning, preset + genetic search, ensembles. Model-level parity confirmed on matbench_dielectric (MAE 0.347 vs 0.353 upstream).",
+      "description": "PyTorch rewrite of MODNet with a scikit-learn API: fit(X, y) on plain DataFrames, no MODData. Full functional parity \u2014 featurization presets, FRR feature selection, joint learning, preset + genetic search, ensembles. Model-level parity confirmed on matbench_dielectric (MAE 0.347 vs 0.353 upstream).",
       "tags": [
         "PyTorch",
         "Materials Informatics",
@@ -79,7 +79,7 @@
     },
     {
       "name": "rogeriog.github.io",
-      "description": "This portfolio site — a static GitHub Pages site designed, built, and maintained by autonomous OpenClaw agents in direct collaboration with me.",
+      "description": "This portfolio site \u2014 a static GitHub Pages site designed, built, and maintained by autonomous OpenClaw agents in direct collaboration with me.",
       "tags": [
         "HTML/CSS",
         "GitHub Pages",
