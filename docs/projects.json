@@ -61,6 +61,10 @@
           "url": "/garden/vibroml/"
         },
         {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/2604.27685"
+        },
+        {
           "label": "GitHub",
           "url": "https://github.com/rogeriog/VibroML"
         }
@@ -81,6 +85,10 @@
         {
           "label": "Explainer",
           "url": "/garden/protocsp/"
+        },
+        {
+          "label": "arXiv (VibroML paper)",
+          "url": "https://arxiv.org/abs/2604.27685"
         },
         {
           "label": "GitHub",
