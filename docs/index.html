@@ -149,7 +149,8 @@
         .card p { color:var(--text-muted); font-size:.88rem; margin-bottom:14px; }
         .card-tags { display:flex; gap:8px; flex-wrap:wrap; }
         .tag { font-size:.7rem; padding:3px 10px; border-radius:12px; background:var(--primary-dim); color:var(--primary); }
-        .card-link { color:var(--text-dim); font-size:.8rem; margin-top:4px; display:inline-block; }
+        .card-links { display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; }
+        .card-link { color:var(--text-dim); font-size:.8rem; display:inline-block; }
         .card-link:hover { color:var(--primary); }
         .empty-state { color:var(--text-dim); font-style:italic; padding:30px 0; }
 
@@ -522,14 +523,21 @@ fetch('./projects.json?nocache=' + Date.now())
         const grid = document.getElementById('projGrid');
         const projects = data.projects || [];
         if (!projects.length) { grid.innerHTML = '<div class="empty-state">Projects coming soon.</div>'; return; }
-        grid.innerHTML = projects.map(p => `
+        const linkHtml = l => {
+            const ext = /^https?:/.test(l.url);
+            return `<a class="card-link" href="${l.url}"${ext ? ' target="_blank" rel="noopener"' : ''}><i class="fas ${ext ? 'fa-external-link-alt' : 'fa-arrow-right'}"></i> ${l.label}</a>`;
+        };
+        grid.innerHTML = projects.map(p => {
+            const links = (p.links && p.links.length) ? p.links : (p.url ? [{ label: 'Open', url: p.url }] : []);
+            return `
             <div class="card">
                 ${p.logo ? `<img class="card-logo" src="${p.logo}" alt="${p.name} logo" loading="lazy">` : ''}
                 <h3>${p.name}</h3>
                 <p>${p.description || ''}</p>
                 <div class="card-tags">${(p.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}</div>
-                ${p.url ? `<a class="card-link" href="${p.url}" target="_blank"><i class="fas fa-external-link-alt"></i> ${p.url.replace(/^https?:\/\//,'')}</a>` : ''}
-            </div>`).join('');
+                <div class="card-links">${links.map(linkHtml).join('')}</div>
+            </div>`;
+        }).join('');
     })
     .catch(() => {
         document.getElementById('projGrid').innerHTML = '<div class="empty-state">Projects coming soon.</div>';

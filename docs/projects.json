@@ -10,7 +10,13 @@
         "dscribe"
       ],
       "url": "/garden/soap-in-3d/",
-      "logo": "assets/logos/soap-in-3d.svg"
+      "logo": "assets/logos/soap-in-3d.svg",
+      "links": [
+        {
+          "label": "Explainer",
+          "url": "/garden/soap-in-3d/"
+        }
+      ]
     },
     {
       "name": "MatterVial",
@@ -22,7 +28,21 @@
         "Python"
       ],
       "url": "https://github.com/rogeriog/MatterVial",
-      "logo": "assets/logos/mattervial.png"
+      "logo": "assets/logos/mattervial.png",
+      "links": [
+        {
+          "label": "Explainer",
+          "url": "/garden/mattervial/"
+        },
+        {
+          "label": "DOI",
+          "url": "https://doi.org/10.1038/s41524-025-01938-2"
+        },
+        {
+          "label": "GitHub",
+          "url": "https://github.com/rogeriog/MatterVial"
+        }
+      ]
     },
     {
       "name": "VibroML",
@@ -34,7 +54,17 @@
         "Phonons"
       ],
       "url": "https://github.com/rogeriog/VibroML",
-      "logo": "assets/logos/vibroml.png"
+      "logo": "assets/logos/vibroml.png",
+      "links": [
+        {
+          "label": "Explainer",
+          "url": "/garden/vibroml/"
+        },
+        {
+          "label": "GitHub",
+          "url": "https://github.com/rogeriog/VibroML"
+        }
+      ]
     },
     {
       "name": "ProtoCSP",
@@ -46,7 +76,17 @@
         "MIT"
       ],
       "url": "https://github.com/rogeriog/ProtoCSP",
-      "logo": "assets/logos/protocsp.png"
+      "logo": "assets/logos/protocsp.png",
+      "links": [
+        {
+          "label": "Explainer",
+          "url": "/garden/protocsp/"
+        },
+        {
+          "label": "GitHub",
+          "url": "https://github.com/rogeriog/ProtoCSP"
+        }
+      ]
     },
     {
       "name": "MEIDNet",
@@ -58,7 +98,21 @@
         "Inverse Design"
       ],
       "url": "https://doi.org/10.1038/s41524-026-02153-3",
-      "logo": "assets/logos/meidnet.png"
+      "logo": "assets/logos/meidnet.png",
+      "links": [
+        {
+          "label": "Explainer",
+          "url": "/garden/meidnet/"
+        },
+        {
+          "label": "DOI",
+          "url": "https://doi.org/10.1038/s41524-026-02153-3"
+        },
+        {
+          "label": "GitHub",
+          "url": "https://github.com/ABnano/MEIDNet"
+        }
+      ]
     },
     {
       "name": "modnet-pt",
@@ -70,7 +124,17 @@
         "AutoML"
       ],
       "url": "https://github.com/rogeriog/modnet-pt",
-      "logo": "assets/logos/modnetpt.svg"
+      "logo": "assets/logos/modnetpt.svg",
+      "links": [
+        {
+          "label": "Explainer",
+          "url": "/garden/modnetpt/"
+        },
+        {
+          "label": "GitHub",
+          "url": "https://github.com/rogeriog/modnet-pt"
+        }
+      ]
     },
     {
       "name": "OpenClaw agent fleet",
@@ -92,7 +156,13 @@
         "OpenClaw"
       ],
       "url": "https://github.com/rogeriog/rogeriog.github.io",
-      "logo": "favicon.svg"
+      "logo": "favicon.svg",
+      "links": [
+        {
+          "label": "GitHub",
+          "url": "https://github.com/rogeriog/rogeriog.github.io"
+        }
+      ]
     }
   ]
 }
