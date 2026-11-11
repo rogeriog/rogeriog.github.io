@@ -24,7 +24,11 @@ All published files live under `docs/` — the Jekyll build is skipped via `docs
 
 - Keep the single-file architecture. New sections go inside `docs/index.html`; new data
   goes in `docs/projects.json`/`docs/publications.json` — no frameworks or bundlers.
-- `projects.json` schema: `{name, description, tags[], url}` — `url` may be `""`.
+- `projects.json` schema: `{name, description, tags[], url, logo?, links?[{label,url}]}` —
+  `url`/`logo` may be `""`/absent; `links` renders labeled card links (internal = same tab).
+- `skills.json` schema: `{skills:[{slug,title,summary,file}]}` — agent-facing directives
+  shown in the Skills section; markdown bodies live in `docs/skills/<file>` and render
+  client-side (lazy-fetched on expand).
 - `publications.json` is machine-owned by `update_scholar.py` — do not hand-edit entries;
   badges may be curated via `BADGE_MAP` in the script.
 - Digital garden lives in `docs/garden/`: one self-contained `<slug>.html` per post

@@ -193,6 +193,28 @@
         .skill-chips { display:flex; gap:10px; flex-wrap:wrap; }
         .skill-chips .chip { font-size:.84rem; padding:7px 15px; }
         .skill-chips .chip:hover { border-color:var(--primary); color:var(--primary); }
+        .agent-skills { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; margin-top:18px; }
+        .agent-skill { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius);
+            padding:20px 22px; transition:var(--transition); }
+        .agent-skill:hover { border-color:rgba(69,214,255,.35); transform:translateY(-2px); }
+        .agent-skill-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+        .agent-skill h4 { font-size:.98rem; margin:0; display:flex; align-items:center; gap:9px; }
+        .agent-skill h4 i { color:var(--teal); font-size:.85rem; }
+        .agent-skill > p { color:var(--text-muted); font-size:.85rem; margin:8px 0 0; }
+        .agent-skill-toggle { flex-shrink:0; background:none; border:1px solid var(--border); border-radius:var(--radius-sm);
+            color:var(--teal); font-size:.75rem; padding:5px 12px; cursor:pointer; transition:var(--transition); font-family:inherit; }
+        .agent-skill-toggle:hover { border-color:var(--teal); }
+        .skill-doc { margin-top:14px; padding:14px 16px; background:var(--bg-2); border:1px solid var(--border);
+            border-radius:var(--radius-sm); font-size:.82rem; line-height:1.6; max-height:380px; overflow-y:auto; }
+        .skill-doc p { margin:.55em 0; color:var(--text-muted); }
+        .skill-doc ul { margin:.4em 0 .6em 1.2em; padding:0; }
+        .skill-doc li { margin:.25em 0; color:var(--text-muted); }
+        .skill-doc .md-h { font-weight:700; color:var(--text); margin-top:.9em; }
+        .skill-doc .md-h1 { font-size:1.02rem; }
+        .skill-doc .md-h2 { font-size:.92rem; color:var(--teal); text-transform:uppercase; letter-spacing:.04em; }
+        .skill-doc code { font-family:var(--font-mono, monospace); font-size:.78rem; background:rgba(69,214,255,.10);
+            padding:1px 5px; border-radius:5px; color:var(--teal); }
+        .skill-doc b { color:var(--text); }
 
         /* ── PUBLICATIONS ── */
         .pub-item { padding:20px 0; border-bottom:1px solid var(--border);
@@ -407,6 +429,12 @@
             <span class="chip">French</span><span class="chip">Spanish</span>
         </div>
     </div>
+    <div class="skill-group">
+        <h3>For agent work</h3>
+        <div class="agent-skills" id="agentSkills">
+            <div class="empty-state">Loading…</div>
+        </div>
+    </div>
 </section>
 
 <!-- ═══════ PUBLICATIONS ═══════ -->
@@ -542,6 +570,59 @@ fetch('./projects.json?nocache=' + Date.now())
     .catch(() => {
         document.getElementById('projGrid').innerHTML = '<div class="empty-state">Projects coming soon.</div>';
     });
+
+/* ── AGENT SKILLS — directives/playbooks I write for agents ── */
+function mdToHtml(md) {
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const inline = s => esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+    let inList = false, html = '';
+    for (const line of md.split('\n')) {
+        const t = line.trim();
+        if (/^#{1,4}\s/.test(t)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            const n = t.match(/^#+/)[0].length;
+            html += `<div class="md-h md-h${Math.min(n,3)}">${inline(t.replace(/^#+\s*/,''))}</div>`;
+        } else if (/^[-*]\s/.test(t)) {
+            if (!inList) { html += '<ul>'; inList = true; }
+            html += `<li>${inline(t.replace(/^[-*]\s*/,''))}</li>`;
+        } else if (!t) {
+            if (inList) { html += '</ul>'; inList = false; }
+        } else {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<p>${inline(t)}</p>`;
+        }
+    }
+    if (inList) html += '</ul>';
+    return html;
+}
+fetch('./skills.json?nocache=' + Date.now())
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+        const host = document.getElementById('agentSkills');
+        const skills = data.skills || [];
+        if (!skills.length) { host.innerHTML = '<div class="empty-state">No agent skills yet.</div>'; return; }
+        host.innerHTML = skills.map((s, i) => `
+            <div class="agent-skill">
+                <div class="agent-skill-head">
+                    <h4><i class="fas fa-robot"></i> ${s.title}</h4>
+                    <button class="agent-skill-toggle" data-i="${i}" type="button">read directive</button>
+                </div>
+                <p>${s.summary || ''}</p>
+                <div class="skill-doc" id="skilldoc-${i}" hidden></div>
+            </div>`).join('');
+        host.querySelectorAll('.agent-skill-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const doc = document.getElementById('skilldoc-' + btn.dataset.i);
+                if (!doc.hidden) { doc.hidden = true; btn.textContent = 'read directive'; return; }
+                doc.hidden = false; btn.textContent = 'hide';
+                if (!doc.dataset.loaded) {
+                    doc.dataset.loaded = '1';
+                    fetch('./' + skills[btn.dataset.i].file).then(r => r.text()).then(md => { doc.innerHTML = mdToHtml(md); });
+                }
+            });
+        });
+    })
+    .catch(() => { document.getElementById('agentSkills').innerHTML = '<div class="empty-state">No agent skills yet.</div>'; });
 </script>
 </body>
 </html>

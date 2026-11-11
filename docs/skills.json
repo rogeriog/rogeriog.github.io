@@ -1,0 +1,10 @@
+{
+  "skills": [
+    {
+      "slug": "cluster-operations",
+      "title": "Cluster operations directive",
+      "summary": "Rules I give every agent before it touches the cluster: GPU/CPU split, mandatory job resumability, debug-queue validation before scale, and diagnose-don't-resubmit on failures.",
+      "file": "skills/cluster_operations_directive.md"
+    }
+  ]
+}
