@@ -1,0 +1,115 @@
+/* VibroML section — scoped to .proj[data-id="vibroml"] */
+.proj[data-id="vibroml"] {
+  --vml-term-bg: #0f1a22;
+  --vml-term-fg: #d7e3ec;
+}
+
+/* chapter 1: two canvases side by side */
+.proj[data-id="vibroml"] .vml-duo { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; align-items: center; }
+.proj[data-id="vibroml"] .vml-cv { min-width: 0; }
+@media (max-width: 700px) { .proj[data-id="vibroml"] .vml-duo { grid-template-columns: minmax(0, 1fr); } }
+
+.proj[data-id="vibroml"] .vml-read,
+.proj[data-id="vibroml"] .vml-metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px;
+}
+.proj[data-id="vibroml"] .vml-read > div,
+.proj[data-id="vibroml"] .vml-metrics > div {
+  background: var(--surface-2); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.proj[data-id="vibroml"] .vml-read .k,
+.proj[data-id="vibroml"] .vml-metrics .k { font-size: var(--t-xs); color: var(--muted); font-weight: 700; }
+.proj[data-id="vibroml"] .vml-read .v { font-size: var(--t-sm); font-weight: 700; color: var(--fg); overflow-wrap: anywhere; }
+.proj[data-id="vibroml"] .vml-metrics .v { font: 800 var(--t-lg)/1.1 var(--f-display); color: var(--p-ink); }
+.proj[data-id="vibroml"] .vml-metrics .v.bad { color: var(--bad); }
+.proj[data-id="vibroml"] .vml-metrics .v.good { color: var(--good); }
+.proj[data-id="vibroml"] .vml-metrics .k2 { font-size: var(--t-xs); color: var(--muted); }
+.proj[data-id="vibroml"] .vml-off { opacity: .4; }
+
+.proj[data-id="vibroml"] .vml-eq {
+  font-size: var(--t-md); background: var(--p-soft); border-radius: 8px; padding: 10px 14px; text-align: center;
+  font-family: "Cambria Math", "Times New Roman", serif;
+}
+.proj[data-id="vibroml"] .prose code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+
+/* chapter 2: pipeline */
+.proj[data-id="vibroml"] .vml-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.proj[data-id="vibroml"] .vml-step {
+  display: flex; gap: 8px; align-items: center; text-align: left; padding: 7px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: 600 var(--t-sm)/1.2 var(--f-body);
+}
+.proj[data-id="vibroml"] .vml-step .n {
+  flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--p-soft); color: var(--p-ink); font: 700 var(--t-xs)/1 var(--f-mono);
+}
+.proj[data-id="vibroml"] .vml-step:hover { border-color: var(--p); }
+.proj[data-id="vibroml"] .vml-step[aria-selected="true"] { background: var(--p); border-color: var(--p); color: var(--surface); }
+.proj[data-id="vibroml"] .vml-step[aria-selected="true"] .n { background: var(--surface); color: var(--p); }
+.proj[data-id="vibroml"] .vml-step-detail { display: flex; flex-direction: column; gap: 8px; min-height: 9em; }
+.proj[data-id="vibroml"] .vml-pipe-stage { align-items: center; }
+.proj[data-id="vibroml"] .vml-pipe-fig { position: relative; width: fit-content; max-width: 100%; margin: 0 auto; }
+.proj[data-id="vibroml"] .vml-pipe-fig img {
+  display: block; max-width: 100%; max-height: 74vh; width: auto; height: auto; border-radius: 8px; background: #fff;
+}
+.proj[data-id="vibroml"] .vml-hl {
+  position: absolute; border: 3px solid var(--bad); border-radius: 8px; pointer-events: none;
+  box-shadow: 0 0 0 9999px color-mix(in oklab, #000 22%, transparent); transition: all .3s ease;
+}
+.proj[data-id="vibroml"] .vml-pipe-fig { overflow: hidden; border-radius: 8px; }
+.proj[data-id="vibroml"] .vml-hot { position: absolute; background: transparent; border: 0; cursor: pointer; padding: 0; }
+.proj[data-id="vibroml"] .vml-hot:focus-visible { outline: 3px solid var(--p); }
+
+/* chapter 4: found minima list */
+.proj[data-id="vibroml"] .vml-found { display: flex; flex-direction: column; gap: 4px; font-size: var(--t-sm); }
+.proj[data-id="vibroml"] .vml-found-h { font-weight: 700; }
+.proj[data-id="vibroml"] .vml-found-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.proj[data-id="vibroml"] .vml-found-row .sw { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--fg); }
+
+/* chapter 5: terminal */
+.proj[data-id="vibroml"] .vml-side .stats { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+.proj[data-id="vibroml"] .vml-term {
+  margin: 0; background: var(--vml-term-bg); color: var(--vml-term-fg); border-radius: 8px; padding: 10px 12px;
+  font: 400 clamp(.7rem, .66rem + .18vw, .84rem)/1.5 var(--f-mono); overflow-x: auto; white-space: pre; min-height: 6em;
+}
+.proj[data-id="vibroml"] .vml-term .c { color: #8fa3b1; font-style: italic; }
+.proj[data-id="vibroml"] .vml-term .cmd { color: #8ccaf0; font-weight: 600; }
+
+/* chapter 6 */
+.proj[data-id="vibroml"] .vml-dispfig img { aspect-ratio: 2.1 / 1; object-fit: contain; }
+.proj[data-id="vibroml"] .vml-v { font-weight: 700; }
+.proj[data-id="vibroml"] .vml-v.good { color: var(--good); }
+.proj[data-id="vibroml"] .vml-v.bad { color: var(--bad); }
+
+/* chapter 7 */
+.proj[data-id="vibroml"] .vml-scale { margin-top: 18px; }
+.proj[data-id="vibroml"] .vml-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.proj[data-id="vibroml"] .vml-dumb { display: flex; flex-direction: column; gap: 14px; }
+.proj[data-id="vibroml"] .vml-dumb .row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) 9.5em; gap: 12px; align-items: center; }
+.proj[data-id="vibroml"] .vml-dumb .lab { font-size: var(--t-sm); }
+.proj[data-id="vibroml"] .vml-dumb .val { font-size: var(--t-sm); white-space: nowrap; }
+.proj[data-id="vibroml"] .vml-dumb .track { position: relative; height: 22px; border-radius: 11px; background: var(--surface-2); margin: 0 9px; }
+.proj[data-id="vibroml"] .vml-dumb .bar { position: absolute; top: 9px; height: 4px; background: color-mix(in oklab, var(--p) 45%, transparent); }
+.proj[data-id="vibroml"] .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--surface); }
+.proj[data-id="vibroml"] .vml-dumb .dot { position: absolute; top: 2px; margin-left: -9px; width: 18px; height: 18px; }
+.proj[data-id="vibroml"] .dot.a { background: var(--muted); }
+.proj[data-id="vibroml"] .dot.b { background: var(--p); }
+.proj[data-id="vibroml"] .vml-legend { display: flex; gap: 8px; align-items: center; font-size: var(--t-xs); color: var(--muted); }
+.proj[data-id="vibroml"] .vml-legend .dot + * { margin-right: 10px; }
+.proj[data-id="vibroml"] .vml-list { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; font-size: var(--t-sm); }
+@media (max-width: 620px) {
+  .proj[data-id="vibroml"] .vml-dumb .row { grid-template-columns: minmax(0, 1fr) auto; }
+  .proj[data-id="vibroml"] .vml-dumb .track { grid-column: 1 / -1; grid-row: 2; }
+}
+.proj[data-id="vibroml"] .vml-funnel { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.proj[data-id="vibroml"] .vml-funnel .f {
+  background: var(--surface-2); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.proj[data-id="vibroml"] .vml-funnel .f b { font: 800 var(--t-lg)/1.1 var(--f-display); color: var(--fg); }
+.proj[data-id="vibroml"] .vml-funnel .f span { font-size: var(--t-xs); color: var(--muted); }
+.proj[data-id="vibroml"] .vml-funnel .f.last { background: var(--p); }
+.proj[data-id="vibroml"] .vml-funnel .f.last b, .proj[data-id="vibroml"] .vml-funnel .f.last span { color: var(--surface); }
+@media (max-width: 520px) { .proj[data-id="vibroml"] .vml-funnel { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.proj[data-id="vibroml"] .stage > .seg,
+.proj[data-id="vibroml"] .stage-title + .seg { align-self: flex-start; }
+.proj[data-id="vibroml"] .vml-pair .imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.proj[data-id="vibroml"] .vml-pair img { height: 180px; object-fit: contain; padding: 6px; box-sizing: border-box; }

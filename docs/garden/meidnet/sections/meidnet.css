@@ -1,0 +1,217 @@
+/* MEIDNet section — scoped to .proj[data-id="meidnet"] */
+.proj[data-id="meidnet"] {
+  /* Studio block colours (docs/use/studio.md): Data blue, Model orange, Family green, Rules amber,
+     Targets pink, Search dark green, Candidates violet */
+  --mdn-blue: #2f6fd0; --mdn-orange: #d9772b; --mdn-green: #3a9a4a; --mdn-amber: #c49512;
+  --mdn-pink: #cf4f8f; --mdn-dkgreen: #1f6b4f; --mdn-violet: #7a4fc9;
+  --mdn-st-use: var(--good); --mdn-st-part: var(--warn); --mdn-st-plan: var(--muted);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .proj[data-id="meidnet"] {
+    --mdn-blue: #7fb0f5; --mdn-orange: #f2a465; --mdn-green: #7fd28b; --mdn-amber: #ecc556;
+    --mdn-pink: #f28dbd; --mdn-dkgreen: #5cc79a; --mdn-violet: #b897f5;
+  }
+}
+:root[data-theme="dark"] .proj[data-id="meidnet"] {
+  --mdn-blue: #7fb0f5; --mdn-orange: #f2a465; --mdn-green: #7fd28b; --mdn-amber: #ecc556;
+  --mdn-pink: #f28dbd; --mdn-dkgreen: #5cc79a; --mdn-violet: #b897f5;
+}
+
+.proj[data-id="meidnet"] .prose code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.proj[data-id="meidnet"] .mdn-sub { font: 700 var(--t-xs)/1.2 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.proj[data-id="meidnet"] .stage > .seg,
+.proj[data-id="meidnet"] .stage-title + .seg,
+.proj[data-id="meidnet"] .prose > .seg { align-self: flex-start; }
+.proj[data-id="meidnet"] .btn.ghost.on { background: var(--p-soft); }
+
+/* ---------- ch1: modality map ---------- */
+.proj[data-id="meidnet"] .mdn-mods { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; }
+.proj[data-id="meidnet"] .mdn-mod {
+  display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 6px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); border-left: 4px solid var(--mdn-st-plan); background: var(--surface); color: var(--fg);
+  font: 600 var(--t-sm)/1.2 var(--f-body);
+}
+.proj[data-id="meidnet"] .mdn-mod .s { font-size: var(--t-xs); color: var(--muted); font-weight: 600; }
+.proj[data-id="meidnet"] .mdn-mod.st-in-use { border-left-color: var(--mdn-st-use); }
+.proj[data-id="meidnet"] .mdn-mod.st-via-structure,
+.proj[data-id="meidnet"] .mdn-mod.st-partial { border-left-color: var(--mdn-st-part); }
+.proj[data-id="meidnet"] .mdn-mod.st-planned { border-style: dashed; border-left-style: solid; color: var(--muted); }
+.proj[data-id="meidnet"] .mdn-mod:hover { border-color: var(--p); }
+.proj[data-id="meidnet"] .mdn-mod[aria-pressed="true"] { background: var(--p-soft); border-color: var(--p); }
+.proj[data-id="meidnet"] .mdn-moddetail { min-height: 3.2em; }
+
+/* ---------- equations ---------- */
+.proj[data-id="meidnet"] .mdn-eq {
+  font-family: "Cambria Math", "Times New Roman", serif; font-size: var(--t-md); background: var(--p-soft);
+  border-radius: 8px; padding: 10px 14px; text-align: center; line-height: 2.1; overflow-x: auto;
+}
+.proj[data-id="meidnet"] .mdn-eq.sm { font-size: var(--t-sm); line-height: 1.7; }
+.proj[data-id="meidnet"] .mdn-eq .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; line-height: 1.25; margin: 0 2px; }
+.proj[data-id="meidnet"] .mdn-eq .fr > span:first-child { border-bottom: 1px solid currentColor; padding: 0 4px 1px; }
+.proj[data-id="meidnet"] .mdn-eq .fr > span:last-child { padding: 1px 4px 0; }
+
+/* ---------- ch2: alignment toy ---------- */
+.proj[data-id="meidnet"] .mdn-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: center; }
+.proj[data-id="meidnet"] .mdn-cv { min-width: 0; }
+@media (max-width: 560px) { .proj[data-id="meidnet"] .mdn-duo { grid-template-columns: minmax(0, 1fr); } }
+.proj[data-id="meidnet"] .mdn-read { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 6px; }
+.proj[data-id="meidnet"] .mdn-read > div { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.proj[data-id="meidnet"] .mdn-read .k { font-size: var(--t-xs); color: var(--muted); font-weight: 700; }
+.proj[data-id="meidnet"] .mdn-read .v { font: 800 var(--t-md)/1.1 var(--f-display); color: var(--p-ink); }
+.proj[data-id="meidnet"] .mdn-read .v.good { color: var(--good); }
+
+/* ---------- ch3: architecture ---------- */
+.proj[data-id="meidnet"] .mdn-arch { overflow-x: auto; }
+.proj[data-id="meidnet"] .mdn-archsvg { min-width: 520px; height: auto; }
+.proj[data-id="meidnet"] .mdn-node { cursor: pointer; outline: none; }
+.proj[data-id="meidnet"] .mdn-node.fake { cursor: default; opacity: .9; }
+.proj[data-id="meidnet"] .mdn-node rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; transition: fill .15s; }
+.proj[data-id="meidnet"] .mdn-node.in rect { fill: var(--surface-2); }
+.proj[data-id="meidnet"] .mdn-node.enc rect { fill: color-mix(in oklab, var(--p) 14%, var(--surface)); stroke: color-mix(in oklab, var(--p) 45%, var(--line)); }
+.proj[data-id="meidnet"] .mdn-node.dec rect { fill: color-mix(in oklab, var(--p2) 14%, var(--surface)); stroke: color-mix(in oklab, var(--p2) 50%, var(--line)); }
+.proj[data-id="meidnet"] .mdn-node.lat rect { fill: var(--surface); stroke: var(--p); stroke-width: 2; }
+.proj[data-id="meidnet"] .mdn-node.loss rect { fill: color-mix(in oklab, var(--warn) 16%, var(--surface)); stroke: var(--warn); stroke-dasharray: 5 3; }
+.proj[data-id="meidnet"] .mdn-node:not(.fake):hover rect { stroke: var(--p); stroke-width: 2.5; }
+.proj[data-id="meidnet"] .mdn-node:focus-visible rect { stroke: var(--p); stroke-width: 3; }
+.proj[data-id="meidnet"] .mdn-node.sel rect { stroke: var(--p); stroke-width: 3.5; fill: color-mix(in oklab, var(--p) 24%, var(--surface)); }
+.proj[data-id="meidnet"] .mdn-node text { text-anchor: middle; fill: var(--fg); font-family: var(--f-body); pointer-events: none; }
+.proj[data-id="meidnet"] .mdn-node text.t { font-size: 15px; font-weight: 800; }
+.proj[data-id="meidnet"] .mdn-node text.t.sm { font-size: 13px; font-weight: 700; }
+.proj[data-id="meidnet"] .mdn-node text.s { font-size: 11px; fill: var(--muted); font-weight: 600; }
+.proj[data-id="meidnet"] .mdn-edge { fill: none; stroke: var(--muted); stroke-width: 1.8; }
+.proj[data-id="meidnet"] .mdn-edge.nce { stroke: var(--warn); stroke-dasharray: 4 3; }
+.proj[data-id="meidnet"] .mdn-edge.inv { stroke: var(--p2); stroke-width: 2.6; stroke-dasharray: 7 4; cursor: pointer; }
+.proj[data-id="meidnet"] .mdn-edge.inv.sel { stroke-width: 4; }
+.proj[data-id="meidnet"] .mdn-arrhead { fill: var(--muted); }
+.proj[data-id="meidnet"] .mdn-arrhead.inv { fill: var(--p2); }
+.proj[data-id="meidnet"] .mdn-elab { font: 700 12px var(--f-body); fill: var(--muted); text-anchor: middle; }
+.proj[data-id="meidnet"] .mdn-elab.inv { fill: var(--p2); cursor: pointer; font-size: 13px; }
+.proj[data-id="meidnet"] .mdn-elab.acc { fill: var(--warn); }
+.proj[data-id="meidnet"] .mdn-info { display: flex; flex-direction: column; gap: 8px; min-height: 8.5em; font-size: var(--t-sm); }
+.proj[data-id="meidnet"] .mdn-info-t { font: 800 var(--t-md)/1.2 var(--f-display); color: var(--p-ink); }
+.proj[data-id="meidnet"] .mdn-info p { max-width: none; }
+
+.proj[data-id="meidnet"] .mdn-abl { display: flex; flex-direction: column; gap: 6px; }
+.proj[data-id="meidnet"] .mdn-ablrow,
+.proj[data-id="meidnet"] .mdn-ablkey { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 6px; align-items: center; }
+.proj[data-id="meidnet"] .mdn-ablrow .k { font-size: var(--t-sm); font-weight: 800; }
+.proj[data-id="meidnet"] .mdn-ablrow .k span { display: block; font-size: var(--t-xs); color: var(--muted); font-weight: 600; }
+.proj[data-id="meidnet"] .mdn-ablrow .bar { position: relative; height: 26px; border-radius: 6px; background: var(--surface-2); overflow: hidden; opacity: .55; transition: opacity .15s; }
+.proj[data-id="meidnet"] .mdn-ablrow .bar.on { opacity: 1; outline: 2px solid var(--p); outline-offset: -2px; }
+.proj[data-id="meidnet"] .mdn-ablrow .bar i { position: absolute; inset: 0 auto 0 0; background: color-mix(in oklab, var(--p) 45%, var(--surface)); }
+.proj[data-id="meidnet"] .mdn-ablrow .bar b { position: relative; display: block; padding: 0 8px; font: 700 var(--t-xs)/26px var(--f-mono); color: var(--fg); }
+.proj[data-id="meidnet"] .mdn-ablkey span { font-size: var(--t-xs); color: var(--muted); font-weight: 700; text-align: center; }
+
+/* ---------- ch4: search toy ---------- */
+.proj[data-id="meidnet"] .mdn-steps { counter-reset: none; }
+.proj[data-id="meidnet"] .mdn-funnel { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 6px; }
+.proj[data-id="meidnet"] .mdn-funnel .f { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.proj[data-id="meidnet"] .mdn-funnel .f b { font: 800 var(--t-lg)/1.1 var(--f-display); color: var(--fg); }
+.proj[data-id="meidnet"] .mdn-funnel .f span { font-size: var(--t-xs); color: var(--muted); }
+.proj[data-id="meidnet"] .mdn-funnel .f.last { background: var(--p); }
+.proj[data-id="meidnet"] .mdn-funnel .f.last b, .proj[data-id="meidnet"] .mdn-funnel .f.last span { color: var(--surface); }
+.proj[data-id="meidnet"] .mdn-cands { display: flex; flex-wrap: wrap; gap: 6px; min-height: 2em; }
+.proj[data-id="meidnet"] .mdn-cand {
+  display: inline-flex; gap: 6px; align-items: baseline; padding: 3px 8px; border-radius: 6px; font-size: var(--t-xs);
+  border: 1px solid var(--line); background: var(--surface);
+}
+.proj[data-id="meidnet"] .mdn-cand b { font-size: var(--t-sm); }
+.proj[data-id="meidnet"] .mdn-cand.good { border-color: color-mix(in oklab, var(--good) 60%, var(--line)); background: color-mix(in oklab, var(--good) 10%, var(--surface)); }
+.proj[data-id="meidnet"] .mdn-cand.good span { color: var(--good); font-weight: 700; }
+.proj[data-id="meidnet"] .mdn-cand.bad { color: var(--muted); }
+.proj[data-id="meidnet"] .mdn-cand.bad span { color: var(--bad); }
+
+/* ---------- ch5: results ---------- */
+.proj[data-id="meidnet"] .mdn-panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.proj[data-id="meidnet"] .mdn-panel > div { display: flex; flex-direction: column; gap: 10px; }
+.proj[data-id="meidnet"] .mdn-panel .seg { align-self: flex-start; }
+.proj[data-id="meidnet"] .mdn-hov { min-height: 2.8em; }
+.proj[data-id="meidnet"] .mdn-plot .grid { stroke: var(--line); stroke-width: 1; }
+.proj[data-id="meidnet"] .mdn-plot .ax { font: 600 12px var(--f-body); fill: var(--muted); }
+.proj[data-id="meidnet"] .mdn-plot .ax.lab { font-weight: 700; fill: var(--fg); }
+.proj[data-id="meidnet"] .mdn-plot .diag { stroke: var(--p2); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.proj[data-id="meidnet"] .mdn-plot .link { stroke: var(--muted); stroke-width: 1; opacity: .5; }
+.proj[data-id="meidnet"] .mdn-plot .cg { fill: var(--p); stroke: var(--surface); stroke-width: 1.5; cursor: pointer; }
+.proj[data-id="meidnet"] .mdn-plot .dft { fill: var(--surface); stroke: var(--warn); stroke-width: 2.5; cursor: pointer; }
+.proj[data-id="meidnet"] .mdn-plot circle:hover, .proj[data-id="meidnet"] .mdn-plot circle:focus { stroke: var(--fg); stroke-width: 3; outline: none; }
+
+.proj[data-id="meidnet"] .mdn-gbars { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.proj[data-id="meidnet"] .mdn-gset { display: flex; flex-direction: column; gap: 5px; }
+.proj[data-id="meidnet"] .mdn-gset > .k { font-weight: 800; font-size: var(--t-sm); }
+.proj[data-id="meidnet"] .mdn-gset .bar,
+.proj[data-id="meidnet"] .mdn-lb .row { display: grid; grid-template-columns: 5.5em minmax(0, 1fr) 4.6em; gap: 8px; align-items: center; font-size: var(--t-xs); }
+.proj[data-id="meidnet"] .mdn-lb .row { grid-template-columns: minmax(0, 15em) minmax(0, 1fr) 3.6em; }
+.proj[data-id="meidnet"] .mdn-gset .n, .proj[data-id="meidnet"] .mdn-lb .n { font-weight: 700; overflow-wrap: anywhere; }
+.proj[data-id="meidnet"] .mdn-gset .track, .proj[data-id="meidnet"] .mdn-lb .track { position: relative; height: 16px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.proj[data-id="meidnet"] .mdn-gset .track i, .proj[data-id="meidnet"] .mdn-lb .track i { position: absolute; inset: 0 auto 0 0; background: color-mix(in oklab, var(--muted) 45%, var(--surface)); }
+.proj[data-id="meidnet"] .mdn-gset .bar.on .track i, .proj[data-id="meidnet"] .mdn-lb .row:not(.base) .track i { background: var(--p); }
+.proj[data-id="meidnet"] .mdn-gset .bar.on .n { color: var(--p-ink); }
+.proj[data-id="meidnet"] .mdn-gset b, .proj[data-id="meidnet"] .mdn-lb b { font-family: var(--f-mono); text-align: right; }
+.proj[data-id="meidnet"] .mdn-lb { display: flex; flex-direction: column; gap: 6px; }
+.proj[data-id="meidnet"] .mdn-lb .row.base .n { color: var(--muted); font-style: italic; }
+
+/* ---------- ch6: repair ---------- */
+.proj[data-id="meidnet"] .mdn-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.proj[data-id="meidnet"] .mdn-strip .st {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--p);
+  border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; font-size: var(--t-xs); color: var(--muted);
+}
+.proj[data-id="meidnet"] .mdn-strip .st b { font-size: var(--t-sm); color: var(--fg); }
+.proj[data-id="meidnet"] .mdn-strip .st:nth-child(3) { border-top-color: var(--p2); }
+@media (max-width: 760px) { .proj[data-id="meidnet"] .mdn-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.proj[data-id="meidnet"] .mdn-clist { display: flex; flex-wrap: wrap; gap: 6px; }
+.proj[data-id="meidnet"] .mdn-clist button {
+  border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 7px; padding: 5px 10px; cursor: pointer;
+  font: 700 var(--t-sm)/1.1 var(--f-body);
+}
+.proj[data-id="meidnet"] .mdn-clist button:hover { border-color: var(--p); }
+.proj[data-id="meidnet"] .mdn-clist button[aria-selected="true"] { background: var(--p); border-color: var(--p); color: var(--surface); }
+.proj[data-id="meidnet"] .mdn-rep { display: flex; flex-direction: column; gap: 10px; min-height: 7.5em; }
+.proj[data-id="meidnet"] .mdn-db { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) 9em; gap: 10px; align-items: center; font-size: var(--t-sm); }
+.proj[data-id="meidnet"] .mdn-db .k { font-weight: 700; }
+.proj[data-id="meidnet"] .mdn-db .v { white-space: nowrap; text-align: right; }
+.proj[data-id="meidnet"] .mdn-db .track { position: relative; height: 20px; border-radius: 10px; background: var(--surface-2); margin: 0 9px; }
+.proj[data-id="meidnet"] .mdn-db .seg { position: absolute; top: 8px; height: 4px; background: color-mix(in oklab, var(--p) 50%, transparent); }
+.proj[data-id="meidnet"] .mdn-db .dot { position: absolute; top: 1px; margin-left: -9px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--surface); box-sizing: border-box; }
+.proj[data-id="meidnet"] .mdn-db .dot.a { background: var(--muted); }
+.proj[data-id="meidnet"] .mdn-db .dot.b { background: var(--p); }
+.proj[data-id="meidnet"] .mdn-db .dot.b.star { background: var(--surface); border: 3px dashed var(--p); }
+@media (max-width: 520px) {
+  .proj[data-id="meidnet"] .mdn-db { grid-template-columns: minmax(0, 1fr) auto; }
+  .proj[data-id="meidnet"] .mdn-db .track { grid-column: 1 / -1; grid-row: 2; }
+}
+.proj[data-id="meidnet"] .mdn-ph { align-items: center; }
+.proj[data-id="meidnet"] .mdn-ph img { width: auto; max-width: 100%; max-height: 62vh; }
+.proj[data-id="meidnet"] .mdn-next { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+@media (max-width: 560px) { .proj[data-id="meidnet"] .mdn-next { grid-template-columns: minmax(0, 1fr); } }
+.proj[data-id="meidnet"] .mdn-next .nx {
+  border: 1px dashed var(--line); border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; font-size: var(--t-xs); color: var(--muted);
+}
+.proj[data-id="meidnet"] .mdn-next .nx b { font-size: var(--t-sm); color: var(--p-ink); }
+
+/* ---------- ch7: Prism / Studio ---------- */
+.proj[data-id="meidnet"] .c-blue { --c: var(--mdn-blue); } .proj[data-id="meidnet"] .c-orange { --c: var(--mdn-orange); }
+.proj[data-id="meidnet"] .c-green { --c: var(--mdn-green); } .proj[data-id="meidnet"] .c-amber { --c: var(--mdn-amber); }
+.proj[data-id="meidnet"] .c-pink { --c: var(--mdn-pink); } .proj[data-id="meidnet"] .c-dkgreen { --c: var(--mdn-dkgreen); }
+.proj[data-id="meidnet"] .c-violet { --c: var(--mdn-violet); }
+.proj[data-id="meidnet"] .mdn-blocks { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+@media (max-width: 620px) { .proj[data-id="meidnet"] .mdn-blocks { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.proj[data-id="meidnet"] .mdn-blocks .blk {
+  border: 1px solid color-mix(in oklab, var(--c) 50%, var(--line)); border-top: 5px solid var(--c); border-radius: 7px;
+  background: color-mix(in oklab, var(--c) 8%, var(--surface)); color: var(--fg); cursor: pointer; padding: 8px 4px;
+  font: 700 var(--t-xs)/1.1 var(--f-body); min-width: 0; overflow-wrap: anywhere; transition: background .2s, box-shadow .2s;
+}
+.proj[data-id="meidnet"] .mdn-blocks .blk:hover { background: color-mix(in oklab, var(--c) 18%, var(--surface)); }
+.proj[data-id="meidnet"] .mdn-blocks .blk[aria-selected="true"] { background: var(--c); color: var(--surface); }
+.proj[data-id="meidnet"] .mdn-blocks .blk.flash { box-shadow: 0 0 0 2px var(--c); }
+.proj[data-id="meidnet"] .mdn-blkdet { display: flex; flex-direction: column; gap: 8px; font-size: var(--t-sm); min-height: 6.5em; }
+.proj[data-id="meidnet"] .mdn-chain { font-size: var(--t-sm); background: var(--surface-2); border-radius: 8px; padding: 8px 12px; min-height: 2.6em; }
+.proj[data-id="meidnet"] .mdn-chain b { color: var(--c); }
+.proj[data-id="meidnet"] .mdn-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }
+.proj[data-id="meidnet"] .mdn-links .lk {
+  display: flex; flex-direction: column; gap: 1px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); text-decoration: none; color: var(--muted); font-size: var(--t-xs); min-width: 0;
+}
+.proj[data-id="meidnet"] .mdn-links .lk b { color: var(--p-ink); font-size: var(--t-sm); }
+.proj[data-id="meidnet"] .mdn-links .lk b::after { content: " ↗"; font-weight: 400; }
+.proj[data-id="meidnet"] .mdn-links .lk:hover { border-color: var(--p); background: var(--p-soft); }

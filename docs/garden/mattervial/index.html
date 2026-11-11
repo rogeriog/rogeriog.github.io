@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MatterVial — interactive explainer | Rogério Gouvêa</title>
+<meta name="description" content="MatterVial — GNN-learned features and symbolic formulas inside a readable materials-informatics model. Interactive explainer.">
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="core.css">
+<link rel="stylesheet" href="sections/hub.css">
+<link rel="stylesheet" href="sections/mattervial.css">
+</head>
+<body>
+<header class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#hub" data-go="hub" aria-label="Back to the toolbox overview">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">MODL toolbox</span>
+    </a>
+    <nav class="proj-nav" id="proj-nav" aria-label="Projects"></nav>
+    <div class="topbar-tools">
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle light or dark theme" title="Theme (T)">◐</button>
+      <button class="icon-btn" id="fs-btn" type="button" aria-label="Toggle fullscreen" title="Fullscreen (F)">⛶</button>
+      <button class="icon-btn" id="help-btn" type="button" aria-label="Keyboard shortcuts" title="Shortcuts (?)">?</button>
+    </div>
+  </div>
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<div class="help-pop" id="help-pop" hidden>
+  <div class="help-card" role="dialog" aria-label="Keyboard shortcuts">
+    <h3>Presenting with the keyboard</h3>
+    <dl>
+      <dt><span class="kbd">→</span> <span class="kbd">Space</span></dt><dd>next chapter</dd>
+      <dt><span class="kbd">←</span></dt><dd>previous chapter</dd>
+      <dt><span class="kbd">0</span> <span class="kbd">Esc</span></dt><dd>back to the overview</dd>
+      <dt><span class="kbd">F</span></dt><dd>fullscreen</dd>
+      <dt><span class="kbd">T</span></dt><dd>light / dark theme</dd>
+    </dl>
+    <button class="btn" type="button" id="help-close">Close</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="core.js"></script>
+<script src="sections/hub.js"></script>
+<script src="sections/mattervial.js"></script>
+<script>WELT.start();</script>
+</body>
+</html>

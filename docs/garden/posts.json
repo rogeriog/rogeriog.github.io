@@ -22,7 +22,83 @@
         "tutorial"
       ],
       "source_url": "",
-      "x_url": ""
+      "x_url": "",
+      "url": "./soap-in-3d/"
+    },
+    {
+      "slug": "mattervial",
+      "title": "Interactive MatterVial explainer",
+      "date": "2026-11-11",
+      "summary": "How MatterVial gives feature-based models the representations GNNs learn — latent features, SISSO formulas, an interpreter, and static element embeddings — as a clickable chapter walkthrough with live widgets.",
+      "tags": [
+        "materials-informatics",
+        "interactive",
+        "GNNs",
+        "symbolic-regression"
+      ],
+      "source_url": "https://doi.org/10.1038/s41524-025-01938-2",
+      "x_url": "",
+      "url": "./mattervial/"
+    },
+    {
+      "slug": "vibroml",
+      "title": "Interactive VibroML explainer",
+      "date": "2026-11-11",
+      "summary": "VibroML finds imaginary phonons with machine-learned potentials and follows the soft modes downhill to dynamically stable polymorphs — pipeline, detection metrics, GA vs single-path remediation, and 6,574-system scale results.",
+      "tags": [
+        "materials-informatics",
+        "interactive",
+        "phonons",
+        "MLIPs"
+      ],
+      "source_url": "",
+      "x_url": "",
+      "url": "./vibroml/"
+    },
+    {
+      "slug": "protocsp",
+      "title": "Interactive ProtoCSP explainer",
+      "date": "2026-11-11",
+      "summary": "ProtoCSP turns a prototype and a target composition into ranked, ordered crystal structures — cold-start prototype borrowing, alloy decoration, fast tensor mode, and MLIP relaxation, all explorable chapter by chapter.",
+      "tags": [
+        "materials-informatics",
+        "interactive",
+        "crystal-structure-prediction",
+        "alloys"
+      ],
+      "source_url": "",
+      "x_url": "",
+      "url": "./protocsp/"
+    },
+    {
+      "slug": "meidnet",
+      "title": "Interactive MEIDNet explainer",
+      "date": "2026-11-11",
+      "summary": "MEIDNet (lead: Anand Babu) generates crystals from target properties via a multimodal contrastive latent space — architecture, latent search, benchmark results, and the VibroML repair loop that followed.",
+      "tags": [
+        "materials-informatics",
+        "interactive",
+        "generative-models",
+        "inverse-design"
+      ],
+      "source_url": "https://doi.org/10.1038/s41524-026-02153-3",
+      "x_url": "",
+      "url": "./meidnet/"
+    },
+    {
+      "slug": "modnetpt",
+      "title": "Interactive modnet-pt explainer",
+      "date": "2026-11-11",
+      "summary": "modnet-pt rewrites MODNet in PyTorch behind the scikit-learn contract — featurization, FRR selection, joint learning, preset and genetic search, ensembles — with confirmed parity on matbench_dielectric.",
+      "tags": [
+        "materials-informatics",
+        "interactive",
+        "PyTorch",
+        "MODNet"
+      ],
+      "source_url": "https://github.com/rogeriog/modnet-pt",
+      "x_url": "",
+      "url": "./modnetpt/"
     }
   ]
 }

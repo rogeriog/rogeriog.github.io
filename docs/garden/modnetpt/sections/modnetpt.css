@@ -1,0 +1,115 @@
+/* modnet-pt section styles — all scoped to the project page, colors from shell tokens. */
+.proj[data-id="modnetpt"] .mp-lockup { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.proj[data-id="modnetpt"] .mp-lockup img { height: 54px; width: auto; max-width: 42%; background: #fff; border-radius: 8px; padding: 4px 8px; border: 1px solid var(--line); }
+.proj[data-id="modnetpt"] .mp-lockup-arrow { font: 800 var(--t-lg)/1 var(--f-display); color: var(--p2); }
+.proj[data-id="modnetpt"] .prose code, .proj[data-id="modnetpt"] .callout code, .proj[data-id="modnetpt"] .hint code,
+.proj[data-id="modnetpt"] .tbl code, .proj[data-id="modnetpt"] .tagline code {
+  font-size: .86em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere;
+}
+.proj[data-id="modnetpt"] .tbl td { white-space: normal; min-width: 9ch; font-size: var(--t-xs); }
+.proj[data-id="modnetpt"] .mp-sub { font: 700 var(--t-xs)/1.2 var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.proj[data-id="modnetpt"] .mp-cv { width: 100%; min-width: 0; }
+.proj[data-id="modnetpt"] .mp-view { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.proj[data-id="modnetpt"] .mp-view[hidden] { display: none; }
+.proj[data-id="modnetpt"] .mp-sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 18px; }
+
+/* ch1: flow strip */
+.proj[data-id="modnetpt"] .mp-flow { display: flex; flex-direction: column; gap: 8px; }
+.proj[data-id="modnetpt"] .mp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px; border-radius: 8px; background: var(--surface-2); transition: opacity .2s; }
+.proj[data-id="modnetpt"] .mp-row.mute { opacity: .38; }
+.proj[data-id="modnetpt"] .mp-tag { font: 700 var(--t-xs)/1 var(--f-mono); color: var(--muted); min-width: 11ch; }
+.proj[data-id="modnetpt"] .mp-chip {
+  font: 600 var(--t-xs)/1.2 var(--f-mono); padding: 5px 8px; border-radius: 6px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--fg); transition: background .2s, opacity .2s, border-color .2s;
+}
+.proj[data-id="modnetpt"] .mp-chip.on { background: var(--p); border-color: var(--p); color: var(--surface); }
+.proj[data-id="modnetpt"] .mp-chip.dim { opacity: .5; }
+.proj[data-id="modnetpt"] .mp-arr { color: var(--muted); font-weight: 700; }
+.proj[data-id="modnetpt"] .mp-box {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 14px 6px 5px; border-radius: 8px;
+  border: 1.5px solid color-mix(in oklab, var(--p2) 55%, var(--line)); position: relative;
+  background: color-mix(in oklab, var(--p2) 7%, var(--surface));
+}
+.proj[data-id="modnetpt"] .mp-box.mp-pipe { border-style: dashed; border-color: color-mix(in oklab, var(--p) 60%, var(--line)); background: color-mix(in oklab, var(--p) 6%, var(--surface)); }
+.proj[data-id="modnetpt"] .mp-box-lab { position: absolute; top: 1px; left: 7px; font: 700 10px/1.2 var(--f-body); color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.proj[data-id="modnetpt"] .mp-badges { display: inline-flex; gap: 5px; flex-wrap: wrap; margin-left: 4px; }
+.proj[data-id="modnetpt"] .mp-badge { font: 600 11px/1.2 var(--f-mono); padding: 3px 7px; border-radius: 999px; color: var(--good); border: 1px solid color-mix(in oklab, var(--good) 50%, var(--line)); background: color-mix(in oklab, var(--good) 9%, var(--surface)); }
+.proj[data-id="modnetpt"] .mp-codes { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.proj[data-id="modnetpt"] .mp-code { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.proj[data-id="modnetpt"] .mp-code.old .code { border-left: 4px solid var(--p2); }
+.proj[data-id="modnetpt"] .mp-code.new .code { border-left: 4px solid var(--p); }
+
+/* ch2: formulas, readouts, bars */
+.proj[data-id="modnetpt"] .mp-eqs { display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); font-size: var(--t-sm); }
+.proj[data-id="modnetpt"] .mp-read { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.proj[data-id="modnetpt"] .mp-read > div { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; font: 700 var(--t-md)/1.2 var(--f-mono); color: var(--p-ink); min-width: 0; }
+.proj[data-id="modnetpt"] .mp-read .k { font: 600 var(--t-xs)/1.2 var(--f-body); color: var(--muted); }
+.proj[data-id="modnetpt"] .mp-two { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 640px) { .proj[data-id="modnetpt"] .mp-two { grid-template-columns: minmax(0, 1fr); } .proj[data-id="modnetpt"] .mp-read { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.proj[data-id="modnetpt"] .mp-bars { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+.proj[data-id="modnetpt"] .mp-bar { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(40px, 1fr) 6ch; gap: 8px; align-items: center; font-size: var(--t-xs); }
+.proj[data-id="modnetpt"] .mp-bar .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proj[data-id="modnetpt"] .mp-bar .track { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.proj[data-id="modnetpt"] .mp-bar .fill { display: block; height: 100%; background: color-mix(in oklab, var(--p2) 55%, var(--surface)); border-radius: 5px; transition: width .25s; }
+.proj[data-id="modnetpt"] .mp-bar.best .fill { background: var(--p2); }
+.proj[data-id="modnetpt"] .mp-bar.best .lab { font-weight: 700; }
+.proj[data-id="modnetpt"] .mp-bar .val { font-family: var(--f-mono); text-align: right; }
+.proj[data-id="modnetpt"] .mp-picks { margin: 6px 0 0; padding-left: 2.2em; font-size: var(--t-xs); display: flex; flex-direction: column; gap: 3px; }
+.proj[data-id="modnetpt"] .mp-picks li { display: flex; justify-content: space-between; gap: 8px; }
+.proj[data-id="modnetpt"] .mp-picks li::marker { color: var(--p-ink); font-weight: 700; }
+.proj[data-id="modnetpt"] .mp-picks li > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.proj[data-id="modnetpt"] .mp-picks .mp-rr { color: var(--muted); font-family: var(--f-mono); white-space: nowrap; }
+.proj[data-id="modnetpt"] .mp-note { min-height: 2.6em; }
+.proj[data-id="modnetpt"] .mp-psl { max-width: 420px; }
+
+/* ch3: network SVG */
+.proj[data-id="modnetpt"] .mp-net { overflow-x: auto; }
+.proj[data-id="modnetpt"] .mp-net svg { min-width: 560px; height: auto; }
+.proj[data-id="modnetpt"] .mp-node rect:first-child { stroke-width: 1.5; }
+.proj[data-id="modnetpt"] .mp-node.in rect:first-child { fill: var(--surface-2); stroke: var(--line); }
+.proj[data-id="modnetpt"] .mp-node.trunk rect:first-child { fill: color-mix(in oklab, var(--p) 22%, var(--surface)); stroke: var(--p); }
+.proj[data-id="modnetpt"] .mp-node.grp rect:first-child { fill: color-mix(in oklab, var(--p) 12%, var(--surface)); stroke: color-mix(in oklab, var(--p) 70%, var(--line)); }
+.proj[data-id="modnetpt"] .mp-node.sub rect:first-child { fill: color-mix(in oklab, var(--p2) 10%, var(--surface)); stroke: color-mix(in oklab, var(--p2) 60%, var(--line)); }
+.proj[data-id="modnetpt"] .mp-node.head rect:first-child { fill: color-mix(in oklab, var(--p2) 22%, var(--surface)); stroke: var(--p2); }
+.proj[data-id="modnetpt"] .mp-node .t1 { font: 700 14px var(--f-mono); fill: var(--fg); }
+.proj[data-id="modnetpt"] .mp-node .t2 { font: 400 12px var(--f-body); fill: var(--muted); }
+.proj[data-id="modnetpt"] .mp-node .badge.bn { fill: var(--good); }
+.proj[data-id="modnetpt"] .mp-node .badge.dr { fill: var(--warn); }
+.proj[data-id="modnetpt"] .mp-node .tb { font: 700 10px var(--f-mono); fill: var(--surface); }
+.proj[data-id="modnetpt"] .mp-edge { fill: none; stroke: color-mix(in oklab, var(--fg) 40%, transparent); stroke-width: 1.6; }
+.proj[data-id="modnetpt"] .mp-coltitle { font: 700 11px var(--f-body); fill: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.proj[data-id="modnetpt"] .mp-out { font: 600 14px var(--f-mono); fill: var(--p-ink); }
+.proj[data-id="modnetpt"] .mp-gl { font: 700 11px var(--f-body); fill: var(--p-ink); }
+.proj[data-id="modnetpt"] .mp-loss { font-size: var(--t-sm); overflow-wrap: anywhere; }
+.proj[data-id="modnetpt"] .mp-schem .fig img { max-height: 70vh; width: auto; max-width: 100%; margin: 0 auto; display: block; }
+.proj[data-id="modnetpt"] .mp-live { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.proj[data-id="modnetpt"] .mp-live[hidden], .proj[data-id="modnetpt"] .mp-schem[hidden] { display: none; }
+
+/* ch4: preset grid + genome */
+.proj[data-id="modnetpt"] .mp-grid { display: flex; flex-direction: column; gap: 4px; }
+.proj[data-id="modnetpt"] .mp-grow { display: grid; grid-template-columns: 7ch minmax(0, 20ch) minmax(0, 1fr); gap: 10px; align-items: center; font-size: var(--t-xs); }
+.proj[data-id="modnetpt"] .mp-grow .lab { color: var(--muted); font-family: var(--f-mono); }
+.proj[data-id="modnetpt"] .mp-grow .arch { font-family: var(--f-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.proj[data-id="modnetpt"] .mp-grow .cells { display: flex; flex-wrap: wrap; gap: 3px; }
+.proj[data-id="modnetpt"] .mp-grow .cell { width: 18px; height: 18px; border-radius: 3px; background: color-mix(in oklab, var(--p) 65%, var(--surface)); }
+.proj[data-id="modnetpt"] .mp-grow .cell:nth-child(2n) { background: color-mix(in oklab, var(--p2) 65%, var(--surface)); }
+.proj[data-id="modnetpt"] .mp-genome { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); }
+.proj[data-id="modnetpt"] .mp-gh { font-size: var(--t-sm); }
+.proj[data-id="modnetpt"] .mp-genes { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+.proj[data-id="modnetpt"] .mp-genes > div { display: flex; flex-direction: column; background: var(--surface); border-radius: 6px; padding: 4px 8px; min-width: 0; }
+.proj[data-id="modnetpt"] .mp-genes .k { font-size: 11px; color: var(--muted); }
+.proj[data-id="modnetpt"] .mp-genes .v { font: 700 var(--t-xs)/1.3 var(--f-mono); color: var(--fg); overflow-wrap: anywhere; }
+.proj[data-id="modnetpt"] .mp-arch { font: 700 var(--t-xs)/1.3 var(--f-mono); color: var(--p-ink); }
+
+/* ch6 */
+.proj[data-id="modnetpt"] .mp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.proj[data-id="modnetpt"] .mp-chips .pill { white-space: normal; }
+.proj[data-id="modnetpt"] .mp-tests { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.proj[data-id="modnetpt"] .mp-lockup img { height: 44px; }
+.proj[data-id="modnetpt"] .mp-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--t-xs); color: var(--muted); margin-top: -4px; }
+.proj[data-id="modnetpt"] .mp-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.proj[data-id="modnetpt"] .mp-legend .ln { display: inline-block; width: 18px; height: 0; border-top: 3px solid var(--p); }
+.proj[data-id="modnetpt"] .mp-legend .ln.mean { border-top: 2px dashed var(--muted); }
+.proj[data-id="modnetpt"] .mp-legend .ln.par { border-top: 2px solid var(--p2); }
+.proj[data-id="modnetpt"] .mp-legend .ring { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid var(--p2); }
