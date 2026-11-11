@@ -249,6 +249,7 @@
   }
 
   function go(id, ch) {
+    if (id === 'hub') { location.href = '/garden/'; return; }
     const hash = id === 'hub' ? 'hub' : (ch ? `${id}-${ch + 1}` : id);
     if (location.hash.slice(1) !== hash) history.pushState(null, '', '#' + hash);
     route();
@@ -257,10 +258,10 @@
 
   function parseHash() {
     const raw = (location.hash || '').slice(1);
-    if (!raw || raw === 'hub') return { id: 'hub', ch: 0 };
+    if (!raw || raw === 'hub') { const l = W.projects(); return { id: l.length ? l[0].id : 'hub', ch: 0 }; }
     const m = raw.match(/^([a-z0-9]+)(?:-(\d+))?$/);
     if (m && defs[m[1]]) return { id: m[1], ch: m[2] ? +m[2] - 1 : 0 };
-    return { id: 'hub', ch: 0 };
+    const l = W.projects(); return { id: l.length ? l[0].id : 'hub', ch: 0 };
   }
   function route() {
     const r = parseHash();
