@@ -1,0 +1,13 @@
+{
+  "posts": [
+    {
+      "slug": "starting-the-garden",
+      "title": "Starting the garden",
+      "date": "2026-10-30",
+      "summary": "Why this page exists: short notes on papers, ideas, and tools I keep coming back to — tended together with my OpenClaw agents.",
+      "tags": ["meta"],
+      "source_url": "",
+      "x_url": ""
+    }
+  ]
+}
