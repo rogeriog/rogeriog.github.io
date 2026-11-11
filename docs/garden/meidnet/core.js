@@ -291,7 +291,7 @@
   }
 
   W.start = function () {
-    try { const t = localStorage.getItem('welt-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) { /* ignore */ }
+    try { const t = localStorage.getItem('welt-theme'); document.documentElement.setAttribute('data-theme', t || 'dark'); } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
     document.addEventListener('click', (e) => {
       const a = e.target.closest('[data-go]');
       if (a) { e.preventDefault(); go(a.getAttribute('data-go'), 0); }
