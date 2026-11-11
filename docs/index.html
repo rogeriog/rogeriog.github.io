@@ -144,6 +144,7 @@
         .card { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius);
             padding:26px; transition:var(--transition); backdrop-filter:blur(8px); }
         .card:hover { transform:translateY(-4px); border-color:rgba(255,61,90,.32); box-shadow:var(--shadow); }
+        .card-logo { height:44px; width:auto; max-width:100%; object-fit:contain; margin-bottom:14px; display:block; }
         .card h3 { font-size:1.05rem; margin-bottom:8px; }
         .card p { color:var(--text-muted); font-size:.88rem; margin-bottom:14px; }
         .card-tags { display:flex; gap:8px; flex-wrap:wrap; }
@@ -523,6 +524,7 @@ fetch('./projects.json?nocache=' + Date.now())
         if (!projects.length) { grid.innerHTML = '<div class="empty-state">Projects coming soon.</div>'; return; }
         grid.innerHTML = projects.map(p => `
             <div class="card">
+                ${p.logo ? `<img class="card-logo" src="${p.logo}" alt="${p.name} logo" loading="lazy">` : ''}
                 <h3>${p.name}</h3>
                 <p>${p.description || ''}</p>
                 <div class="card-tags">${(p.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}</div>

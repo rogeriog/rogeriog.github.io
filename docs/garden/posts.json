@@ -38,7 +38,8 @@
       ],
       "source_url": "https://doi.org/10.1038/s41524-025-01938-2",
       "x_url": "",
-      "url": "./mattervial/"
+      "url": "./mattervial/",
+      "logo": "./mattervial/assets/logos/mattervial.png"
     },
     {
       "slug": "vibroml",
@@ -53,7 +54,8 @@
       ],
       "source_url": "",
       "x_url": "",
-      "url": "./vibroml/"
+      "url": "./vibroml/",
+      "logo": "./vibroml/assets/logos/vibroml.png"
     },
     {
       "slug": "protocsp",
@@ -68,7 +70,8 @@
       ],
       "source_url": "",
       "x_url": "",
-      "url": "./protocsp/"
+      "url": "./protocsp/",
+      "logo": "./protocsp/assets/logos/protocsp.png"
     },
     {
       "slug": "meidnet",
@@ -83,7 +86,8 @@
       ],
       "source_url": "https://doi.org/10.1038/s41524-026-02153-3",
       "x_url": "",
-      "url": "./meidnet/"
+      "url": "./meidnet/",
+      "logo": "./meidnet/assets/logos/meidnet.png"
     },
     {
       "slug": "modnetpt",
@@ -98,7 +102,8 @@
       ],
       "source_url": "https://github.com/rogeriog/modnet-pt",
       "x_url": "",
-      "url": "./modnetpt/"
+      "url": "./modnetpt/",
+      "logo": "./modnetpt/assets/logos/modnetpt.svg"
     }
   ]
 }

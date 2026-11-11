@@ -57,6 +57,7 @@
             border-radius:var(--radius); padding:22px 26px; text-decoration:none; color:var(--text);
             transition:var(--transition); }
         .post-card:hover { border-color:rgba(99,230,164,.35); transform:translateY(-2px); }
+        .post-logo { height:40px; width:auto; max-width:160px; object-fit:contain; display:block; margin-bottom:12px; }
         .post-card h2 { font-size:1.25rem; margin-bottom:6px; }
         .post-card:hover h2 { color:var(--green); }
         .post-meta { display:flex; gap:14px; align-items:center; font-size:.78rem; color:var(--text-dim);
@@ -110,6 +111,7 @@
             if (!posts.length) { list.innerHTML = '<p class="empty">Nothing planted yet.</p>'; return; }
             list.innerHTML = posts.map(p => `
                 <a class="post-card" href="${p.url || './' + p.slug + '.html'}">
+                    ${p.logo ? `<img class="post-logo" src="${p.logo}" alt="${p.title} logo" loading="lazy">` : ''}
                     <div class="post-meta">
                         <span>${p.date}</span>
                         ${(p.tags||[]).map(t => `<span class="tag">${t}</span>`).join('')}
