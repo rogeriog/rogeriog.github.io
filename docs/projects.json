@@ -9,7 +9,8 @@
         "Three.js",
         "dscribe"
       ],
-      "url": "/garden/soap-in-3d/"
+      "url": "/garden/soap-in-3d/",
+      "logo": "assets/logos/soap-in-3d.svg"
     },
     {
       "name": "MatterVial",

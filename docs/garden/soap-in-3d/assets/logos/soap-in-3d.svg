@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="sphere" cx="36%" cy="30%" r="85%">
+      <stop offset="0%" stop-color="#8ff0ff"/>
+      <stop offset="55%" stop-color="#45d6ff"/>
+      <stop offset="100%" stop-color="#2b6fd4"/>
+    </radialGradient>
+    <linearGradient id="lobes" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#63e6a4"/>
+      <stop offset="100%" stop-color="#45d6ff"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="27" fill="url(#sphere)" opacity="0.18"/>
+  <circle cx="32" cy="32" r="27" fill="none" stroke="url(#lobes)" stroke-width="2.6"/>
+  <g fill="url(#lobes)">
+    <ellipse cx="32" cy="21" rx="6.5" ry="11"/>
+    <ellipse cx="32" cy="43" rx="6.5" ry="11"/>
+    <ellipse cx="21" cy="32" rx="11" ry="6.5"/>
+    <ellipse cx="43" cy="32" rx="11" ry="6.5"/>
+  </g>
+  <circle cx="32" cy="32" r="4.6" fill="#f2fbff" stroke="#1d4e89" stroke-width="1.6"/>
+</svg>

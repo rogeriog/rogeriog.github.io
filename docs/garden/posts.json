@@ -23,7 +23,8 @@
       ],
       "source_url": "",
       "x_url": "",
-      "url": "./soap-in-3d/"
+      "url": "./soap-in-3d/",
+      "logo": "./soap-in-3d/assets/logos/soap-in-3d.svg"
     },
     {
       "slug": "mattervial",
