@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squeezing MatMiner through a bottleneck — draft</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08060a; --panel:#160e16; --border:rgba(214,160,180,.14);
+    --text:#eee9ee; --muted:#a79ba6; --dim:#6e5f6e;
+    --red:#ff3d5a; --blue:#5a6cff; --ice:#45d6ff; --green:#63e6a4; --gold:#e8a05a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(900px 600px at 8% -5%, rgba(120,18,40,.28), transparent 65%),
+      radial-gradient(760px 620px at 95% 15%, rgba(30,45,120,.24), transparent 70%),
+      var(--bg);
+    color:var(--text);font-family:'Inter',sans-serif;line-height:1.65}
+  a{color:var(--red)}
+  code{font-family:ui-monospace,Menlo,monospace;font-size:.86em;color:var(--ice)}
+  header{max-width:980px;margin:0 auto;padding:26px 24px 0;display:flex;justify-content:space-between;align-items:center}
+  .brand{font-family:'Space Grotesk';font-weight:700;text-decoration:none;color:var(--text)}
+  .brand span{color:var(--red)}
+  .back{font-size:.82rem;color:var(--muted);text-decoration:none}
+  main{max-width:980px;margin:0 auto;padding:40px 24px 80px}
+  .wip{display:inline-flex;align-items:center;gap:8px;font-size:.7rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--gold);border:1px solid rgba(232,160,90,.35);
+    background:rgba(232,160,90,.08);padding:5px 12px;border-radius:20px;margin-bottom:18px}
+  h1{font-family:'Space Grotesk';font-size:clamp(1.9rem,5vw,2.9rem);line-height:1.1;margin:0 0 14px}
+  h1 em{font-style:normal;color:var(--red)}
+  h2{font-family:'Space Grotesk';font-size:1.3rem;margin:46px 0 8px}
+  h2::after{content:'';display:block;width:46px;height:3px;margin-top:8px;border-radius:2px;
+    background:linear-gradient(90deg,var(--red),var(--blue))}
+  h3{font-family:'Space Grotesk';font-size:1rem;margin:24px 0 8px}
+  p{color:var(--muted);margin:12px 0}
+  p strong{color:var(--text)}
+  .lede{color:var(--muted);max-width:700px;font-size:1.03rem}
+  .card{background:rgba(22,14,22,.72);border:1px solid var(--border);border-radius:16px;padding:20px;margin-top:18px}
+  .kv{display:flex;gap:22px;flex-wrap:wrap;margin:8px 0 4px}
+  .kv b{font-family:'Space Grotesk';font-size:1.5rem;color:var(--ice);display:block;line-height:1.1}
+  .kv small{font-size:.68rem;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+  .note{font-size:.76rem;color:var(--dim);margin-top:12px}
+  .note strong{color:var(--muted)}
+  svg{width:100%;height:auto;display:block}
+  .callout{border-left:3px solid var(--red);background:rgba(255,61,90,.06);padding:12px 16px;border-radius:0 10px 10px 0;margin:18px 0;font-size:.88rem;color:var(--muted)}
+  .callout strong{color:var(--text)}
+  pre{background:#0d090d;border:1px solid var(--border);border-radius:12px;padding:14px 16px;overflow:auto;font-size:.76rem;line-height:1.55;color:#c9bcc9;white-space:pre-wrap}
+  ul{color:var(--muted)}
+  li{margin:8px 0}
+  footer{max-width:980px;margin:0 auto;padding:24px;border-top:1px solid var(--border);color:var(--dim);font-size:.76rem}
+  .bars{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+  .bar-row{display:grid;grid-template-columns:170px 1fr 56px;gap:10px;align-items:center;font-size:.76rem;color:var(--muted)}
+  .bar-track{height:9px;background:rgba(214,160,180,.1);border-radius:5px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:5px}
+  .bar-row b{color:var(--text);text-align:right;font-weight:500}
+  input[type=range]{width:100%;accent-color:var(--red)}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../../index.html">rogeriog<span>.</span></a>
+  <a class="back" href="../index.html">← garden</a>
+</header>
+
+<main>
+  <div class="wip">Draft · not listed · feedback welcome</div>
+  <h1>Squeezing MatMiner through a <em>bottleneck</em></h1>
+  <p class="lede">
+    In MatterVial, the descriptor family ℓ-MM and ℓ-OFM does something deceptively simple:
+    it trains an autoencoder to compress the slow, expensive descriptor matrices, then teaches a
+    graph network to predict the compressed code straight from the crystal structure. This post is
+    my attempt to take that trick apart — what it is, why compression can help rather than hurt,
+    and what I still don't understand about it.
+  </p>
+
+  <h2>The slow step nobody talks about</h2>
+  <p>
+    Feature-based models in materials science live and die by their descriptors, and the honest
+    cost is featurization time. MatMiner computes <strong>1 336 features</strong> per structure —
+    elemental statistics, oxidation states, structural descriptors — and for large datasets that
+    is the bottleneck of the whole pipeline. The Orbital Field Matrix (OFM) is in the same family:
+    physically rich, expensive to compute.
+  </p>
+  <p>
+    The classical answer is "just wait for it". The MatterVial answer is more interesting:
+    <strong>pay the cost once</strong>, compress the result into a dense code, and from then on
+    predict the code directly from the structure with a graph network. The featurizer becomes a
+    student of itself.
+  </p>
+
+  <h2>ℓ-MM and ℓ-OFM, precisely</h2>
+  <div class="card">
+    <div class="kv">
+      <div><b>1 336 → 758</b><small>ℓ-MM · MatMiner latent</small></div>
+      <div><b>OFM → 188</b><small>ℓ-OFM · orbital-field latent</small></div>
+      <div><b>106 113</b><small>training structures</small></div>
+    </div>
+    <p style="margin-top:10px">Both members of the <strong>descriptor-oriented</strong> family in
+      MatterVial's three-part taxonomy — the family whose whole trick is
+      <em>autoencoder + GNN proxy</em>:</p>
+    <ul>
+      <li><strong>ℓ-MM</strong> — an autoencoder bottleneck over the 1 336 MatMiner features
+        (MP2018-stable subset, 106 113 structures). The encoder compresses; the decoder keeps the
+        latent <em>decodable</em> back toward the original descriptor vector. A MEGNet proxy is then
+        trained to predict the 758-dim latent vector from the structure alone. Downstream, the
+        feature is <code>MEGNet_MatMiner_X</code>: 758 columns, no MatMiner call at prediction time.</li>
+      <li><strong>ℓ-OFM</strong> — the same recipe on the Orbital Field Matrix, down to
+        <strong>188 dims</strong>. Tighter bottleneck, more aggressive compression, and still
+        decodable — which is the part I want to verify by eye at some point.</li>
+    </ul>
+    <p class="note" style="margin-bottom:0">Downstream both are simply concatenated with the
+      task-oriented features (MVL readouts, ROOST, ORB-v3) and the SISSO symbolic block. The
+      garden's <a href="../mattervial/">MatterVial explainer</a> shows where each family sits in
+      the feature vector.</p>
+  </div>
+
+  <h2>Why compress? Why does the small code survive?</h2>
+  <p>
+    My 2022 self wrote down two links on autoencoder representations — the
+    machinelearningmastery regression tutorial and Neptune's representation-learning post — with a
+    half-formed intuition that <em>compression may explain better ML results</em>. MatterVial's
+    ℓ-blocks are the first place I've seen that intuition industrialized for materials descriptors,
+    so let me make the intuition precise.
+  </p>
+  <ul>
+    <li><strong>Redundancy is real.</strong> MatMiner features are heavily collinear — elemental
+      property statistics overlap by construction. A bottleneck that reconstructs the matrix must
+      spend its dimensions on directions that carry variance, not on near-duplicates. The code is
+      a denoised, decorrelated version of the descriptor set.</li>
+      <li><strong>The bottleneck is an information budget.</strong> With 758 dims for 1 336 inputs
+        the budget is generous (~57%); with 188 dims for OFM it is aggressive. In both cases the
+        autoencoder decides <em>which</em> combinations of descriptors matter, without ever seeing
+        a target — so it cannot overfit to a benchmark, which is exactly what you want from a
+        reusable representation.</li>
+      <li><strong>The GNN proxy transfers the shortcut.</strong> Once the latent exists, the MEGNet
+        proxy learns "structure in → code out". The expensive physics lives inside the proxy's
+        pretrained weights; the consumer of the features pays O(1) per structure. This is the same
+        amortization logic as the MVL readouts — the descriptor family just amortizes
+        <em>featurization</em> instead of a pretrained property model.</li>
+  </ul>
+  <div class="callout">
+    <strong>The claim I want to test:</strong> a downstream model fed ℓ-MM should behave like one
+    fed full MatMiner features — at a small accuracy tax — while the featurization cost moves from
+    "hours, per dataset" to "one pretrained network". The MatterVial paper's benchmark table
+    supports this, but the mechanism-level check (reconstruction error vs downstream error, per
+    latent size) is the experiment I would run next.
+  </div>
+
+  <h2>The compression budget, interactively</h2>
+  <div class="card">
+    <p style="margin-top:0">Every learned featurizer sits somewhere on a trade-off: fewer latent
+      dimensions → cheaper, more regularized, harder to reconstruct; more → closer to the original
+      matrix. Drag the budget and watch where ℓ-MM and ℓ-OFM sit on the descriptor families.</p>
+    <svg id="encSvg" viewBox="0 0 900 320" role="img" aria-label="Autoencoder compression diagram"></svg>
+    <label style="display:block;margin-top:8px">latent budget
+      <input id="encSlider" type="range" min="64" max="1336" step="2" value="758">
+    </label>
+    <div class="bars" id="encBars"></div>
+    <p class="note">Schematic: encoder (blue) compresses the raw descriptor matrix to the latent
+      budget (red), the decoder (green) reconstructs, and a MEGNet proxy learns to emit the latent
+      from structure alone. ℓ-MM's actual operating point is 758; ℓ-OFM's is 188.</p>
+  </div>
+
+  <h2>Hands-on</h2>
+<pre>from mattervial import DescriptorMEGNetFeaturizer
+
+desc_mm  = DescriptorMEGNetFeaturizer(base_descriptor='l-MM_v1')
+desc_ofm = DescriptorMEGNetFeaturizer(base_descriptor='l-OFM_v1')
+
+l_mm  = desc_mm.get_features(structures)    # 758 cols: MEGNet_MatMiner_X
+l_ofm = desc_ofm.get_features(structures)   # 188 cols: MEGNet_OFMEncoded_v1_X</pre>
+
+  <h2>What I still don't know</h2>
+  <ul>
+    <li>How much reconstruction fidelity the 758- and 188-dim codes actually retain — the paper
+      reports downstream numbers, not per-descriptor reconstruction curves. That curve is the
+      natural ablation.</li>
+    <li>Whether the latent is <em>interpretable</em>. A decodable code is not automatically a
+      physical one; I'd like to see which original descriptors load on which latent dimensions.</li>
+    <li>How the ℓ-blocks behave out-of-distribution — the autoencoder saw MP2018-stable structures;
+      a wildly novel composition may get a confidently wrong code, with no NaN warning like raw
+      MatMiner would give.</li>
+  </ul>
+
+  <p class="note" style="margin-top:28px">
+    Draft ends here. Related reading in the garden: <a href="../mattervial/">MatterVial in a
+    nutshell</a> · seed notes from 2022 (<em>Encoder — Neural Network Compression</em>) fed this
+    post.
+  </p>
+</main>
+
+<footer>Draft · not listed in posts.json · Rogério Gouvêa</footer>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const $=(id)=>document.getElementById(id);
+const el=(t,a={})=>{const n=document.createElementNS(NS,t);for(const[k,v]of Object.entries(a))n.setAttribute(k,v);return n};
+
+const RAW=1336, LMM=758, LOFM=188;
+const slider=$("encSlider"), bars=$("encBars");
+
+function draw(){
+  const L=+slider.value;
+  const svg=$("encSvg"); svg.innerHTML="";
+  const W=900,H=320;
+  const blocks=[
+    {x:40, w:170, label:"raw descriptor\nmatrix", sub:RAW+" dims", color:"#5a6cff"},
+    {x:360, w:Math.max(30,Math.round(170*L/RAW)), label:"latent code\n(z)", sub:L+" dims", color:"#ff3d5a"},
+    {x:690, w:170, label:"reconstruction", sub:RAW+" dims", color:"#63e6a4"},
+  ];
+  // arrows + proxy path
+  const defs=el("defs");
+  const mk=el("marker",{id:"arr",markerWidth:8,markerHeight:8,refX:6,refY:3,orient:"auto"});
+  mk.appendChild(el("path",{d:"M0,0 L6,3 L0,6 Z",fill:"rgba(214,160,180,.45)"}));
+  defs.appendChild(mk); svg.appendChild(defs);
+  const arrow=(x1,y1,x2,y2,c)=>svg.appendChild(el("line",{x1,y1,x2,y2,stroke:c||"rgba(214,160,180,.4)","stroke-width":1.4,"marker-end":"url(#arr)"}));
+  blocks.forEach(b=>{
+    svg.appendChild(el("rect",{x:b.x,y:90,width:b.w,height:110,rx:12,fill:"rgba(22,14,22,.9)",stroke:b.color,"stroke-width":1.4}));
+    const t=el("text",{x:b.x+b.w/2,y:135,"text-anchor":"middle",fill:"#eee9ee","font-size":12,"font-family":"Space Grotesk"});
+    t.textContent=b.label.split("\n")[0]; svg.appendChild(t);
+    const t2=el("text",{x:b.x+b.w/2,y:152,"text-anchor":"middle",fill:b.color,"font-size":11,"font-family":"Space Grotesk"});
+    t2.textContent=b.sub; svg.appendChild(t2);
+    const t3=el("text",{x:b.x+b.w/2,y:170,"text-anchor":"middle",fill:"#6e5f6e","font-size":9});
+    t3.textContent=b.label.split("\n")[1]||""; svg.appendChild(t3);
+  });
+  arrow(blocks[0].x+blocks[0].w+4, 145, blocks[1].x-6, 145);       // encoder
+  arrow(blocks[1].x+blocks[1].w+4, 125, blocks[2].x-6, 125);       // decoder
+  // GNN proxy path under the latent
+  svg.appendChild(el("rect",{x:200,y:230,width:500,height:50,rx:10,fill:"rgba(22,14,22,.9)",stroke:"#e8a05a","stroke-width":1.3}));
+  const pt=el("text",{x:450,y:260,"text-anchor":"middle",fill:"#eee9ee","font-size":12,"font-family":"Space Grotesk"});
+  pt.textContent="MEGNet proxy — structure → latent code"; svg.appendChild(pt);
+  arrow(450,230,Math.min(blocks[1].x+blocks[1].w-8,blocks[1].x+120),202,"rgba(232,160,90,.55)");
+  // labels
+  const e1=el("text",{x:250,y:120,"text-anchor":"middle",fill:"#5a6cff","font-size":11,"font-family":"Space Grotesk"});
+  e1.textContent="encoder"; svg.appendChild(e1);
+  const e2=el("text",{x:Math.min(640,blocks[1].x+blocks[1].w+40),y:110,"text-anchor":"middle",fill:"#63e6a4","font-size":11,"font-family":"Space Grotesk"});
+  e2.textContent="decoder"; svg.appendChild(e2);
+
+  const pct=(n)=>Math.round(100*n/RAW);
+  const rows=[
+    {name:"MatMiner (raw)", n:RAW, color:"#5a6cff"},
+    {name:"ℓ-MM latent", n:LMM, color:"#ff3d5a"},
+    {name:"your slider budget", n:L, color:"#45d6ff"},
+    {name:"ℓ-OFM latent", n:LOFM, color:"#63e6a4"},
+  ];
+  const max=Math.max(...rows.map(r=>r.n));
+  bars.innerHTML=rows.map(r=>`
+    <div class="bar-row">
+      <span>${r.name}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${r.n/max*100}%;background:${r.color}"></span></span>
+      <b>${r.n} · ${pct(r.n)}%</b>
+    </div>`).join("");
+}
+slider.oninput=draw;
+draw();
+</script>
+</body>
+</html>
